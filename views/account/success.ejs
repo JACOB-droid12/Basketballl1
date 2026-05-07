@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Account Created</title>
+    <link rel="stylesheet" href="/css/styles.css">
+  </head>
+  <body>
+    <header class="mockup-topbar">
+      <h1>Admin Dashboard</h1>
+    </header>
+    <div class="app-shell">
+      <%- include("../partials/navigation", { active }) %>
+      <main class="workspace mockup-workspace">
+        <section class="account-panel office-panel account-success" aria-labelledby="success-title">
+          <h1 id="success-title">Account Created Successfully</h1>
+          <p>The new account has been saved.</p>
+          <dl class="account-summary">
+            <div>
+              <dt>Full Name</dt>
+              <dd><%= createdUser.fullName %></dd>
+            </div>
+            <div>
+              <dt>Username</dt>
+              <dd><%= createdUser.username %></dd>
+            </div>
+            <div>
+              <dt>Role</dt>
+              <dd><%= createdUser.role === 'ADMIN' ? 'Admin' : 'Staff' %></dd>
+            </div>
+          </dl>
+          <a class="button account-create-button" href="/account">Back to Account Management</a>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

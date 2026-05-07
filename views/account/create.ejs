@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Create Account</title>
+    <link rel="stylesheet" href="/css/styles.css">
+  </head>
+  <body>
+    <header class="mockup-topbar">
+      <h1>Admin Dashboard</h1>
+    </header>
+    <div class="app-shell">
+      <%- include("../partials/navigation", { active }) %>
+      <main class="workspace mockup-workspace">
+        <section class="account-panel office-panel" aria-labelledby="create-account-title">
+          <h1 id="create-account-title">Create Account</h1>
+
+          <% if (errorMessage) { %>
+            <div class="alert"><%= errorMessage %></div>
+          <% } %>
+
+          <form class="account-form" method="post" action="/account/create" novalidate>
+            <label>
+              <span>Full Name</span>
+              <input type="text" name="fullName" value="<%= form.fullName || '' %>" required>
+              <% if (errors.fullName) { %><small><%= errors.fullName %></small><% } %>
+            </label>
+            <label>
+              <span>Username</span>
+              <input type="text" name="username" value="<%= form.username || '' %>" required>
+              <% if (errors.username) { %><small><%= errors.username %></small><% } %>
+            </label>
+            <label>
+              <span>Password</span>
+              <input type="password" name="password" required>
+              <% if (errors.password) { %><small><%= errors.password %></small><% } %>
+            </label>
+            <fieldset>
+              <legend>Role</legend>
+              <label>
+                <input type="radio" name="role" value="ADMIN" <%= String(form.role || '').toUpperCase() === 'ADMIN' ? 'checked' : '' %>>
+                <span>Admin</span>
+              </label>
+              <label>
+                <input type="radio" name="role" value="STAFF" <%= String(form.role || '').toUpperCase() === 'STAFF' ? 'checked' : '' %>>
+                <span>Staff</span>
+              </label>
+              <% if (errors.role) { %><small><%= errors.role %></small><% } %>
+            </fieldset>
+            <button class="button account-save-button" type="submit">Save Account</button>
+          </form>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

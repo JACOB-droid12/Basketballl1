@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Account Management</title>
+    <link rel="stylesheet" href="/css/styles.css">
+  </head>
+  <body>
+    <header class="mockup-topbar">
+      <h1>Admin Dashboard</h1>
+    </header>
+    <div class="app-shell">
+      <%- include("../partials/navigation", { active }) %>
+      <main class="workspace mockup-workspace">
+        <section class="account-panel office-panel" aria-labelledby="account-title">
+          <h1 id="account-title">Account Management</h1>
+          <a class="button account-create-button" href="/account/create">Create Account</a>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

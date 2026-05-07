@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Home</title>
+    <link rel="stylesheet" href="/css/styles.css">
+  </head>
+  <body>
+    <header class="mockup-topbar">
+      <h1>Home</h1>
+    </header>
+    <div class="app-shell">
+      <%- include("partials/navigation", { active }) %>
+      <main class="workspace mockup-workspace">
+        <section class="home-board" aria-labelledby="home-title">
+          <h2 id="home-title">Date and Schedule time of basketball court game</h2>
+
+          <% if (errorMessage) { %>
+            <div class="alert"><%= errorMessage %></div>
+          <% } %>
+
+          <div class="week-selector">
+            <span aria-hidden="true">◀</span>
+            <strong><%= displayWeekRange %></strong>
+            <span aria-hidden="true">▶</span>
+          </div>
+
+          <div class="summary-strip" aria-label="Today schedule summary">
+            <span>Reserved Slots: <strong><%= summary.reservedCount %></strong></span>
+            <span>Available Slots: <strong><%= summary.availableCount %></strong></span>
+            <span>Missed: <strong><%= summary.missedCount %></strong></span>
+            <a href="/reservations/new?date=<%= encodeURIComponent(summary.today) %>">Add Reservation</a>
+          </div>
+
+          <% if (nearestAvailableSlot) { %>
+            <div class="nearest-inline">
+              Nearest available: <strong><%= nearestAvailableSlot.date %>, <%= nearestAvailableSlot.name %></strong>
+            </div>
+          <% } %>
+
+          <div class="weekly-table-wrap">
+            <table class="weekly-table">
+              <thead>
+                <tr>
+                  <th>Time schedule of game</th>
+                  <th>Sunday</th>
+                  <th>Monday</th>
+                  <th>Tuesday</th>
+                  <th>Wednesday</th>
+                  <th>Thursday</th>
+                  <th>Friday</th>
+                  <th>Saturday</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (todaySchedule.length === 0) { %>
+                  <tr>
+                    <td colspan="8">No schedule data available.</td>
+                  </tr>
+                <% } %>
+                <% todaySchedule.forEach((slot) => { %>
+                  <tr>
+                    <th><%= slot.name %></th>
+                    <% ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].forEach((_day, index) => { %>
+                      <% if (index === new Date(summary.today + "T00:00:00").getDay()) { %>
+                        <td class="<%= slot.isAvailableForBooking ? 'cell-available' : 'cell-reserved' %>">
+                          <% if (slot.reservation) { %>
+                            <strong><%= slot.reservation.purpose || slot.statusName %></strong>
+                            <span><%= slot.reservation.representativeName || '' %></span>
+                          <% } else { %>
+                            <span>Available</span>
+                          <% } %>
+                        </td>
+                      <% } else { %>
+                        <td></td>
+                      <% } %>
+                    <% }) %>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="dashboard-grid">
+          <article class="office-panel">
+            <h2>Upcoming Reservations</h2>
+            <div class="record-list">
+              <% if (summary.upcomingReservations.length === 0) { %>
+                <p>No upcoming reserved slots.</p>
+              <% } %>
+              <% summary.upcomingReservations.slice(0, 6).forEach((reservation) => { %>
+                <div class="record-item">
+                  <strong><%= reservation.reservationDate %> <%= reservation.startTime %> - <%= reservation.endTime %></strong>
+                  <span><%= reservation.representativeName || 'Recorded reservation' %></span>
+                  <span><%= reservation.purpose || '' %></span>
+                </div>
+              <% }) %>
+            </div>
+          </article>
+
+          <article class="office-panel">
+            <h2>Missed Reservations</h2>
+            <div class="record-list">
+              <% if (summary.missedReservations.length === 0) { %>
+                <p>No missed reservations needing action.</p>
+              <% } %>
+              <% summary.missedReservations.forEach((reservation) => { %>
+                <div class="record-item">
+                  <strong><%= reservation.startTime %> - <%= reservation.endTime %></strong>
+                  <span><%= reservation.representativeName || 'Recorded reservation' %></span>
+                  <span><%= reservation.purpose || '' %></span>
+                </div>
+              <% }) %>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

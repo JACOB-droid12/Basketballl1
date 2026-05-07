@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reservation Details</title>
+    <link rel="stylesheet" href="/css/styles.css">
+  </head>
+  <body>
+    <header class="mockup-topbar">
+      <h1><%= reservation ? reservation.reservationDate + " " + reservation.startTime + " - " + reservation.endTime : "Reservation Details" %></h1>
+    </header>
+    <div class="app-shell">
+      <%- include("../partials/navigation", { active }) %>
+      <main class="workspace mockup-workspace">
+        <section class="reservation-shell">
+          <% if (errorMessage) { %>
+            <div class="alert"><%= errorMessage %></div>
+          <% } %>
+
+          <% if (reservation) { %>
+            <article class="office-panel detail-panel" aria-labelledby="detail-title">
+              <h1 id="detail-title">Representative Personal information</h1>
+
+              <dl class="detail-list">
+                <div>
+                  <dt>Name:</dt>
+                  <dd><%= reservation.representativeName %></dd>
+                </div>
+                <div>
+                  <dt>Contact number:</dt>
+                  <dd><%= reservation.contactNo %></dd>
+                </div>
+                <div>
+                  <dt>Address:</dt>
+                  <dd><%= reservation.address %></dd>
+                </div>
+                <div>
+                  <dt>Purpose:</dt>
+                  <dd><%= reservation.purpose %></dd>
+                </div>
+                <div>
+                  <dt>Status:</dt>
+                  <dd><span class="status <%= reservation.statusCode.toLowerCase() %>"><%= reservation.statusName %></span></dd>
+                </div>
+                <div>
+                  <dt>Remarks:</dt>
+                  <dd><%= reservation.remarks || "No remarks recorded." %></dd>
+                </div>
+                <div>
+                  <dt>Encoded by:</dt>
+                  <dd><%= reservation.createdByName || "Barangay personnel" %></dd>
+                </div>
+              </dl>
+
+              <div class="detail-actions">
+                <a class="button" href="/reservations/<%= reservation.reservationId %>/edit">Edit Reservation</a>
+                <a class="button secondary" href="/schedule?date=<%= encodeURIComponent(reservation.reservationDate) %>">Back to Schedule</a>
+                <a class="button secondary" href="/reservations">Back to Records</a>
+                <% ["MISSED", "COMPLETED", "CANCELLED"].forEach((statusCode) => { %>
+                  <form method="post" action="/reservations/<%= reservation.reservationId %>/status">
+                    <input type="hidden" name="statusCode" value="<%= statusCode %>">
+                    <input type="hidden" name="returnTo" value="/reservations/<%= reservation.reservationId %>">
+                    <button class="button" type="submit"><%= statusCode.charAt(0) + statusCode.slice(1).toLowerCase() %></button>
+                  </form>
+                <% }) %>
+              </div>
+            </article>
+          <% } %>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

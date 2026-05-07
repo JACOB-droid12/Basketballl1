@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reservations</title>
+    <link rel="stylesheet" href="/css/styles.css">
+  </head>
+  <body>
+    <header class="mockup-topbar">
+      <h1>Reservations</h1>
+    </header>
+    <div class="app-shell">
+      <%- include("../partials/navigation", { active }) %>
+      <main class="workspace mockup-workspace">
+        <header class="page-header">
+          <div>
+            <p>Barangay Sto. Niño, Parañaque City</p>
+            <h1>Reservation Records</h1>
+          </div>
+          <a class="button" href="/reservations/new">Add Reservation</a>
+        </header>
+
+        <% if (errorMessage) { %>
+          <div class="alert"><%= errorMessage %></div>
+        <% } %>
+
+        <section class="office-panel reservation-shell">
+          <form class="filter-bar" method="get" action="/reservations">
+            <label>
+              <span>Date</span>
+              <input type="date" name="reservationDate" value="<%= filters.reservationDate || '' %>">
+            </label>
+            <label>
+              <span>Status</span>
+              <select name="statusCode">
+                <option value="">All</option>
+                <% statuses.forEach((status) => { %>
+                  <option value="<%= status.statusCode %>" <%= filters.statusCode === status.statusCode ? 'selected' : '' %>><%= status.statusName %></option>
+                <% }) %>
+              </select>
+            </label>
+            <label>
+              <span>Name / Contact</span>
+              <input type="search" name="search" value="<%= filters.search || '' %>">
+            </label>
+            <label>
+              <span>Purpose</span>
+              <input type="search" name="purpose" value="<%= filters.purpose || '' %>">
+            </label>
+            <button class="button secondary" type="submit">Filter</button>
+          </form>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Representative</th>
+                  <th>Contact</th>
+                  <th>Purpose</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (reservations.length === 0) { %>
+                  <tr>
+                    <td colspan="7">No reservation records found.</td>
+                  </tr>
+                <% } %>
+                <% reservations.forEach((reservation) => { %>
+                  <tr>
+                    <td><%= reservation.reservationDate %></td>
+                    <td><%= reservation.startTime %> - <%= reservation.endTime %></td>
+                    <td><a class="record-link" href="/reservations/<%= reservation.reservationId %>"><%= reservation.representativeName %></a></td>
+                    <td><%= reservation.contactNo %></td>
+                    <td><%= reservation.purpose %></td>
+                    <td><span class="status <%= reservation.statusCode.toLowerCase() %>"><%= reservation.statusName %></span></td>
+                    <td class="actions">
+                      <% ["MISSED", "COMPLETED", "CANCELLED"].forEach((statusCode) => { %>
+                        <form method="post" action="/reservations/<%= reservation.reservationId %>/status">
+                          <input type="hidden" name="statusCode" value="<%= statusCode %>">
+                          <input type="hidden" name="returnTo" value="/reservations">
+                          <button type="submit"><%= statusCode.charAt(0) + statusCode.slice(1).toLowerCase() %></button>
+                        </form>
+                      <% }) %>
+                      <a href="/reservations/<%= reservation.reservationId %>/edit">Edit</a>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

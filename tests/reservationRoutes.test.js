@@ -1,0 +1,206 @@
+import assert from "node:assert/strict";
+import express from "express";
+import path from "node:path";
+import test from "node:test";
+import { fileURLToPath } from "node:url";
+
+import { createReservationRoutes } from "../src/features/reservations/reservationRoutes.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectRoot = path.resolve(__dirname, "..");
+
+test("POST /reservations returns validation messages for missing required fields", async () => {
+  const app = express();
+  app.set("view engine", "ejs");
+  app.set("views", path.join(projectRoot, "views"));
+  app.use(express.urlencoded({ extended: false }));
+  app.use(
+    createReservationRoutes({
+      db: {},
+      todayProvider: () => "2026-05-07"
+    })
+  );
+
+  const server = app.listen(0);
+  try {
+    const port = server.address().port;
+    const response = await fetch(`http://127.0.0.1:${port}/reservations`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: ""
+    });
+    const body = await response.text();
+
+    assert.equal(response.status, 400);
+    assert.match(body, /Reservation date is required\./);
+    assert.match(body, /Resident or group representative name is required\./);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("GET /reservations/:reservationId renders representative detail information", async () => {
+  const app = express();
+  app.set("view engine", "ejs");
+  app.set("views", path.join(projectRoot, "views"));
+  app.use(
+    createReservationRoutes({
+      db: {},
+      repositories: {
+        getReservationById: async () => ({
+          reservationId: 7,
+          reservationDate: "2026-05-08",
+          startTime: "07:00",
+          endTime: "08:00",
+          representativeName: "Sto. Niño Youth Team",
+          contactNo: "09171234567",
+          address: "Purok 3",
+          purpose: "Practice",
+          remarks: "Bring barangay ID.",
+          statusCode: "RESERVED",
+          statusName: "Reserved",
+          createdByName: "Admin User"
+        })
+      }
+    })
+  );
+
+  const server = app.listen(0);
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/reservations/7`);
+    const body = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.match(body, /Representative Personal information/);
+    assert.match(body, /Sto\. Niño Youth Team/);
+    assert.match(body, /09171234567/);
+    assert.match(body, /Purok 3/);
+    assert.match(body, /Practice/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("GET /reservations/:reservationId returns 404 when the reservation is missing", async () => {
+  const app = express();
+  app.set("view engine", "ejs");
+  app.set("views", path.join(projectRoot, "views"));
+  app.use(
+    createReservationRoutes({
+      db: {},
+      repositories: {
+        getReservationById: async () => null
+      }
+    })
+  );
+
+  const server = app.listen(0);
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/reservations/999`);
+    const body = await response.text();
+
+    assert.equal(response.status, 404);
+    assert.match(body, /Reservation record was not found/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("GET /reservations/:reservationId/edit renders a populated edit form", async () => {
+  const app = express();
+  app.set("view engine", "ejs");
+  app.set("views", path.join(projectRoot, "views"));
+  app.use(
+    createReservationRoutes({
+      db: {},
+      repositories: {
+        getReservationById: async () => ({
+          reservationId: 7,
+          reservationDate: "2026-05-08",
+          startTime: "07:00",
+          endTime: "08:00",
+          representativeName: "Sto. Niño Youth Team",
+          contactNo: "09171234567",
+          address: "Purok 3",
+          purpose: "Practice",
+          remarks: "Bring barangay ID.",
+          statusCode: "RESERVED",
+          statusName: "Reserved",
+          createdByName: "Admin User"
+        })
+      }
+    })
+  );
+
+  const server = app.listen(0);
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/reservations/7/edit`);
+    const body = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.match(body, /Edit Reservation/);
+    assert.match(body, /Sto\. Niño Youth Team/);
+    assert.match(body, /Bring barangay ID\./);
+    assert.match(body, /action="\/reservations\/7\/edit"/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("POST /reservations/:reservationId/edit updates a reservation and redirects to detail", async () => {
+  let updatedReservation = null;
+  const app = express();
+  app.set("view engine", "ejs");
+  app.set("views", path.join(projectRoot, "views"));
+  app.use(express.urlencoded({ extended: false }));
+  app.use(
+    createReservationRoutes({
+      db: {},
+      todayProvider: () => "2026-05-08",
+      repositories: {
+        updateReservation: async (_db, reservationId, reservation) => {
+          updatedReservation = { reservationId, reservation };
+        }
+      }
+    })
+  );
+
+  const server = app.listen(0);
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/reservations/7/edit`, {
+      method: "POST",
+      redirect: "manual",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        reservationDate: "2026-05-08",
+        startTime: "07:00",
+        endTime: "08:00",
+        representativeName: "Sto. Niño Youth Team Updated",
+        contactNo: "09170000000",
+        address: "Purok 4",
+        purpose: "Game",
+        remarks: "Updated remarks"
+      })
+    });
+
+    assert.equal(response.status, 302);
+    assert.equal(response.headers.get("location"), "/reservations/7");
+    assert.deepEqual(updatedReservation, {
+      reservationId: "7",
+      reservation: {
+        reservationDate: "2026-05-08",
+        startTime: "07:00",
+        endTime: "08:00",
+        representativeName: "Sto. Niño Youth Team Updated",
+        contactNo: "09170000000",
+        address: "Purok 4",
+        purpose: "Game",
+        remarks: "Updated remarks",
+        statusCode: "RESERVED"
+      }
+    });
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});

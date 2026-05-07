@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Schedule</title>
+    <link rel="stylesheet" href="/css/styles.css">
+  </head>
+  <body>
+    <header class="mockup-topbar">
+      <h1>Schedule</h1>
+    </header>
+    <div class="app-shell">
+      <%- include("../partials/navigation", { active }) %>
+      <main class="workspace mockup-workspace">
+        <section class="reservation-shell">
+          <div class="schedule-heading">
+            <h1>Schedule of this week</h1>
+            <p><%= displayWeekRange %></p>
+          </div>
+
+          <div class="schedule-toolbar">
+            <form class="filter-bar" method="get" action="/schedule">
+              <label>
+                <span>Schedule Date</span>
+                <input type="date" name="date" value="<%= date %>">
+              </label>
+              <button class="button secondary" type="submit">View Date</button>
+            </form>
+            <a class="button" href="/reservations/new?date=<%= encodeURIComponent(date) %>">Add Reservation</a>
+          </div>
+
+          <% if (errorMessage) { %>
+            <div class="alert"><%= errorMessage %></div>
+          <% } %>
+
+          <section class="office-panel">
+            <div class="slot-list">
+              <% if (schedule.length === 0) { %>
+                <p>No schedule slots available.</p>
+              <% } %>
+              <% schedule.forEach((slot) => { %>
+                <article class="slot-row <%= slot.isAvailableForBooking ? 'available' : 'blocked' %>">
+                  <div>
+                    <strong><%= slot.name %></strong>
+                    <span><%= slot.startTime %> - <%= slot.endTime %></span>
+                  </div>
+                  <div>
+                    <span class="status <%= slot.statusCode.toLowerCase() %>"><%= slot.statusName %></span>
+                    <% if (slot.reservation) { %>
+                      <p><%= slot.reservation.representativeName || 'Recorded reservation' %> <%= slot.reservation.purpose ? '- ' + slot.reservation.purpose : '' %></p>
+                      <a class="slot-link" href="/reservations/<%= slot.reservation.reservationId %>">View details</a>
+                    <% } else { %>
+                      <p>Open for barangay personnel to reserve.</p>
+                      <a class="slot-link" href="<%= "/reservations/new?date=" + encodeURIComponent(date) + "&startTime=" + encodeURIComponent(slot.startTime) + "&endTime=" + encodeURIComponent(slot.endTime) %>">Reserve this time</a>
+                    <% } %>
+                  </div>
+                </article>
+              <% }) %>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

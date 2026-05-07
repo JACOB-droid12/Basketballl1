@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit Reservation</title>
+    <link rel="stylesheet" href="/css/styles.css">
+  </head>
+  <body>
+    <header class="mockup-topbar">
+      <h1>Edit Reservation</h1>
+    </header>
+    <div class="app-shell">
+      <%- include("../partials/navigation", { active }) %>
+      <main class="workspace mockup-workspace">
+        <header class="page-header">
+          <div>
+            <p>Barangay Sto. Niño, Parañaque City</p>
+            <h1>Edit Reservation</h1>
+          </div>
+          <a class="button secondary" href="/reservations/<%= reservationId %>">Back to Details</a>
+        </header>
+
+        <% if (errorMessage) { %>
+          <div class="alert"><%= errorMessage %></div>
+        <% } %>
+
+        <section class="office-panel reservation-shell">
+          <form class="reservation-form" method="post" action="/reservations/<%= reservationId %>/edit" novalidate>
+            <input type="hidden" name="statusCode" value="<%= form.statusCode || 'RESERVED' %>">
+            <div class="form-grid">
+              <label>
+                <span>Reservation Date</span>
+                <input type="date" name="reservationDate" value="<%= form.reservationDate || '' %>" required>
+                <% if (errors.reservationDate) { %><small><%= errors.reservationDate %></small><% } %>
+              </label>
+              <label>
+                <span>Start Time</span>
+                <input type="time" name="startTime" value="<%= form.startTime || '' %>" required>
+                <% if (errors.startTime) { %><small><%= errors.startTime %></small><% } %>
+              </label>
+              <label>
+                <span>End Time</span>
+                <input type="time" name="endTime" value="<%= form.endTime || '' %>" required>
+                <% if (errors.endTime) { %><small><%= errors.endTime %></small><% } %>
+              </label>
+              <label>
+                <span>Resident / Group Representative</span>
+                <input type="text" name="representativeName" value="<%= form.representativeName || '' %>" required>
+                <% if (errors.representativeName) { %><small><%= errors.representativeName %></small><% } %>
+              </label>
+              <label>
+                <span>Contact Number</span>
+                <input type="text" name="contactNo" value="<%= form.contactNo || '' %>" required>
+                <% if (errors.contactNo) { %><small><%= errors.contactNo %></small><% } %>
+              </label>
+              <label>
+                <span>Address</span>
+                <input type="text" name="address" value="<%= form.address || '' %>" required>
+                <% if (errors.address) { %><small><%= errors.address %></small><% } %>
+              </label>
+              <label>
+                <span>Purpose</span>
+                <input type="text" name="purpose" value="<%= form.purpose || '' %>" placeholder="Practice, game, or event" required>
+                <% if (errors.purpose) { %><small><%= errors.purpose %></small><% } %>
+              </label>
+              <label>
+                <span>Remarks</span>
+                <textarea name="remarks" rows="3"><%= form.remarks || '' %></textarea>
+              </label>
+            </div>
+            <button class="button" type="submit">Save Changes</button>
+          </form>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
