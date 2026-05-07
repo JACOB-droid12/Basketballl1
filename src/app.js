@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { createDatabasePool } from "./config/database.js";
+import { createActivityLogRoutes } from "./features/activityLogs/activityLogRoutes.js";
 import { createReservationRoutes } from "./features/reservations/reservationRoutes.js";
 import { createDashboardRoutes } from "./features/schedule/dashboardRoutes.js";
 import { createScheduleRoutes } from "./features/schedule/scheduleRoutes.js";
@@ -50,6 +51,7 @@ export function createApp() {
   app.use(createDashboardRoutes({ db }));
   app.use(createReservationRoutes({ db }));
   app.use(createScheduleRoutes({ db }));
+  app.use(createActivityLogRoutes({ db }));
 
   return app;
 }

@@ -18,6 +18,7 @@ Milestone 4 authentication/account management is now partially implemented:
 - Add-reservation, reservation-list, reservation-detail, and schedule routes
 - Date/time validation and active-overlap prevention logic
 - Schedule slot display logic with clickable reserved/available slots
+- Activity-log viewing with date, action, and user/details filters
 - Tests for validation, overlap rules, query builders, route validation, schedule mapping, login, and account creation
 
 ## Target Stack
@@ -71,6 +72,7 @@ Useful local URLs:
 - `http://localhost:3000/schedule`
 - `http://localhost:3000/reservations`
 - `http://localhost:3000/reservations/new`
+- `http://localhost:3000/activity-logs`
 
 Seeded starter login after applying `database/seed.sql`:
 

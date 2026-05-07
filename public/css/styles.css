@@ -296,6 +296,10 @@ a {
   margin-bottom: 20px;
 }
 
+.activity-filter-bar {
+  grid-template-columns: repeat(3, minmax(150px, 1fr)) auto;
+}
+
 .filter-bar label,
 .reservation-form label {
   display: grid;
@@ -394,6 +398,16 @@ th {
 .status.completed {
   background: #dceafe;
   color: #214a8a;
+}
+
+.status.log-action {
+  min-width: 0;
+  max-width: 210px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  border-radius: 8px;
+  background: #fff0c2;
+  color: #6b3f00;
 }
 
 .actions {

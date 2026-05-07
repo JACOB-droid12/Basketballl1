@@ -6,7 +6,7 @@ Build the Basketball Court Scheduling System for Barangay Sto. Niño, Parañaque
 
 ## Current Milestone
 
-Milestone 4 is partially in progress. Milestone 1 foundation is implemented, Milestone 2 core reservation logic is implemented in code and tests, Milestone 3 schedule/dashboard/detail screens are partly implemented, and Milestone 4 login/account creation is now partly implemented. Edit-reservation is implemented in code and tests. Live MySQL verification is still blocked in this sandbox.
+Milestone 4 is partially in progress. Milestone 1 foundation is implemented, Milestone 2 core reservation logic is implemented in code and tests, Milestone 3 schedule/dashboard/detail screens are partly implemented, and Milestone 4 login/account creation is now partly implemented. Edit-reservation and activity-log viewing are implemented in code and tests. Live MySQL verification is still blocked in this sandbox.
 
 ## Completed Work
 
@@ -26,6 +26,7 @@ Milestone 4 is partially in progress. Milestone 1 foundation is implemented, Mil
 - Implemented account creation validation for full name, username, password, and Admin/Staff role.
 - Implemented duplicate username handling and bcrypt password hashing for new user accounts.
 - Implemented login/session protection for dashboard, schedule, and reservation management routes.
+- Implemented `/activity-logs` with date, action, and user/details filters for monitoring reservation activity records.
 - Implemented EJS views for login, home/dashboard, schedule, reservation list, add reservation, reservation details, account management, create account, and account success.
 - Extracted the Sto. Niño barangay logo from the presentation media into `public/images/barangay-logo.jpg`.
 - Restyled the app to follow the provided mockups: red top bars, gold sidebar, rounded white nav buttons, tan workspace, bordered week box, weekly schedule table, orange/red slot cards, account panels, and rounded form controls.
@@ -48,6 +49,8 @@ Milestone 4 is partially in progress. Milestone 1 foundation is implemented, Mil
 - `src/app.js`
 - `src/server.js`
 - `src/config/database.js`
+- `src/features/activityLogs/activityLogRepository.js`
+- `src/features/activityLogs/activityLogRoutes.js`
 - `src/features/reservations/reservationValidation.js`
 - `src/features/reservations/reservationOverlap.js`
 - `src/features/reservations/reservationRepository.js`
@@ -60,6 +63,8 @@ Milestone 4 is partially in progress. Milestone 1 foundation is implemented, Mil
 - `src/features/users/userRepository.js`
 - `src/features/users/userValidation.js`
 - `tests/authRoutes.test.js`
+- `tests/activityLogRepository.test.js`
+- `tests/activityLogRoutes.test.js`
 - `tests/dashboardRoutes.test.js`
 - `tests/reservationValidation.test.js`
 - `tests/reservationOverlap.test.js`
@@ -72,6 +77,7 @@ Milestone 4 is partially in progress. Milestone 1 foundation is implemented, Mil
 - `views/login.ejs`
 - `views/dashboard.ejs`
 - `views/partials/navigation.ejs`
+- `views/activityLogs/index.ejs`
 - `views/account/index.ejs`
 - `views/account/create.ejs`
 - `views/account/success.ejs`
@@ -98,9 +104,12 @@ Milestone 4 is partially in progress. Milestone 1 foundation is implemented, Mil
 
 ## Tests Run
 
-- `npm test` - passed, 40 tests.
+- `npm test` - passed, 43 tests.
+- `npm test -- tests/activityLogRepository.test.js tests/activityLogRoutes.test.js` - passed.
 - `npm run verify:foundation` - passed.
 - `node --check src\app.js` - passed.
+- `node --check src\features\activityLogs\activityLogRepository.js` - passed.
+- `node --check src\features\activityLogs\activityLogRoutes.js` - passed.
 - `node --check src\features\users\authRoutes.js` - passed.
 - `node --check src\features\users\sessionMiddleware.js` - passed.
 - `node --check src\features\users\userRepository.js` - passed.
@@ -122,6 +131,8 @@ Milestone 4 is partially in progress. Milestone 1 foundation is implemented, Mil
 - Opened `http://localhost:3000/account` without a session and confirmed it redirects to `/login`.
 - Opened `http://localhost:3000/schedule` without a session and confirmed it redirects to `/login`.
 - Opened dashboard, schedule, and add-reservation pages earlier and confirmed the mockup-style chrome renders.
+- Opened a temporary browser preview of `/activity-logs` with seeded fake activity rows and confirmed the page renders the mockup-style red top bar, gold sidebar, rounded bordered panel, filters, activity rows, and reservation links.
+- Checked `/activity-logs` at a 390px mobile viewport and confirmed the body width stays contained while the table scrolls horizontally inside its wrapper.
 - Used Chrome DevTools computed-style checks earlier to verify key mockup colors and dimensions.
 - Used a 390px viewport emulation check earlier and fixed weekly table overflow so the page width remains contained while the table scrolls horizontally.
 - Browser/IAB was unavailable earlier because no Codex IAB backend was discovered. Chrome DevTools was used as the fallback. DevTools screenshot capture timed out, so verification used accessibility snapshots plus computed layout/style checks.
@@ -129,8 +140,7 @@ Milestone 4 is partially in progress. Milestone 1 foundation is implemented, Mil
 ## Known Risks
 
 - MySQL is not installed in the current sandbox, so `schema.sql` and `seed.sql` still need to be applied on a real local MySQL server.
-- Add/list/edit/schedule/status/login/account code is implemented, but live flows against a real MySQL database still need verification.
-- Activity log writes are included in repository functions, but the activity log screen is not implemented yet.
+- Add/list/edit/schedule/status/login/account/activity-log code is implemented, but live flows against a real MySQL database still need verification.
 - Account listing/deactivation is not implemented; current account management supports account creation only, matching the provided core create-account mockup.
 - Branch creation previously failed due `.git/HEAD.lock` permission denial, so work remains on the initial `master` branch in this sandbox.
 
@@ -141,8 +151,8 @@ Milestone 4 is partially in progress. Milestone 1 foundation is implemented, Mil
 
 ## Recommended Next Step
 
-Apply `database/schema.sql` and `database/seed.sql` on a local MySQL server, then live-test login using `admin` / `admin123`, account creation, add reservation, edit reservation, overlap rejection, schedule links, status updates, and reservation details. In code, the next useful feature is activity-log viewing.
+Apply `database/schema.sql` and `database/seed.sql` on a local MySQL server, then live-test login using `admin` / `admin123`, account creation, add reservation, edit reservation, overlap rejection, schedule links, status updates, activity-log viewing, and reservation details. In code, the next useful feature is deployment/user-guide documentation plus backup/export support if time allows.
 
 ## Suggested Next Prompt
 
-Continue from `docs/CODEX_HANDOFF.md`. If MySQL is available, verify the live app with `admin` / `admin123`; otherwise implement activity-log viewing and deployment/user-guide documentation.
+Continue from `docs/CODEX_HANDOFF.md`. If MySQL is available, verify the live app with `admin` / `admin123`; otherwise implement deployment/user-guide documentation and optional backup/export support.
