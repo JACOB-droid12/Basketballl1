@@ -18,7 +18,7 @@ Evidence:
 - Active overlap prevention exists in application logic and MySQL triggers.
 - Schedule view shows available and reserved slots.
 - Dashboard summarizes today’s schedule, upcoming reservations, missed reservations, and nearest available slot suggestion logic.
-- Admin account creation supports role selection and duplicate username validation.
+- Admin account management supports listing users, role display, duplicate username validation, account creation, and active/inactive status changes.
 - Activity logs record and display reservation actions.
 - Filtered reservation records can be exported as CSV for reports and presentation evidence.
 
@@ -137,7 +137,6 @@ Suggested evaluation tasks:
 ## Current Evidence Gaps
 
 - Live MySQL end-to-end verification is still required on a computer with MySQL installed.
-- Account deactivation/list management is not yet implemented.
 - Database backup and restore are documented but not automated inside the app.
 - Print formatting is not yet implemented as a dedicated UI, but exported CSV files can be opened in spreadsheet software and printed.
 
@@ -154,4 +153,4 @@ Suggested evaluation tasks:
 9. Mark it Completed or Missed.
 10. Open Activity Logs and show the recorded actions.
 11. Export reservation records as CSV.
-12. Open Account and show the Create Account workflow.
+12. Open Account and show the Create Account and Deactivate/Reactivate workflows.

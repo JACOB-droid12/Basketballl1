@@ -85,13 +85,25 @@ Cancelled, Missed, and Completed records are kept for reporting and history.
 
 ## Account Management
 
-Admin users can create accounts.
+Admin users can view, create, deactivate, and reactivate accounts.
 
 1. Log in as Admin.
 2. Click Account.
-3. Click Create Account.
-4. Enter full name, username, password, and role.
-5. Save the account.
+3. Review the account list to check usernames, roles, and active/inactive status.
+
+To create an account:
+
+1. Click Create Account.
+2. Enter full name, username, password, and role.
+3. Save the account.
+
+To deactivate or reactivate an account:
+
+1. Open Account.
+2. Find the user row.
+3. Click Deactivate or Reactivate.
+
+The currently signed-in Admin account cannot deactivate itself from the account page.
 
 Validation rules:
 

@@ -407,6 +407,16 @@ th {
   color: #214a8a;
 }
 
+.status.active {
+  background: #e4f2d9;
+  color: #2f641d;
+}
+
+.status.inactive {
+  background: #ececec;
+  color: #555;
+}
+
 .status.log-action {
   min-width: 0;
   max-width: 210px;
@@ -528,6 +538,12 @@ th {
   gap: 36px;
 }
 
+.account-list-panel {
+  min-height: auto;
+  align-content: start;
+  justify-items: stretch;
+}
+
 .account-panel h1 {
   margin: 0;
   font-size: clamp(34px, 4vw, 50px);
@@ -542,6 +558,20 @@ th {
   border-radius: 16px;
   background: var(--cream);
   font-size: 28px;
+}
+
+.account-toolbar {
+  display: flex;
+  justify-content: center;
+}
+
+.account-table-wrap {
+  width: 100%;
+}
+
+.muted-action {
+  color: var(--muted);
+  font-weight: 700;
 }
 
 .account-form {

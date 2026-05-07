@@ -7,6 +7,13 @@ export class DuplicateUsernameError extends Error {
   }
 }
 
+export class UserNotFoundError extends Error {
+  constructor(message = "User account was not found.") {
+    super(message);
+    this.name = "UserNotFoundError";
+  }
+}
+
 export async function findUserByUsername(db, username) {
   const [rows] = await db.execute(
     `
@@ -58,6 +65,53 @@ export async function createUser(db, user) {
   };
 }
 
+export function buildUserListQuery() {
+  return {
+    sql: `
+      SELECT
+        user_id,
+        full_name,
+        username,
+        role,
+        account_status,
+        DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at
+      FROM users
+      ORDER BY role ASC, full_name ASC, user_id ASC
+    `,
+    params: {}
+  };
+}
+
+export async function listUsers(db) {
+  const query = buildUserListQuery();
+  const [rows] = await db.execute(query.sql, query.params);
+
+  return rows.map(mapAccountUserRow);
+}
+
+export function buildUpdateUserStatusQuery(userId, accountStatus) {
+  return {
+    sql: `
+      UPDATE users
+      SET account_status = :accountStatus
+      WHERE user_id = :userId
+    `,
+    params: {
+      userId: Number(userId),
+      accountStatus
+    }
+  };
+}
+
+export async function updateUserAccountStatus(db, userId, accountStatus) {
+  const query = buildUpdateUserStatusQuery(userId, accountStatus);
+  const [result] = await db.execute(query.sql, query.params);
+
+  if (result.affectedRows === 0) {
+    throw new UserNotFoundError();
+  }
+}
+
 async function findAnyUserByUsername(db, username) {
   const [rows] = await db.execute(
     `
@@ -81,4 +135,23 @@ function mapUserRow(row) {
     role: row.role,
     accountStatus: row.account_status
   };
+}
+
+export function mapAccountUserRow(row) {
+  return {
+    userId: Number(row.user_id),
+    fullName: row.full_name,
+    username: row.username,
+    role: row.role,
+    accountStatus: row.account_status,
+    createdAt: formatDateTimeValue(row.created_at)
+  };
+}
+
+function formatDateTimeValue(value) {
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 19).replace("T", " ");
+  }
+
+  return String(value || "").slice(0, 19).replace("T", " ");
 }

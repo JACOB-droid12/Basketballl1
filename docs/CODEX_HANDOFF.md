@@ -6,7 +6,7 @@ Build the Basketball Court Scheduling System for Barangay Sto. Niño, Parañaque
 
 ## Current Milestone
 
-Milestone 5 usability/reporting/documentation is now partly in progress. Milestone 1 foundation is implemented, Milestone 2 core reservation logic is implemented in code and tests, Milestone 3 schedule/dashboard/detail screens are partly implemented, and Milestone 4 login/account creation is partly implemented. Edit-reservation, activity-log viewing, and reservation CSV export are implemented in code and tests. Live MySQL verification is still blocked in this sandbox.
+Milestone 5 usability/reporting/documentation is now partly in progress. Milestone 1 foundation is implemented, Milestone 2 core reservation logic is implemented in code and tests, Milestone 3 schedule/dashboard/detail screens are partly implemented, and Milestone 4 login/account management is implemented in code and tests. Edit-reservation, activity-log viewing, and reservation CSV export are implemented in code and tests. Live MySQL verification is still blocked in this sandbox.
 
 ## Completed Work
 
@@ -25,6 +25,8 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Implemented admin-only account management route protection through session role checks.
 - Implemented account creation validation for full name, username, password, and Admin/Staff role.
 - Implemented duplicate username handling and bcrypt password hashing for new user accounts.
+- Implemented Admin account listing with active/inactive status display and Deactivate/Reactivate controls.
+- Added a self-deactivation guard so an Admin cannot deactivate the currently signed-in account from the account page.
 - Implemented login/session protection for dashboard, schedule, and reservation management routes.
 - Implemented `/activity-logs` with date, action, and user/details filters for monitoring reservation activity records.
 - Implemented filtered reservation CSV export through `/reservations/export.csv` and an Export CSV button on the reservation list.
@@ -80,6 +82,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - `tests/scheduleRoutes.test.js`
 - `tests/scheduleService.test.js`
 - `tests/sessionMiddleware.test.js`
+- `tests/userRepository.test.js`
 - `tests/userValidation.test.js`
 - `views/login.ejs`
 - `views/dashboard.ejs`
@@ -111,18 +114,19 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 
 ## Tests Run
 
-- `npm test` - passed, 46 tests.
+- `npm test` - passed, 51 tests.
+- `npm test -- tests/userRepository.test.js tests/authRoutes.test.js` - passed.
 - `npm test -- tests/reservationExport.test.js tests/reservationRoutes.test.js` - passed.
 - `npm test -- tests/activityLogRepository.test.js tests/activityLogRoutes.test.js` - passed.
 - `npm run verify:foundation` - passed.
 - `node --check src\features\reservations\reservationExport.js` - passed.
 - `node --check src\features\reservations\reservationRoutes.js` - passed.
 - `node --check src\app.js` - passed.
+- `node --check src\features\users\authRoutes.js` - passed.
+- `node --check src\features\users\userRepository.js` - passed.
 - `node --check src\features\activityLogs\activityLogRepository.js` - passed.
 - `node --check src\features\activityLogs\activityLogRoutes.js` - passed.
-- `node --check src\features\users\authRoutes.js` - passed.
 - `node --check src\features\users\sessionMiddleware.js` - passed.
-- `node --check src\features\users\userRepository.js` - passed.
 - `node --check src\features\users\userValidation.js` - passed.
 - `npm audit --omit=dev --json` - passed with zero vulnerabilities.
 - Earlier syntax checks in this goal also passed for server, database config, reservation repository/routes, schedule routes/dashboard routes, and foundation verifier.
@@ -145,6 +149,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Opened a temporary browser preview of `/activity-logs` with seeded fake activity rows and confirmed the page renders the mockup-style red top bar, gold sidebar, rounded bordered panel, filters, activity rows, and reservation links.
 - Checked `/activity-logs` at a 390px mobile viewport and confirmed the body width stays contained while the table scrolls horizontally inside its wrapper.
 - Opened a temporary browser preview of `/reservations` with seeded fake reservation rows and confirmed the Export CSV button appears beside Add Reservation, preserves date/status filters, and remains contained on a 390px mobile viewport.
+- Opened a temporary browser preview of `/account` with seeded fake Admin session data and confirmed account rows, current-account guard, Deactivate/Reactivate controls, mockup-style panel, and 390px mobile table containment.
 - Created docs for daily office use, offline deployment, database backup/restore, update procedure, security notes, ISO 25010 evidence, and presentation demo flow.
 - Used Chrome DevTools computed-style checks earlier to verify key mockup colors and dimensions.
 - Used a 390px viewport emulation check earlier and fixed weekly table overflow so the page width remains contained while the table scrolls horizontally.
@@ -154,7 +159,6 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 
 - MySQL is not installed in the current sandbox, so `schema.sql` and `seed.sql` still need to be applied on a real local MySQL server.
 - Add/list/edit/schedule/status/login/account/activity-log code is implemented, but live flows against a real MySQL database still need verification.
-- Account listing/deactivation is not implemented; current account management supports account creation only, matching the provided core create-account mockup.
 - Dedicated print formatting is not implemented; reservation CSV export and MySQL backup/restore are available/documented.
 - Branch creation previously failed due `.git/HEAD.lock` permission denial, so work remains on the initial `master` branch in this sandbox.
 
@@ -165,8 +169,8 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 
 ## Recommended Next Step
 
-Apply `database/schema.sql` and `database/seed.sql` on a local MySQL server, then live-test login using `admin` / `admin123`, account creation, add reservation, edit reservation, overlap rejection, schedule links, status updates, activity-log viewing, CSV export, and reservation details. In code, the next useful feature is account listing/deactivation if time allows.
+Apply `database/schema.sql` and `database/seed.sql` on a local MySQL server, then live-test login using `admin` / `admin123`, account creation, account deactivation/reactivation, add reservation, edit reservation, overlap rejection, schedule links, status updates, activity-log viewing, CSV export, and reservation details. In code, the next useful feature is dedicated print styling if time allows.
 
 ## Suggested Next Prompt
 
-Continue from `docs/CODEX_HANDOFF.md`. If MySQL is available, verify the live app with `admin` / `admin123`; otherwise implement account listing/deactivation or dedicated print styling.
+Continue from `docs/CODEX_HANDOFF.md`. If MySQL is available, verify the live app with `admin` / `admin123`; otherwise implement dedicated print styling or perform a completion audit against the current milestone.

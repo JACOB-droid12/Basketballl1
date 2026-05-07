@@ -14,7 +14,7 @@ Milestone 4 authentication/account management is now partially implemented:
 - Architecture and reference review documents
 - Handoff document for future Codex turns
 - Login handling with bcrypt password verification
-- Admin account management and create-account screens
+- Admin account management, create-account, and activate/deactivate screens
 - Add-reservation, reservation-list, reservation-detail, and schedule routes
 - Date/time validation and active-overlap prevention logic
 - Schedule slot display logic with clickable reserved/available slots

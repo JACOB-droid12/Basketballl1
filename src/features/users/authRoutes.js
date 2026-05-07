@@ -1,10 +1,17 @@
 import bcrypt from "bcryptjs";
 import { Router } from "express";
 
-import { createUser, DuplicateUsernameError, findUserByUsername } from "./userRepository.js";
+import {
+  createUser,
+  DuplicateUsernameError,
+  findUserByUsername,
+  listUsers,
+  updateUserAccountStatus,
+  UserNotFoundError
+} from "./userRepository.js";
 import { validateCreateUserInput } from "./userValidation.js";
 
-const defaultRepositories = { createUser, findUserByUsername };
+const defaultRepositories = { createUser, findUserByUsername, listUsers, updateUserAccountStatus };
 
 export function createAuthRoutes({ db, repositories = {} } = {}) {
   const repo = { ...defaultRepositories, ...repositories };
@@ -60,8 +67,24 @@ export function createAuthRoutes({ db, repositories = {} } = {}) {
     response.redirect("/login");
   });
 
-  router.get("/account", requireAdmin, (_request, response) => {
-    response.render("account/index", { active: "account" });
+  router.get("/account", requireAdmin, async (request, response) => {
+    try {
+      const users = await repo.listUsers(db);
+
+      response.render("account/index", {
+        active: "account",
+        currentUserId: request.session.user.userId,
+        users,
+        errorMessage: ""
+      });
+    } catch (error) {
+      response.status(503).render("account/index", {
+        active: "account",
+        currentUserId: request.session.user.userId,
+        users: [],
+        errorMessage: databaseErrorMessage(error)
+      });
+    }
   });
 
   router.get("/account/create", requireAdmin, (_request, response) => {
@@ -101,6 +124,28 @@ export function createAuthRoutes({ db, repositories = {} } = {}) {
         errors: {},
         errorMessage: databaseErrorMessage(error)
       });
+    }
+  });
+
+  router.post("/account/:userId/status", requireAdmin, async (request, response) => {
+    const accountStatus = String(request.body.accountStatus || "").trim().toUpperCase();
+
+    if (!["ACTIVE", "INACTIVE"].includes(accountStatus)) {
+      response.status(400).send("Account status is invalid.");
+      return;
+    }
+
+    if (Number(request.params.userId) === Number(request.session.user.userId)) {
+      response.status(400).send("You cannot change your own account status.");
+      return;
+    }
+
+    try {
+      await repo.updateUserAccountStatus(db, request.params.userId, accountStatus);
+      response.redirect("/account");
+    } catch (error) {
+      const status = error instanceof UserNotFoundError ? 404 : 503;
+      response.status(status).send(accountStatusErrorMessage(error));
     }
   });
 
@@ -144,4 +189,12 @@ function databaseErrorMessage(error) {
   }
 
   return "Database is unavailable. Check that local MySQL is running and the database setup has been applied.";
+}
+
+function accountStatusErrorMessage(error) {
+  if (error instanceof UserNotFoundError) {
+    return error.message;
+  }
+
+  return databaseErrorMessage(error);
 }
