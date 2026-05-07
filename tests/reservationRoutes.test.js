@@ -40,6 +40,43 @@ test("POST /reservations returns validation messages for missing required fields
   }
 });
 
+test("GET /reservations renders an export link that preserves filters", async () => {
+  const app = express();
+  app.set("view engine", "ejs");
+  app.set("views", path.join(projectRoot, "views"));
+  app.use(
+    createReservationRoutes({
+      db: {},
+      repositories: {
+        listReservations: async () => [],
+        getReservationStatuses: async () => [
+          {
+            statusCode: "RESERVED",
+            statusName: "Reserved"
+          }
+        ]
+      }
+    })
+  );
+
+  const server = app.listen(0);
+  try {
+    const response = await fetch(
+      `http://127.0.0.1:${server.address().port}/reservations?reservationDate=2026-05-08&statusCode=RESERVED&purpose=Practice`
+    );
+    const body = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.match(body, /Export CSV/);
+    assert.match(
+      body,
+      /href="\/reservations\/export\.csv\?reservationDate=2026-05-08&amp;statusCode=RESERVED&amp;purpose=Practice"/
+    );
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 test("GET /reservations/:reservationId renders representative detail information", async () => {
   const app = express();
   app.set("view engine", "ejs");
@@ -77,6 +114,58 @@ test("GET /reservations/:reservationId renders representative detail information
     assert.match(body, /09171234567/);
     assert.match(body, /Purok 3/);
     assert.match(body, /Practice/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("GET /reservations/export.csv downloads filtered reservation records", async () => {
+  let receivedFilters = null;
+  const app = express();
+  app.set("view engine", "ejs");
+  app.set("views", path.join(projectRoot, "views"));
+  app.use(
+    createReservationRoutes({
+      db: {},
+      repositories: {
+        listReservations: async (_db, filters) => {
+          receivedFilters = filters;
+          return [
+            {
+              reservationDate: "2026-05-08",
+              startTime: "07:00",
+              endTime: "08:00",
+              representativeName: "Sto. Niño Youth Team",
+              contactNo: "09171234567",
+              address: "Purok 3",
+              purpose: "Practice",
+              statusName: "Reserved",
+              createdByName: "Admin User"
+            }
+          ];
+        }
+      }
+    })
+  );
+
+  const server = app.listen(0);
+  try {
+    const response = await fetch(
+      `http://127.0.0.1:${server.address().port}/reservations/export.csv?reservationDate=2026-05-08&statusCode=RESERVED`
+    );
+    const body = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("content-type"), /text\/csv/);
+    assert.match(response.headers.get("content-disposition"), /attachment; filename="reservations.csv"/);
+    assert.deepEqual(receivedFilters, {
+      reservationDate: "2026-05-08",
+      statusCode: "RESERVED",
+      search: "",
+      purpose: ""
+    });
+    assert.match(body, /Reservation Date,Start Time,End Time,Representative/);
+    assert.match(body, /2026-05-08,07:00,08:00,Sto\. Niño Youth Team/);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

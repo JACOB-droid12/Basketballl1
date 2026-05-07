@@ -244,6 +244,13 @@ a {
   font-size: 26px;
 }
 
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
 .button {
   display: inline-flex;
   align-items: center;

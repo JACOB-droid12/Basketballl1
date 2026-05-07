@@ -115,6 +115,17 @@ Use Activity Logs to monitor important actions such as:
 
 Filters are available for date, action, and user/details search.
 
+## Export Reservation Records
+
+Use Reservations to export records for reporting or backup review.
+
+1. Click Reservations.
+2. Apply date, status, name/contact, or purpose filters if needed.
+3. Click Export CSV.
+4. Open the downloaded CSV file in a spreadsheet app if a printed or tabular report is needed.
+
+The export includes the active reservation-list filters.
+
 ## Common Problems
 
 If the app shows a database unavailable message:

@@ -20,6 +20,7 @@ Evidence:
 - Dashboard summarizes today’s schedule, upcoming reservations, missed reservations, and nearest available slot suggestion logic.
 - Admin account creation supports role selection and duplicate username validation.
 - Activity logs record and display reservation actions.
+- Filtered reservation records can be exported as CSV for reports and presentation evidence.
 
 Suggested evaluation tasks:
 
@@ -138,7 +139,7 @@ Suggested evaluation tasks:
 - Live MySQL end-to-end verification is still required on a computer with MySQL installed.
 - Account deactivation/list management is not yet implemented.
 - Database backup and restore are documented but not automated inside the app.
-- Export or print reporting is not yet implemented in the UI.
+- Print formatting is not yet implemented as a dedicated UI, but exported CSV files can be opened in spreadsheet software and printed.
 
 ## Recommended Presentation Demo Flow
 
@@ -152,4 +153,5 @@ Suggested evaluation tasks:
 8. Edit the reservation.
 9. Mark it Completed or Missed.
 10. Open Activity Logs and show the recorded actions.
-11. Open Account and show the Create Account workflow.
+11. Export reservation records as CSV.
+12. Open Account and show the Create Account workflow.

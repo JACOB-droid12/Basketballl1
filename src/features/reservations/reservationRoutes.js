@@ -10,6 +10,7 @@ import {
   updateReservation,
   updateReservationStatus
 } from "./reservationRepository.js";
+import { toReservationCsv } from "./reservationExport.js";
 import { validateReservationInput } from "./reservationValidation.js";
 
 const defaultRepositories = {
@@ -36,6 +37,7 @@ export function createReservationRoutes({ db, todayProvider = getTodayDate, repo
 
       response.render("reservations/index", {
         active: "reservations",
+        exportUrl: buildReservationExportUrl(filters),
         filters,
         reservations,
         statuses,
@@ -44,11 +46,26 @@ export function createReservationRoutes({ db, todayProvider = getTodayDate, repo
     } catch (error) {
       response.status(503).render("reservations/index", {
         active: "reservations",
+        exportUrl: buildReservationExportUrl(filters),
         filters,
         reservations: [],
         statuses: [],
         errorMessage: databaseErrorMessage(error)
       });
+    }
+  });
+
+  router.get("/reservations/export.csv", async (request, response) => {
+    const filters = cleanFilters(request.query);
+
+    try {
+      const reservations = await repo.listReservations(db, filters);
+
+      response.setHeader("content-type", "text/csv; charset=utf-8");
+      response.setHeader("content-disposition", 'attachment; filename="reservations.csv"');
+      response.send(toReservationCsv(reservations));
+    } catch (error) {
+      response.status(503).type("text/plain").send(databaseErrorMessage(error));
     }
   });
 
@@ -223,6 +240,19 @@ function cleanFilters(query) {
 
 function clean(value) {
   return String(value || "").trim();
+}
+
+function buildReservationExportUrl(filters) {
+  const params = new URLSearchParams();
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value) {
+      params.set(key, value);
+    }
+  });
+
+  const query = params.toString();
+  return query ? `/reservations/export.csv?${query}` : "/reservations/export.csv";
 }
 
 function databaseErrorMessage(error) {

@@ -18,7 +18,10 @@
             <p>Barangay Sto. Niño, Parañaque City</p>
             <h1>Reservation Records</h1>
           </div>
-          <a class="button" href="/reservations/new">Add Reservation</a>
+          <div class="page-actions">
+            <a class="button secondary" href="<%= exportUrl %>">Export CSV</a>
+            <a class="button" href="/reservations/new">Add Reservation</a>
+          </div>
         </header>
 
         <% if (errorMessage) { %>
