@@ -80,3 +80,11 @@ Seeded starter login after applying `database/seed.sql`:
 - Temporary password: `admin123`
 
 The current sandbox does not have MySQL installed, so live reservation saves still need verification on a computer with local MySQL.
+
+## Documentation
+
+- `docs/USER_GUIDE.md` explains the daily workflow for barangay Admin and Staff users.
+- `docs/DEPLOYMENT_GUIDE.md` explains offline Windows + local MySQL installation, startup, backup, restore, and update steps.
+- `docs/ISO_25010_EVALUATION.md` maps the system to ISO 25010 quality characteristics for project evaluation.
+- `docs/ARCHITECTURE.md` explains the chosen stack and module boundaries.
+- `docs/CODEX_HANDOFF.md` records the current milestone state, verification, risks, and next step.

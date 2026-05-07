@@ -6,7 +6,7 @@ Build the Basketball Court Scheduling System for Barangay Sto. Niño, Parañaque
 
 ## Current Milestone
 
-Milestone 4 is partially in progress. Milestone 1 foundation is implemented, Milestone 2 core reservation logic is implemented in code and tests, Milestone 3 schedule/dashboard/detail screens are partly implemented, and Milestone 4 login/account creation is now partly implemented. Edit-reservation and activity-log viewing are implemented in code and tests. Live MySQL verification is still blocked in this sandbox.
+Milestone 5 documentation is now partly in progress. Milestone 1 foundation is implemented, Milestone 2 core reservation logic is implemented in code and tests, Milestone 3 schedule/dashboard/detail screens are partly implemented, and Milestone 4 login/account creation is partly implemented. Edit-reservation and activity-log viewing are implemented in code and tests. Live MySQL verification is still blocked in this sandbox.
 
 ## Completed Work
 
@@ -28,6 +28,7 @@ Milestone 4 is partially in progress. Milestone 1 foundation is implemented, Mil
 - Implemented login/session protection for dashboard, schedule, and reservation management routes.
 - Implemented `/activity-logs` with date, action, and user/details filters for monitoring reservation activity records.
 - Implemented EJS views for login, home/dashboard, schedule, reservation list, add reservation, reservation details, account management, create account, and account success.
+- Added barangay staff user guide, Windows/local MySQL deployment guide, and ISO 25010 evaluation notes for presentation readiness.
 - Extracted the Sto. Niño barangay logo from the presentation media into `public/images/barangay-logo.jpg`.
 - Restyled the app to follow the provided mockups: red top bars, gold sidebar, rounded white nav buttons, tan workspace, bordered week box, weekly schedule table, orange/red slot cards, account panels, and rounded form controls.
 - Added mobile-width CSS constraints so the weekly table scrolls inside its container instead of widening the whole page.
@@ -44,6 +45,9 @@ Milestone 4 is partially in progress. Milestone 1 foundation is implemented, Mil
 - `database/README.md`
 - `docs/ARCHITECTURE.md`
 - `docs/REFERENCE_REVIEW.md`
+- `docs/USER_GUIDE.md`
+- `docs/DEPLOYMENT_GUIDE.md`
+- `docs/ISO_25010_EVALUATION.md`
 - `docs/CODEX_HANDOFF.md`
 - `docs/superpowers/plans/2026-05-07-basketball-court-scheduling-system.md`
 - `src/app.js`
@@ -116,6 +120,7 @@ Milestone 4 is partially in progress. Milestone 1 foundation is implemented, Mil
 - `node --check src\features\users\userValidation.js` - passed.
 - `npm audit --omit=dev --json` - passed with zero vulnerabilities.
 - Earlier syntax checks in this goal also passed for server, database config, reservation repository/routes, schedule routes/dashboard routes, and foundation verifier.
+- Documentation files were reviewed in the working tree after creation.
 
 ## Manual Verification Performed
 
@@ -133,6 +138,7 @@ Milestone 4 is partially in progress. Milestone 1 foundation is implemented, Mil
 - Opened dashboard, schedule, and add-reservation pages earlier and confirmed the mockup-style chrome renders.
 - Opened a temporary browser preview of `/activity-logs` with seeded fake activity rows and confirmed the page renders the mockup-style red top bar, gold sidebar, rounded bordered panel, filters, activity rows, and reservation links.
 - Checked `/activity-logs` at a 390px mobile viewport and confirmed the body width stays contained while the table scrolls horizontally inside its wrapper.
+- Created docs for daily office use, offline deployment, database backup/restore, update procedure, security notes, ISO 25010 evidence, and presentation demo flow.
 - Used Chrome DevTools computed-style checks earlier to verify key mockup colors and dimensions.
 - Used a 390px viewport emulation check earlier and fixed weekly table overflow so the page width remains contained while the table scrolls horizontally.
 - Browser/IAB was unavailable earlier because no Codex IAB backend was discovered. Chrome DevTools was used as the fallback. DevTools screenshot capture timed out, so verification used accessibility snapshots plus computed layout/style checks.
@@ -142,6 +148,7 @@ Milestone 4 is partially in progress. Milestone 1 foundation is implemented, Mil
 - MySQL is not installed in the current sandbox, so `schema.sql` and `seed.sql` still need to be applied on a real local MySQL server.
 - Add/list/edit/schedule/status/login/account/activity-log code is implemented, but live flows against a real MySQL database still need verification.
 - Account listing/deactivation is not implemented; current account management supports account creation only, matching the provided core create-account mockup.
+- Print/export reporting is not implemented in the UI; backup/restore is documented through MySQL commands.
 - Branch creation previously failed due `.git/HEAD.lock` permission denial, so work remains on the initial `master` branch in this sandbox.
 
 ## Blockers
@@ -151,8 +158,8 @@ Milestone 4 is partially in progress. Milestone 1 foundation is implemented, Mil
 
 ## Recommended Next Step
 
-Apply `database/schema.sql` and `database/seed.sql` on a local MySQL server, then live-test login using `admin` / `admin123`, account creation, add reservation, edit reservation, overlap rejection, schedule links, status updates, activity-log viewing, and reservation details. In code, the next useful feature is deployment/user-guide documentation plus backup/export support if time allows.
+Apply `database/schema.sql` and `database/seed.sql` on a local MySQL server, then live-test login using `admin` / `admin123`, account creation, add reservation, edit reservation, overlap rejection, schedule links, status updates, activity-log viewing, and reservation details. In code, the next useful feature is optional print/export support if time allows.
 
 ## Suggested Next Prompt
 
-Continue from `docs/CODEX_HANDOFF.md`. If MySQL is available, verify the live app with `admin` / `admin123`; otherwise implement deployment/user-guide documentation and optional backup/export support.
+Continue from `docs/CODEX_HANDOFF.md`. If MySQL is available, verify the live app with `admin` / `admin123`; otherwise implement optional print/export support or account listing/deactivation.
