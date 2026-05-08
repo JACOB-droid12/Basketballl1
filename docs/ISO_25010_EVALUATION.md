@@ -21,6 +21,7 @@ Evidence:
 - Admin account management supports listing users, role display, duplicate username validation, account creation, and active/inactive status changes.
 - Activity logs record and display reservation actions.
 - Filtered reservation records can be exported as CSV for reports and presentation evidence.
+- Reservation and schedule screens include print controls with print-friendly layout rules.
 
 Suggested evaluation tasks:
 
@@ -138,7 +139,7 @@ Suggested evaluation tasks:
 
 - Live MySQL end-to-end verification is still required on a computer with MySQL installed.
 - Database backup and restore are documented but not automated inside the app.
-- Print formatting is not yet implemented as a dedicated UI, but exported CSV files can be opened in spreadsheet software and printed.
+- Live browser print output should still be checked on the barangay office printer because printer margins and browser settings can vary.
 
 ## Recommended Presentation Demo Flow
 
@@ -153,4 +154,5 @@ Suggested evaluation tasks:
 9. Mark it Completed or Missed.
 10. Open Activity Logs and show the recorded actions.
 11. Export reservation records as CSV.
-12. Open Account and show the Create Account and Deactivate/Reactivate workflows.
+12. Show Print Records or Print Schedule.
+13. Open Account and show the Create Account and Deactivate/Reactivate workflows.

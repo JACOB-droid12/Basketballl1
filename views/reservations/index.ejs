@@ -19,6 +19,7 @@
             <h1>Reservation Records</h1>
           </div>
           <div class="page-actions">
+            <button class="button secondary screen-only" type="button" onclick="window.print()">Print Records</button>
             <a class="button secondary" href="<%= exportUrl %>">Export CSV</a>
             <a class="button" href="/reservations/new">Add Reservation</a>
           </div>
@@ -64,7 +65,7 @@
                   <th>Contact</th>
                   <th>Purpose</th>
                   <th>Status</th>
-                  <th>Actions</th>
+                  <th class="print-hidden">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -81,7 +82,7 @@
                     <td><%= reservation.contactNo %></td>
                     <td><%= reservation.purpose %></td>
                     <td><span class="status <%= reservation.statusCode.toLowerCase() %>"><%= reservation.statusName %></span></td>
-                    <td class="actions">
+                    <td class="actions print-hidden">
                       <% ["MISSED", "COMPLETED", "CANCELLED"].forEach((statusCode) => { %>
                         <form method="post" action="/reservations/<%= reservation.reservationId %>/status">
                           <input type="hidden" name="statusCode" value="<%= statusCode %>">

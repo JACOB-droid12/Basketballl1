@@ -20,6 +20,7 @@ Milestone 4 authentication/account management is now partially implemented:
 - Schedule slot display logic with clickable reserved/available slots
 - Activity-log viewing with date, action, and user/details filters
 - Reservation CSV export from the filtered reservation list
+- Print controls and print-friendly styling for reservation records and schedules
 - Tests for validation, overlap rules, query builders, route validation, schedule mapping, login, and account creation
 
 ## Target Stack

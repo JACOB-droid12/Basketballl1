@@ -27,7 +27,10 @@
               </label>
               <button class="button secondary" type="submit">View Date</button>
             </form>
-            <a class="button" href="/reservations/new?date=<%= encodeURIComponent(date) %>">Add Reservation</a>
+            <div class="page-actions">
+              <button class="button secondary screen-only" type="button" onclick="window.print()">Print Schedule</button>
+              <a class="button" href="/reservations/new?date=<%= encodeURIComponent(date) %>">Add Reservation</a>
+            </div>
           </div>
 
           <% if (errorMessage) { %>

@@ -68,6 +68,8 @@ test("GET /reservations renders an export link that preserves filters", async ()
 
     assert.equal(response.status, 200);
     assert.match(body, /Export CSV/);
+    assert.match(body, /Print Records/);
+    assert.match(body, /onclick="window\.print\(\)"/);
     assert.match(
       body,
       /href="\/reservations\/export\.csv\?reservationDate=2026-05-08&amp;statusCode=RESERVED&amp;purpose=Practice"/

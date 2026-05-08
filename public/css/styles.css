@@ -40,6 +40,10 @@ a {
   border: 0;
 }
 
+.screen-only {
+  display: inline-flex;
+}
+
 .mockup-topbar {
   min-height: 58px;
   display: grid;
@@ -924,5 +928,85 @@ th {
   .account-save-button {
     min-width: 0;
     width: 100%;
+  }
+}
+
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .mockup-topbar,
+  .sidebar,
+  .filter-bar,
+  .page-actions,
+  .screen-only,
+  .print-hidden,
+  .actions {
+    display: none !important;
+  }
+
+  .app-shell {
+    display: block;
+    min-height: auto;
+    background: #fff;
+  }
+
+  .workspace,
+  .mockup-workspace {
+    padding: 0;
+    background: #fff;
+  }
+
+  .office-panel {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: #fff;
+  }
+
+  .reservation-shell {
+    max-width: none;
+    margin: 0;
+  }
+
+  .page-header,
+  .schedule-heading {
+    margin-bottom: 14px;
+  }
+
+  .table-wrap,
+  .weekly-table-wrap,
+  .account-table-wrap {
+    overflow: visible;
+  }
+
+  table,
+  .weekly-table {
+    min-width: 0;
+    width: 100%;
+    font-size: 11px;
+  }
+
+  th,
+  td,
+  .weekly-table th,
+  .weekly-table td {
+    border: 1px solid #444;
+    padding: 6px;
+  }
+
+  .slot-row {
+    break-inside: avoid;
+    grid-template-columns: 170px 1fr;
+    border: 1px solid #444;
+    background: #fff;
+  }
+
+  .slot-link,
+  .record-link {
+    color: #000;
+    text-decoration: none;
   }
 }

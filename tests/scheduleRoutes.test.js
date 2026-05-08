@@ -44,6 +44,8 @@ test("GET /schedule links reserved slots to details and available slots to add r
     const body = await response.text();
 
     assert.equal(response.status, 200);
+    assert.match(body, /Print Schedule/);
+    assert.match(body, /onclick="window\.print\(\)"/);
     assert.match(body, /href="\/reservations\/10"/);
     assert.match(body, /View details/);
     assert.match(body, /href="\/reservations\/new\?date=2026-05-08&amp;startTime=08%3A00&amp;endTime=09%3A00"/);

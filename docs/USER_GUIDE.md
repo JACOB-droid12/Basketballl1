@@ -138,6 +138,15 @@ Use Reservations to export records for reporting or backup review.
 
 The export includes the active reservation-list filters.
 
+## Print Records and Schedules
+
+Use the print buttons when a paper copy is needed for office posting or meeting review.
+
+- Click Reservations, apply filters, then click Print Records.
+- Click Schedule, choose the date, then click Print Schedule.
+
+The print layout hides navigation, filters, and action buttons so the record content is easier to read on paper.
+
 ## Common Problems
 
 If the app shows a database unavailable message:

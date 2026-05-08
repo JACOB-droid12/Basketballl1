@@ -6,7 +6,7 @@ Build the Basketball Court Scheduling System for Barangay Sto. Niño, Parañaque
 
 ## Current Milestone
 
-Milestone 5 usability/reporting/documentation is now partly in progress. Milestone 1 foundation is implemented, Milestone 2 core reservation logic is implemented in code and tests, Milestone 3 schedule/dashboard/detail screens are partly implemented, and Milestone 4 login/account management is implemented in code and tests. Edit-reservation, activity-log viewing, and reservation CSV export are implemented in code and tests. Live MySQL verification is still blocked in this sandbox.
+Milestone 5 usability/reporting/documentation is now partly in progress. Milestone 1 foundation is implemented, Milestone 2 core reservation logic is implemented in code and tests, Milestone 3 schedule/dashboard/detail screens are partly implemented, and Milestone 4 login/account management is implemented in code and tests. Edit-reservation, activity-log viewing, reservation CSV export, and print controls are implemented in code and tests. Live MySQL verification is still blocked in this sandbox.
 
 ## Completed Work
 
@@ -30,6 +30,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Implemented login/session protection for dashboard, schedule, and reservation management routes.
 - Implemented `/activity-logs` with date, action, and user/details filters for monitoring reservation activity records.
 - Implemented filtered reservation CSV export through `/reservations/export.csv` and an Export CSV button on the reservation list.
+- Implemented Print Records and Print Schedule controls with print stylesheet rules that hide navigation, filters, and action controls.
 - Implemented EJS views for login, home/dashboard, schedule, reservation list, add reservation, reservation details, account management, create account, and account success.
 - Added barangay staff user guide, Windows/local MySQL deployment guide, and ISO 25010 evaluation notes for presentation readiness.
 - Extracted the Sto. Niño barangay logo from the presentation media into `public/images/barangay-logo.jpg`.
@@ -115,6 +116,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 ## Tests Run
 
 - `npm test` - passed, 51 tests.
+- `npm test -- tests/reservationRoutes.test.js tests/scheduleRoutes.test.js` - passed.
 - `npm test -- tests/userRepository.test.js tests/authRoutes.test.js` - passed.
 - `npm test -- tests/reservationExport.test.js tests/reservationRoutes.test.js` - passed.
 - `npm test -- tests/activityLogRepository.test.js tests/activityLogRoutes.test.js` - passed.
@@ -150,6 +152,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Checked `/activity-logs` at a 390px mobile viewport and confirmed the body width stays contained while the table scrolls horizontally inside its wrapper.
 - Opened a temporary browser preview of `/reservations` with seeded fake reservation rows and confirmed the Export CSV button appears beside Add Reservation, preserves date/status filters, and remains contained on a 390px mobile viewport.
 - Opened a temporary browser preview of `/account` with seeded fake Admin session data and confirmed account rows, current-account guard, Deactivate/Reactivate controls, mockup-style panel, and 390px mobile table containment.
+- Opened temporary browser previews of `/reservations` and `/schedule` and confirmed Print Records and Print Schedule controls render; verified print CSS includes rules for hiding navigation, filters, action controls, and print-hidden columns.
 - Created docs for daily office use, offline deployment, database backup/restore, update procedure, security notes, ISO 25010 evidence, and presentation demo flow.
 - Used Chrome DevTools computed-style checks earlier to verify key mockup colors and dimensions.
 - Used a 390px viewport emulation check earlier and fixed weekly table overflow so the page width remains contained while the table scrolls horizontally.
@@ -159,7 +162,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 
 - MySQL is not installed in the current sandbox, so `schema.sql` and `seed.sql` still need to be applied on a real local MySQL server.
 - Add/list/edit/schedule/status/login/account/activity-log code is implemented, but live flows against a real MySQL database still need verification.
-- Dedicated print formatting is not implemented; reservation CSV export and MySQL backup/restore are available/documented.
+- Live browser/printer output still needs a final check on the barangay office computer because print margins depend on the installed browser and printer.
 - Branch creation previously failed due `.git/HEAD.lock` permission denial, so work remains on the initial `master` branch in this sandbox.
 
 ## Blockers
@@ -169,8 +172,8 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 
 ## Recommended Next Step
 
-Apply `database/schema.sql` and `database/seed.sql` on a local MySQL server, then live-test login using `admin` / `admin123`, account creation, account deactivation/reactivation, add reservation, edit reservation, overlap rejection, schedule links, status updates, activity-log viewing, CSV export, and reservation details. In code, the next useful feature is dedicated print styling if time allows.
+Apply `database/schema.sql` and `database/seed.sql` on a local MySQL server, then live-test login using `admin` / `admin123`, account creation, account deactivation/reactivation, add reservation, edit reservation, overlap rejection, schedule links, status updates, activity-log viewing, CSV export, print controls, and reservation details.
 
 ## Suggested Next Prompt
 
-Continue from `docs/CODEX_HANDOFF.md`. If MySQL is available, verify the live app with `admin` / `admin123`; otherwise implement dedicated print styling or perform a completion audit against the current milestone.
+Continue from `docs/CODEX_HANDOFF.md`. If MySQL is available, verify the live app with `admin` / `admin123`; otherwise perform a completion audit against the current milestone and list only the remaining live-environment gaps.
