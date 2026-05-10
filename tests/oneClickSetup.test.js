@@ -2,6 +2,25 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
+test("staff launcher provides one menu for setup, startup, checks, and sign-off", () => {
+  const script = readFileSync("START-HERE.bat", "utf8");
+
+  assert.match(script, /Windows Offline Office Launcher/i);
+  assert.match(script, /Start the system for daily use/i);
+  assert.match(script, /First-time setup on this computer/i);
+  assert.match(script, /Check this computer before setup/i);
+  assert.match(script, /Create final office sign-off report/i);
+  assert.match(script, /Database-only setup\/checks for IT support/i);
+  assert.match(script, /call "%~dp0start-barangay-office\.bat"/i);
+  assert.match(script, /call "%~dp0setup-barangay-office\.bat"/i);
+  assert.match(script, /call "%~dp0check-office-readiness\.bat"/i);
+  assert.match(script, /call "%~dp0run-office-signoff\.bat"/i);
+  assert.match(script, /call "%~dp0setup-database-only\.bat"/i);
+  assert.match(script, /notepad "%~dp0README-FIRST-WINDOWS\.txt"/i);
+  assert.doesNotMatch(script, /npm install/i);
+  assert.doesNotMatch(script, /npm ci/i);
+});
+
 test("one-click setup batch file invokes the PowerShell setup script", () => {
   const script = readFileSync("setup-barangay-office.bat", "utf8");
 
@@ -42,6 +61,7 @@ test("office readiness checker batch file invokes prerequisite checks without do
   assert.match(powerShellScript, /node_modules/);
   assert.match(powerShellScript, /database\\schema\.sql/);
   assert.match(powerShellScript, /database\\seed\.sql/);
+  assert.match(powerShellScript, /START-HERE\.bat/);
   assert.match(powerShellScript, /setup-barangay-office\.bat/);
   assert.match(powerShellScript, /start-barangay-office\.bat/);
   assert.match(powerShellScript, /run-office-signoff\.bat/);

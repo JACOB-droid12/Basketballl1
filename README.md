@@ -121,7 +121,7 @@ npm test
 
 For the barangay office, prepare a complete offline project folder before bringing it to the office computer. The folder must include `node_modules/`; the one-click setup does not download npm packages.
 
-This setup path is Windows-only. The supported office workflow is `README-FIRST-WINDOWS.txt` -> `check-office-readiness.bat` -> `setup-barangay-office.bat` -> `start-barangay-office.bat` -> `run-office-signoff.bat`.
+This setup path is Windows-only. The simplest staff workflow is `START-HERE.bat`, which opens a menu for readiness checks, first-time setup, daily startup, office sign-off, database-only support, and quick instructions.
 
 To create the prepared folder on a setup computer:
 
@@ -135,14 +135,14 @@ This creates `dist/barangay-court-scheduler-offline/`. Copy that folder to the b
 
 On the barangay office computer, after Node.js 20+ and MySQL 8+ are installed from local installers if needed:
 
-1. Open `README-FIRST-WINDOWS.txt`.
-2. Double-click `check-office-readiness.bat`.
+1. Double-click `START-HERE.bat`.
+2. Choose `Check this computer before setup`.
 3. Fix any failed readiness checks, such as missing Node.js, MySQL tools, or `node_modules/`.
-4. Double-click `setup-barangay-office.bat`.
+4. Choose `First-time setup on this computer`.
 5. Enter the local MySQL password when asked.
-6. Double-click `start-barangay-office.bat`.
+6. Choose `Start the system for daily use`.
 7. Open `http://localhost:3000/prototype`.
-8. For deployment sign-off, double-click `run-office-signoff.bat` and keep the generated report under `reports\office-signoff`.
+8. For deployment sign-off, choose `Create final office sign-off report` and keep the generated report under `reports\office-signoff`.
 
 If a Windows setup or startup message is unclear, open `TROUBLESHOOT-WINDOWS.txt` in the prepared offline folder.
 

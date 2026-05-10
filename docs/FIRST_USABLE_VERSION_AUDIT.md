@@ -1,6 +1,6 @@
 # First Usable Version Completion Audit
 
-Date: 2026-05-10
+Date: 2026-05-11
 
 ## Objective Restated
 
@@ -45,6 +45,7 @@ Code, SQL, documentation, offline packaging, and prototype-backed frontend work 
 | Backup/restore commands | `scripts/backup-mysql.mjs`; `scripts/restore-mysql.mjs`; backup/restore tests; disposable Oracle MySQL and MariaDB client tools verified live backup/restore | Implemented and live-tested on disposable local Oracle MySQL and MariaDB |
 | SQL diagnostics | `database/diagnostics.sql`; `npm run verify:sql` checks diagnostics coverage and read-only safety | Implemented and statically verified |
 | SQL-only manual setup | `setup-database-only.bat`; `database/SQL_ONLY_SETUP.md`; `npm run verify:sql` checks that setup applies schema, seed, and diagnostics; the batch runner passes the password through local `MYSQL_PWD` instead of using `mysql -p` while SQL input is redirected | Implemented, statically verified, and fixed for Oracle MySQL 9 |
+| Staff-friendly launcher | `START-HERE.bat`; `README-FIRST-WINDOWS.txt`; `docs/OFFLINE_INSTALL_CHECKLIST.md`; `tests/oneClickSetup.test.js`; `npm run verify:bundle` | Implemented and tested |
 | One-click barangay setup | `setup-barangay-office.bat`; `scripts/setup-barangay-office.ps1`; `tests/oneClickSetup.test.js` | Implemented; requires local Node.js/MySQL already installed |
 | Office readiness check | `check-office-readiness.bat`; `scripts/check-office-readiness.ps1`; `tests/oneClickSetup.test.js`; `docs/OFFLINE_INSTALL_CHECKLIST.md` | Implemented and tested |
 | Office deployment sign-off report | `run-office-signoff.bat`; `scripts/run-office-signoff.ps1`; `reports\office-signoff` output; `tests/oneClickSetup.test.js`; `docs/DEPLOYMENT_GUIDE.md` | Implemented and tested; requires actual office MySQL/MariaDB for passing sign-off |
@@ -70,6 +71,7 @@ Code, SQL, documentation, offline packaging, and prototype-backed frontend work 
 
 ## Fresh Verification Evidence
 
+- Staff-friendly launcher iteration on 2026-05-11: `START-HERE.bat` was added as the root launcher for daily start, first-time setup, readiness check, office sign-off, database-only support, and quick instructions; `npm test -- tests\offlineBundle.test.js tests\oneClickSetup.test.js` passed with 12/12 focused tests, `npm run verify:foundation` passed, `npm run bundle:offline` refreshed the prepared folder, `npm run verify:bundle` confirmed `START-HERE.bat` is included, `npm test` passed with 127/127 tests, and `cmd /c "echo 7|START-HERE.bat"` confirmed the launcher opens and exits cleanly.
 - Prototype frontend pivot on 2026-05-10: `npm test -- tests\prototypeRoutes.test.js tests\prototypeApiRoutes.test.js tests\uiSmokeVerifier.test.js tests\offlineBundle.test.js tests\oneClickSetup.test.js` passed with 21/21 focused tests after `/`, `/prototype`, `/app`, the injected backend bridge, prototype API login/reservation/account routes, offline bundle requirements, and the Windows start URL were updated.
 - Prototype frontend pivot on 2026-05-10: `node --check src\features\prototype\prototypeRoutes.js`, `node --check src\features\prototype\prototypeApiRoutes.js`, `node --check scripts\verify-ui-smoke.mjs`, and `node --check public\js\prototype-backend.js` passed.
 - Prototype offline browser verification on 2026-05-10: Chrome loaded `http://127.0.0.1:3188/prototype` against disposable local MySQL 9.7.0 on `127.0.0.1:3391`, logged in with `admin`, loaded only local scripts, created a reservation through `/api/prototype/reservations`, and displayed it in the prototype Schedule screen.
@@ -159,8 +161,7 @@ On a computer with local MySQL installed and running, use the prepared offline b
 
 ```powershell
 cd path\to\barangay-court-scheduler-offline
-setup-barangay-office.bat
-run-office-signoff.bat
+START-HERE.bat
 ```
 
-Then complete the manual checklist written into the sign-off report: live-test login with `admin` / `admin123` on first setup or the configured active Admin account after starter-admin retirement, change the starter password, account creation/deactivation, add reservation, overlap rejection, edit reservation, mark missed/completed/cancelled, activity logs, CSV export, and print controls.
+Use the launcher menu to run first-time setup, start the app, and create the sign-off report. Then complete the manual checklist written into the sign-off report: live-test login with `admin` / `admin123` on first setup or the configured active Admin account after starter-admin retirement, change the starter password, account creation/deactivation, add reservation, overlap rejection, edit reservation, mark missed/completed/cancelled, activity logs, CSV export, and print controls.

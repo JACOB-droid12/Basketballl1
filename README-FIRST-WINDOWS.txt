@@ -7,6 +7,13 @@ This system is Windows-only for deployment in this project.
 It runs offline on the office computer and uses local MySQL or MariaDB.
 Residents do not reserve online.
 
+IF UNSURE, DOUBLE-CLICK THIS FIRST
+
+START-HERE.bat
+
+That file shows a simple menu for checking the computer, first-time setup,
+daily startup, sign-off reporting, and database-only support.
+
 BEFORE SETUP
 
 1. Install Node.js 20 or newer from an offline Windows installer.
@@ -15,6 +22,10 @@ BEFORE SETUP
 4. Make sure this folder includes node_modules.
 
 FIRST RUN
+
+Recommended: double-click START-HERE.bat and use the menu.
+
+Manual steps:
 
 1. Double-click check-office-readiness.bat.
 2. Fix any failed checks.
@@ -37,8 +48,9 @@ After first login, change the starter password from Account > Change Password.
 DAILY STARTUP
 
 1. Start MySQL if it is not already running.
-2. Double-click start-barangay-office.bat.
-3. Open http://localhost:3000/prototype.
+2. Double-click START-HERE.bat.
+3. Choose "Start the system for daily use".
+4. Open http://localhost:3000/prototype.
 
 If start-barangay-office.bat says Node.js, npm, node_modules, or .env is missing,
 fix that item first. If .env is missing, run setup-barangay-office.bat before

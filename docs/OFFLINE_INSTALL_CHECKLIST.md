@@ -39,6 +39,7 @@ dist\barangay-court-scheduler-offline
 4. Copy `dist\barangay-court-scheduler-offline` to a USB drive or local installer folder. It includes:
 
 - `node_modules/`
+- `START-HERE.bat`
 - `README-FIRST-WINDOWS.txt`
 - `TROUBLESHOOT-WINDOWS.txt`
 - `package.json`
@@ -73,19 +74,21 @@ On the barangay office computer:
 1. Install Node.js and MySQL from local/offline installers if needed.
 2. Make sure MySQL is running.
 3. Copy the prepared project folder to the computer.
-4. Open `README-FIRST-WINDOWS.txt`.
-5. Double-click `check-office-readiness.bat`.
+4. Double-click `START-HERE.bat`.
+5. Choose `Check this computer before setup`.
 6. Fix any failed checks. The checker confirms Node.js, npm, MySQL tools, `node_modules/`, SQL files, and setup/start scripts are present.
-7. Double-click `setup-barangay-office.bat`.
+7. Reopen `START-HERE.bat` if needed and choose `First-time setup on this computer`.
 8. Enter the local MySQL password when asked.
 9. Confirm the setup finishes without errors.
-10. Double-click `start-barangay-office.bat`.
+10. Choose `Start the system for daily use`.
 11. Open `http://localhost:3000/prototype`.
-12. For final deployment sign-off, double-click `run-office-signoff.bat` and keep the generated report under `reports\office-signoff`.
+12. For final deployment sign-off, choose `Create final office sign-off report` and keep the generated report under `reports\office-signoff`.
 
 The start script checks Node.js, npm, `node_modules/`, `.env`, and the configured local MySQL/MariaDB database before opening the browser. If it reports a missing `.env`, run `setup-barangay-office.bat` first. If it reports a local database check failure, start MySQL/MariaDB or rerun setup.
 
 If a Windows setup or startup error is unclear, open `TROUBLESHOOT-WINDOWS.txt` in the prepared folder.
+
+The older individual batch files remain in the folder for technical staff, but barangay personnel can use `START-HERE.bat` for normal setup and daily startup.
 
 If only the database needs to be created or checked, double-click `setup-database-only.bat` instead. It does not start the app UI.
 

@@ -7,6 +7,7 @@ const root = process.cwd();
 const requiredFiles = [
   "package.json",
   ".env.example",
+  "START-HERE.bat",
   "README.md",
   "README-FIRST-WINDOWS.txt",
   "TROUBLESHOOT-WINDOWS.txt",

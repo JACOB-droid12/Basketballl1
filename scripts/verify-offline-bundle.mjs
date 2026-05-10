@@ -10,6 +10,7 @@ const REQUIRED_BUNDLE_ITEMS = [
   { path: "package.json", type: "file" },
   { path: "package-lock.json", type: "file" },
   { path: ".env.example", type: "file" },
+  { path: "START-HERE.bat", type: "file" },
   { path: "README.md", type: "file" },
   { path: "README-FIRST-WINDOWS.txt", type: "file" },
   { path: "TROUBLESHOOT-WINDOWS.txt", type: "file" },

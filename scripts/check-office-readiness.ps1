@@ -114,6 +114,7 @@ Test-RequiredCommand "mysqldump" "Install local MySQL or MariaDB and add its bin
 Test-RequiredPath "node_modules" "directory" "required for fully offline setup"
 Test-RequiredPath "package.json" "file" "required project manifest"
 Test-RequiredPath ".env.example" "file" "template used by setup-barangay-office.bat"
+Test-RequiredPath "START-HERE.bat" "file" "main staff-friendly launcher"
 Test-RequiredPath "database\schema.sql" "file" "creates the local MySQL database and tables"
 Test-RequiredPath "database\seed.sql" "file" "adds starter admin, statuses, settings, and time slots"
 Test-RequiredPath "database\diagnostics.sql" "file" "checks the installed local database"

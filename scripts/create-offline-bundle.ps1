@@ -45,6 +45,7 @@ $ItemsToCopy = @(
   ".env.example",
   "package.json",
   "package-lock.json",
+  "START-HERE.bat",
   "README.md",
   "README-FIRST-WINDOWS.txt",
   "TROUBLESHOOT-WINDOWS.txt",
@@ -77,4 +78,4 @@ Write-Host ""
 Write-Host "Offline bundle created:"
 Write-Host $BundleRoot
 Write-Host ""
-Write-Host "Copy this folder to the barangay office computer, open README-FIRST-WINDOWS.txt, run check-office-readiness.bat, then run setup-barangay-office.bat. If an error appears, open TROUBLESHOOT-WINDOWS.txt."
+Write-Host "Copy this folder to the barangay office computer, then double-click START-HERE.bat. If an error appears, open TROUBLESHOOT-WINDOWS.txt."

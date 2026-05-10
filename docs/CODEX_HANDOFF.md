@@ -76,6 +76,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Added `check-office-readiness.bat` and `scripts/check-office-readiness.ps1` so staff can double-click a local readiness check before setup. It checks Node.js, npm, MySQL tools, `node_modules/`, SQL files, and setup/start scripts without downloading anything.
 - Added `README-FIRST-WINDOWS.txt` as the plain first file to open inside the offline bundle. It lists the Windows-only first-run flow, starter login, daily startup, database-only setup, and security notes.
 - Updated `README-FIRST-WINDOWS.txt` so the first-run guide tells staff that the sign-off report captures the actual MySQL/MariaDB version, browser, printer, readable print output, and barangay personnel sign-off.
+- Added `START-HERE.bat` as a staff-friendly root launcher for daily startup, first-time setup, readiness checks, office sign-off reports, database-only support, and quick instructions.
 - Added `TROUBLESHOOT-WINDOWS.txt` as a plain Windows error-recovery guide for common setup, startup, database, login, and sign-off failures.
 - Hardened `start-barangay-office.bat` so it checks Node.js, npm, `node_modules\`, and `.env` before opening the browser and tells staff to run setup when `.env` is missing.
 - Added `npm run check:database` through `scripts/check-runtime-database.mjs`, and wired `start-barangay-office.bat` to run it before opening the browser. It confirms the configured local MySQL/MariaDB database is reachable and has seeded statuses, time slots, and at least one active Admin account without writing data.
@@ -96,6 +97,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Exposed `app.locals.db` from `createApp()` so verification scripts can close the app's MySQL pool cleanly after live HTTP checks.
 - Documented the prerequisite check, live MySQL verification, UI smoke verification, MySQL backup, and MySQL restore commands in `README.md`, `database/README.md`, and `docs/DEPLOYMENT_GUIDE.md`.
 - Final local refresh on 2026-05-10 passed `npm test` with 126/126 tests, `npm run verify:sql`, `npm run verify:foundation`, `npm run verify:ui` for 15 screens, `npm run bundle:offline`, `npm run verify:bundle`, `npm run verify:mysql` against disposable local Oracle MySQL on `127.0.0.1:3391`, and `git diff --check`.
+- Staff-friendly launcher refresh on 2026-05-11 passed `npm test -- tests\offlineBundle.test.js tests\oneClickSetup.test.js` with 12/12 focused setup/bundle tests, `npm run verify:foundation`, `npm run bundle:offline`, `npm run verify:bundle`, full `npm test` with 127/127 tests, and `cmd /c "echo 7|START-HERE.bat"`; the offline bundle scripts/verifier now require `START-HERE.bat`.
 
 ## Files Created or Changed
 
@@ -103,6 +105,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - `package-lock.json`
 - `.env.example`
 - `.gitignore`
+- `START-HERE.bat`
 - `README.md`
 - `README-FIRST-WINDOWS.txt`
 - `TROUBLESHOOT-WINDOWS.txt`
@@ -225,6 +228,12 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 
 ## Tests Run
 
+- `npm test -- tests\offlineBundle.test.js tests\oneClickSetup.test.js` - passed with 12/12 focused tests after adding `START-HERE.bat` as the staff-friendly launcher and making the offline bundle require it.
+- `npm run verify:foundation` - passed after adding `START-HERE.bat` to the foundation verifier.
+- `npm run bundle:offline` - passed and refreshed `dist\barangay-court-scheduler-offline` with `START-HERE.bat`.
+- `npm run verify:bundle` - passed and confirmed the refreshed offline bundle includes `START-HERE.bat` while excluding `.env`, backups, and sign-off reports.
+- `npm test` - passed with 127/127 tests after adding the staff-friendly launcher.
+- `cmd /c "echo 7|START-HERE.bat"` - passed and confirmed the staff launcher opens its menu and exits cleanly.
 - `npm test -- tests\prototypeRoutes.test.js tests\prototypeApiRoutes.test.js tests\uiSmokeVerifier.test.js tests\offlineBundle.test.js tests\oneClickSetup.test.js` - passed, 21 focused tests for the copied prototype frontend routes, hidden backend bridge, prototype JSON APIs, UI smoke coverage, offline bundle requirements, and Windows start URL.
 - `npm test -- tests\prototypeRoutes.test.js tests\offlineBundle.test.js tests\uiSmokeVerifier.test.js` - passed, 13 focused tests after fixing bridge injection to use the final `</body>` and rewriting prototype CDN scripts to local vendor files.
 - `node --check src\features\prototype\prototypeRoutes.js`, `node --check src\features\prototype\prototypeApiRoutes.js`, `node --check scripts\verify-ui-smoke.mjs`, and `node --check public\js\prototype-backend.js` - passed after wiring the prototype frontend to the backend.
@@ -566,7 +575,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Current Windows-only local audit is blocked only by the live environment: this shell has no normal `mysql` / `mysqldump` on PATH and no default local MySQL/MariaDB service on `127.0.0.1:3306`.
 - Add/list/edit/schedule/status/login/account/activity-log code is implemented and covered by automated tests and disposable local MySQL verification; the remaining live-flow check is against the actual barangay office database installation.
 - Live browser/printer output still needs a final check on the barangay office computer because print margins depend on the installed browser and printer.
-- Branch creation previously failed due `.git/HEAD.lock` permission denial, so work remains on the initial `master` branch in this sandbox.
+- Work is currently on `main`; earlier branch creation issues are no longer an active blocker for this workspace.
 
 ## Blockers
 
@@ -575,8 +584,8 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 
 ## Recommended Next Step
 
-Use `dist\barangay-court-scheduler-offline` for the barangay office copy. On the office computer, install Node.js and local MySQL from offline installers if they are not already installed, start MySQL, open `README-FIRST-WINDOWS.txt`, double-click `check-office-readiness.bat`, fix any failed checks, double-click `setup-barangay-office.bat`, then double-click `run-office-signoff.bat`. Keep the report from `reports\office-signoff`, and complete the manual checklist for login using `admin` / `admin123`, changing the starter password, account creation, add/edit reservation, overlap rejection, schedule links, status updates, activity-log viewing, CSV export, print controls, and reservation details.
+Use `dist\barangay-court-scheduler-offline` for the barangay office copy. On the office computer, install Node.js and local MySQL from offline installers if they are not already installed, start MySQL, then double-click `START-HERE.bat`. Use its menu to check the computer, run first-time setup, start daily office use, and create the final office sign-off report. Keep the report from `reports\office-signoff`, and complete the manual checklist for login using `admin` / `admin123`, changing the starter password, account creation, add/edit reservation, overlap rejection, schedule links, status updates, activity-log viewing, CSV export, print controls, and reservation details.
 
 ## Suggested Next Prompt
 
-Continue from `docs/CODEX_HANDOFF.md`. If the actual Windows office MySQL/MariaDB environment is available, run `run-office-signoff.bat`, keep the generated report under `reports\office-signoff`, then finish the manual checklist. Otherwise, perform a completion audit against the current milestone and list only the remaining live-environment gaps.
+Continue from `docs/CODEX_HANDOFF.md`. If the actual Windows office MySQL/MariaDB environment is available, use `START-HERE.bat` to run setup/start/sign-off, keep the generated report under `reports\office-signoff`, then finish the manual checklist. Otherwise, perform a completion audit against the current milestone and list only the remaining live-environment gaps.

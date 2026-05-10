@@ -51,9 +51,17 @@ npm run verify:bundle
 
 Copy `dist\barangay-court-scheduler-offline` to the barangay office computer.
 
-The prepared folder includes `README-FIRST-WINDOWS.txt` for the shortest setup path and `TROUBLESHOOT-WINDOWS.txt` for common Windows setup/startup errors.
+The prepared folder includes `START-HERE.bat` as the staff-friendly launcher, `README-FIRST-WINDOWS.txt` for the shortest written setup path, and `TROUBLESHOOT-WINDOWS.txt` for common Windows setup/startup errors.
 
 ## One-Click Offline Setup
+
+For barangay staff, the simplest path is:
+
+```text
+START-HERE.bat
+```
+
+That menu can check the computer, run first-time setup, start daily office use, create the sign-off report, and open the quick instructions.
 
 After Node.js 20+ and MySQL 8+ are installed on the barangay office computer from local installers if needed, use:
 
