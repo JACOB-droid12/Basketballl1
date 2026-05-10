@@ -2,6 +2,8 @@
 
 This system is designed to run without internet access in the barangay office.
 
+Deployment is Windows-only for this project. Use the included `.bat` files and PowerShell scripts on the barangay office computer.
+
 ## What Offline Means
 
 - The reservation system opens at `http://localhost:3000/login`.

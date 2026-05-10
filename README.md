@@ -32,6 +32,8 @@ Milestone 5 usability, reporting, and deployment documentation is partly in prog
 
 The app does not use cloud services for core functionality.
 
+Deployment focus is Windows only for this project. Use the included `.bat` and PowerShell scripts for barangay-office setup and startup.
+
 ## Quick Start
 
 1. Install Node.js 20+ and MySQL 8+ on the barangay office computer.
@@ -118,6 +120,8 @@ npm test
 ## Pure Offline Barangay Setup
 
 For the barangay office, prepare a complete offline project folder before bringing it to the office computer. The folder must include `node_modules/`; the one-click setup does not download npm packages.
+
+This setup path is Windows-only. The supported office workflow is `check-office-readiness.bat` -> `setup-barangay-office.bat` -> `start-barangay-office.bat`.
 
 To create the prepared folder on a setup computer:
 

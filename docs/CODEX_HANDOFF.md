@@ -6,7 +6,7 @@ Build the Basketball Court Scheduling System for Barangay Sto. Niño, Parañaque
 
 ## Current Milestone
 
-Milestone 5 usability/reporting/documentation is now partly in progress. Milestone 1 foundation is implemented, Milestone 2 core reservation logic is implemented in code and tests, Milestone 3 schedule/dashboard/detail screens are implemented and prototype-aligned, and Milestone 4 login/account management is implemented in code and tests. Edit-reservation, activity-log viewing, reservation CSV export, print controls, offline setup scripts, SQL-only setup, and offline bundle creation are implemented in code and tests. Live SQL verification now passes against disposable local Oracle MySQL 9.7.0 and MariaDB 12.2.2 servers under ignored `tmp/`; final verification should still be repeated on the barangay office's target local MySQL/MariaDB installation.
+Milestone 5 usability/reporting/documentation is now partly in progress. Milestone 1 foundation is implemented, Milestone 2 core reservation logic is implemented in code and tests, Milestone 3 schedule/dashboard/detail screens are implemented and prototype-aligned, and Milestone 4 login/account management is implemented in code and tests. Edit-reservation, activity-log viewing, reservation CSV export, print controls, Windows-only offline setup scripts, SQL-only setup, and offline bundle creation are implemented in code and tests. Live SQL verification now passes against disposable local Oracle MySQL 9.7.0 and MariaDB 12.2.2 servers under ignored `tmp/`; final verification should still be repeated on the barangay office's target local MySQL/MariaDB installation.
 
 ## Completed Work
 
@@ -494,6 +494,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Browser-verified at a narrow viewport that the schedule toolbar no longer creates document-level horizontal overflow after the responsive CSS fix; the dashboard weekly table stays contained inside its intended horizontal scroll wrapper.
 - Started a disposable MariaDB 12.2.2 server from the official Windows ZIP under ignored `tmp\mariadb-portable\`, listening only on `127.0.0.1:3390`, and used it to live-verify schema/seed, triggers, app HTTP smoke, backup, restore, and SQL diagnostics.
 - Ran `scripts\check-office-readiness.ps1`; it passed Node.js/npm/local-file checks and failed only because `mysql` and `mysqldump` are not on PATH in this shell. That is the intended office-prerequisite signal before setup.
+- Confirmed the deployment focus is Windows only; do not add non-Windows setup wrappers unless the project scope changes.
 
 ## Known Risks
 
