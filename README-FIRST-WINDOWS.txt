@@ -36,6 +36,10 @@ DAILY STARTUP
 2. Double-click start-barangay-office.bat.
 3. Open http://localhost:3000/login.
 
+If start-barangay-office.bat says Node.js, npm, node_modules, or .env is missing,
+fix that item first. If .env is missing, run setup-barangay-office.bat before
+starting the system.
+
 DATABASE-ONLY SETUP
 
 If only the database needs to be created or checked, double-click:

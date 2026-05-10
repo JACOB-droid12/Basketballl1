@@ -68,6 +68,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Added pure-offline setup files: `setup-barangay-office.bat`, `start-barangay-office.bat`, and `scripts/setup-barangay-office.ps1`.
 - Added `check-office-readiness.bat` and `scripts/check-office-readiness.ps1` so staff can double-click a local readiness check before setup. It checks Node.js, npm, MySQL tools, `node_modules/`, SQL files, and setup/start scripts without downloading anything.
 - Added `README-FIRST-WINDOWS.txt` as the plain first file to open inside the offline bundle. It lists the Windows-only first-run flow, starter login, daily startup, database-only setup, and security notes.
+- Hardened `start-barangay-office.bat` so it checks Node.js, npm, `node_modules\`, and `.env` before opening the browser and tells staff to run setup when `.env` is missing.
 - Added `docs/OFFLINE_INSTALL_CHECKLIST.md` documenting how to prepare a complete offline project folder with `node_modules/` before bringing it to the barangay office.
 - Added `tests/oneClickSetup.test.js` to check the one-click setup applies schema/seed/diagnostics, runs verification, and does not call `npm install` or `npm ci`.
 - Added pure-offline bundle creation through `create-offline-bundle.bat`, `scripts/create-offline-bundle.ps1`, and `npm run bundle:offline`; the generated bundle includes `node_modules/` and excludes local `.env` secrets.
@@ -216,6 +217,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - `npm run bundle:offline` - passed after adding `check-office-readiness.bat`.
 - `npm run verify:bundle` - passed after rebuilding the offline bundle with `check-office-readiness.bat` and `scripts\check-office-readiness.ps1`.
 - `npm test -- tests\offlineBundle.test.js` - passed after adding `README-FIRST-WINDOWS.txt` as a required offline bundle item.
+- `npm test -- tests\oneClickSetup.test.js` - passed after hardening `start-barangay-office.bat` with Windows preflight checks.
 - `npm test` - passed, 51 tests before the 2026-05-08 weekly dashboard update.
 - `npm test` - passed, 51 tests on 2026-05-08 foundation/status recheck.
 - `npm test` - passed, 52 tests after the 2026-05-08 weekly dashboard update.

@@ -80,6 +80,8 @@ On the barangay office computer:
 10. Double-click `start-barangay-office.bat`.
 11. Open `http://localhost:3000/login`.
 
+The start script checks Node.js, npm, `node_modules/`, and `.env` before opening the browser. If it reports a missing `.env`, run `setup-barangay-office.bat` first.
+
 If only the database needs to be created or checked, double-click `setup-database-only.bat` instead. It does not start the app UI.
 
 Starter login after setup:
