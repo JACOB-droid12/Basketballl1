@@ -5,9 +5,7 @@ INSERT INTO users
 VALUES
   (1, 'System Administrator', NULL, 'admin', '$2a$12$FBkcAG7B68XP8st6u/98L.FbdrEHZLZN3VEeDJMl.LXs6iJjw6gg.', 'ADMIN', 'ACTIVE')
 ON DUPLICATE KEY UPDATE
-  full_name = VALUES(full_name),
-  role = VALUES(role),
-  account_status = VALUES(account_status);
+  username = VALUES(username);
 
 INSERT INTO reservation_statuses
   (status_id, status_code, status_name, is_blocking, display_order)

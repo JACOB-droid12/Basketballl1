@@ -102,10 +102,24 @@ test("prepares schema scripts for the configured database name", () => {
   });
 });
 
-test("asserts seeded admin, statuses, and time slots", async () => {
+test("asserts configured active admin, starter admin hash, statuses, and time slots", async () => {
   const connection = {
-    execute: async (sql) => {
-      if (sql.includes("FROM users")) {
+    execute: async (sql, params = {}) => {
+      if (sql.includes("COUNT(*) AS count_value") && sql.includes("FROM users")) {
+        return [[{ count_value: 1 }]];
+      }
+
+      if (sql.includes("FROM users") && sql.includes("username = 'admin'")) {
+        return [[{
+          username: "admin",
+          password_hash: "$2a$12$hash",
+          role: "ADMIN",
+          account_status: "ACTIVE"
+        }]];
+      }
+
+      if (sql.includes("FROM users") && sql.includes("username = :loginUsername")) {
+        assert.deepEqual(params, { loginUsername: "admin" });
         return [[{
           username: "admin",
           password_hash: "$2a$12$hash",
@@ -127,14 +141,30 @@ test("asserts seeded admin, statuses, and time slots", async () => {
   };
 
   await assertSeedData(connection, {
-    comparePassword: async (plain, hash) => plain === "admin123" && hash === "$2a$12$hash"
+    comparePassword: async (plain, hash) => plain === "admin123" && hash === "$2a$12$hash",
+    loginUsername: "admin",
+    loginPassword: "admin123"
   });
 });
 
-test("assertSeedData accepts a configured starter password", async () => {
+test("assertSeedData accepts a configured starter admin password", async () => {
   const connection = {
-    execute: async (sql) => {
-      if (sql.includes("FROM users")) {
+    execute: async (sql, params = {}) => {
+      if (sql.includes("COUNT(*) AS count_value") && sql.includes("FROM users")) {
+        return [[{ count_value: 1 }]];
+      }
+
+      if (sql.includes("FROM users") && sql.includes("username = 'admin'")) {
+        return [[{
+          username: "admin",
+          password_hash: "$2a$12$hash",
+          role: "ADMIN",
+          account_status: "ACTIVE"
+        }]];
+      }
+
+      if (sql.includes("FROM users") && sql.includes("username = :loginUsername")) {
+        assert.deepEqual(params, { loginUsername: "admin" });
         return [[{
           username: "admin",
           password_hash: "$2a$12$hash",
@@ -156,9 +186,85 @@ test("assertSeedData accepts a configured starter password", async () => {
   };
 
   await assertSeedData(connection, {
-    adminPassword: "changed-password",
+    loginUsername: "admin",
+    loginPassword: "changed-password",
     comparePassword: async (plain, hash) => plain === "changed-password" && hash === "$2a$12$hash"
   });
+});
+
+test("assertSeedData allows a retired starter admin when another admin is active", async () => {
+  const connection = {
+    execute: async (sql, params = {}) => {
+      if (sql.includes("COUNT(*) AS count_value") && sql.includes("FROM users")) {
+        return [[{ count_value: 1 }]];
+      }
+
+      if (sql.includes("FROM users") && sql.includes("username = :loginUsername")) {
+        assert.deepEqual(params, { loginUsername: "office_admin" });
+        return [[{
+          username: "office_admin",
+          password_hash: "$2a$12$officehash",
+          role: "ADMIN",
+          account_status: "ACTIVE"
+        }]];
+      }
+
+      if (sql.includes("FROM users") && sql.includes("username = 'admin'")) {
+        return [[{
+          username: "admin",
+          password_hash: "$2a$12$hash",
+          role: "ADMIN",
+          account_status: "INACTIVE"
+        }]];
+      }
+
+      if (sql.includes("FROM reservation_statuses")) {
+        return [[{ count_value: 5 }]];
+      }
+
+      if (sql.includes("FROM time_slots")) {
+        return [[{ count_value: 14 }]];
+      }
+
+      throw new Error(`Unexpected SQL: ${sql}`);
+    }
+  };
+
+  await assertSeedData(connection, {
+    loginUsername: "office_admin",
+    loginPassword: "office-password",
+    comparePassword: async (plain, hash) => plain === "office-password" && hash === "$2a$12$officehash"
+  });
+});
+
+test("assertSeedData rejects a configured verification login that is not active admin", async () => {
+  const connection = {
+    execute: async (sql) => {
+      if (sql.includes("COUNT(*) AS count_value") && sql.includes("FROM users")) {
+        return [[{ count_value: 1 }]];
+      }
+
+      if (sql.includes("FROM users") && sql.includes("username = :loginUsername")) {
+        return [[{
+          username: "staff_user",
+          password_hash: "$2a$12$hash",
+          role: "STAFF",
+          account_status: "ACTIVE"
+        }]];
+      }
+
+      throw new Error(`Unexpected SQL: ${sql}`);
+    }
+  };
+
+  await assert.rejects(
+    assertSeedData(connection, {
+      loginUsername: "staff_user",
+      loginPassword: "staff-password",
+      comparePassword: async () => true
+    }),
+    /configured verification login must be an ADMIN account/
+  );
 });
 
 test("repository round trip creates, reads, completes, checks logs, and cleans up", async () => {
@@ -219,9 +325,10 @@ test("live app HTTP smoke logs in and checks authenticated office pages", async 
   assert.ok(results.every((result) => result.status === 200));
 });
 
-test("live app HTTP smoke can use a configured login password", async () => {
+test("live app HTTP smoke can use configured login credentials", async () => {
   const results = await verifyLiveAppHttpSmoke({
-    createApp: () => buildFakeLiveApp({ password: "changed-password" }),
+    createApp: () => buildFakeLiveApp({ username: "office_admin", password: "changed-password" }),
+    loginUsername: "office_admin",
     loginPassword: "changed-password"
   });
 
@@ -241,11 +348,12 @@ test("live app HTTP smoke reports login failure clearly", async () => {
 
 function buildFakeLiveApp(options = {}) {
   const app = express();
+  const expectedUsername = options.username || "admin";
   const expectedPassword = options.password || "admin123";
 
   app.use(express.urlencoded({ extended: false }));
   app.post("/login", (request, response) => {
-    if (request.body.username !== "admin" || request.body.password !== expectedPassword) {
+    if (request.body.username !== expectedUsername || request.body.password !== expectedPassword) {
       response.status(401).send("Invalid");
       return;
     }

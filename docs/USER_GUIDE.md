@@ -7,7 +7,7 @@ This guide is for authorized barangay personnel who encode and monitor basketbal
 ## Daily Use
 
 1. Start the local app on the barangay office computer.
-2. Open `http://localhost:3000/login` in the browser.
+2. Open `http://localhost:3000/prototype` in the browser.
 3. Log in with an Admin or Staff account.
 4. Use Home for today's schedule summary.
 5. Use Schedule to check available and reserved court slots.
@@ -176,6 +176,7 @@ If login fails:
 If you are using the starter Admin account for the first time, log in with `admin` / `admin123`, then change the password before regular office use.
 
 If technical staff rerun the live MySQL verification after the starter password changes, they should set `VERIFY_LOGIN_PASSWORD` in `.env` to the current local password first.
+If the starter `admin` account has been deactivated after creating a real Admin account, they should set both `VERIFY_LOGIN_USERNAME` and `VERIFY_LOGIN_PASSWORD` in `.env` to that active Admin account before rerunning live verification.
 
 If a reservation cannot be saved:
 

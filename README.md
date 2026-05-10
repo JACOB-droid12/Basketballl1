@@ -109,7 +109,7 @@ If the starter `admin` password has already been changed, set `VERIFY_LOGIN_PASS
 npm run verify:ui
 ```
 
-This command renders the main office screens with safe sample data and checks the login, dashboard, schedule, reservation, account, and activity-log pages.
+This command renders the prototype frontend plus the main office screens with safe sample data and checks the prototype backend bridge, login, dashboard, schedule, reservation, account, and activity-log pages.
 
 10. Run the automated tests:
 
@@ -141,7 +141,7 @@ On the barangay office computer, after Node.js 20+ and MySQL 8+ are installed fr
 4. Double-click `setup-barangay-office.bat`.
 5. Enter the local MySQL password when asked.
 6. Double-click `start-barangay-office.bat`.
-7. Open `http://localhost:3000/login`.
+7. Open `http://localhost:3000/prototype`.
 8. For deployment sign-off, double-click `run-office-signoff.bat` and keep the generated report under `reports\office-signoff`.
 
 If a Windows setup or startup message is unclear, open `TROUBLESHOOT-WINDOWS.txt` in the prepared offline folder.
@@ -168,6 +168,7 @@ npm start
 
 Useful local URLs:
 
+- `http://localhost:3000/prototype` - prototype frontend used by barangay staff
 - `http://localhost:3000/login`
 - `http://localhost:3000/account`
 - `http://localhost:3000/schedule`

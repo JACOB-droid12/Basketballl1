@@ -21,7 +21,7 @@ FIRST RUN
 3. Double-click setup-barangay-office.bat.
 4. Enter the local MySQL password when asked.
 5. Double-click start-barangay-office.bat.
-6. Open http://localhost:3000/login in the office browser.
+6. Open http://localhost:3000/prototype in the office browser.
 7. For deployment sign-off, double-click run-office-signoff.bat and keep the
    generated report from reports\office-signoff.
 
@@ -36,7 +36,7 @@ DAILY STARTUP
 
 1. Start MySQL if it is not already running.
 2. Double-click start-barangay-office.bat.
-3. Open http://localhost:3000/login.
+3. Open http://localhost:3000/prototype.
 
 If start-barangay-office.bat says Node.js, npm, node_modules, or .env is missing,
 fix that item first. If .env is missing, run setup-barangay-office.bat before

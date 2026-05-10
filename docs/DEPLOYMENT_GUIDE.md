@@ -112,6 +112,7 @@ VERIFY_MYSQL_DATE=2099-05-08
 Use a strong `APP_SESSION_SECRET` for the barangay office installation.
 Set `DB_PASSWORD` to the local MySQL password before running the live verification commands.
 Leave `VERIFY_LOGIN_PASSWORD` blank during first setup so the verifier uses the seeded temporary password `admin123`. If the starter password has already been changed and you need to rerun `npm run verify:mysql`, set `VERIFY_LOGIN_PASSWORD` to the current local password first. Keep `.env` private.
+If the starter `admin` account has been deactivated after creating a real Admin account, set `VERIFY_LOGIN_USERNAME` and `VERIFY_LOGIN_PASSWORD` to the active Admin account before running live verification.
 
 ## Create Local MySQL Database
 
@@ -173,8 +174,8 @@ Expected result:
 - Foundation verification passes.
 - SQL static verification confirms required schema, seed, and diagnostics safeguards before live MySQL setup.
 - Database diagnostics prints PASS rows for the installed MySQL database setup checks.
-- MySQL verification applies the schema and seed, checks the starter admin, creates/completes a temporary reservation, verifies activity logging, confirms overlap-trigger rejection, and logs in through the app over HTTP to check authenticated office pages.
-- UI smoke verification renders the main office screens with sample data and confirms each page contains the expected workflow text.
+- MySQL verification applies the schema and seed, checks reference data, confirms at least one active Admin account, verifies the starter account still uses a bcrypt password hash, creates/completes a temporary reservation, verifies activity logging, confirms overlap-trigger rejection, and logs in through the app over HTTP to check authenticated office pages.
+- UI smoke verification renders the prototype frontend and the main office screens with sample data and confirms each page contains the expected workflow text.
 - Automated tests pass.
 
 ## Start the App
@@ -188,7 +189,7 @@ npm start
 Open:
 
 ```text
-http://localhost:3000/login
+http://localhost:3000/prototype
 ```
 
 Seeded starter account:
@@ -198,13 +199,15 @@ Seeded starter account:
 
 Change the seeded admin password from Account > Change Password before regular office use, or create a new Admin account and deactivate the seeded account.
 
+Rerunning setup or live verification after deactivating the seeded account will not reactivate it. Keep at least one real Admin account active and set `VERIFY_LOGIN_USERNAME` / `VERIFY_LOGIN_PASSWORD` to that account for sign-off checks.
+
 ## Office Startup Procedure
 
 1. Turn on the barangay office computer.
 2. Start MySQL if it does not start automatically.
 3. Open PowerShell in the project folder.
 4. Run `npm start`.
-5. Open `http://localhost:3000/login`.
+5. Open `http://localhost:3000/prototype`.
 6. Log in as Admin or Staff.
 
 ## Optional Windows Shortcut

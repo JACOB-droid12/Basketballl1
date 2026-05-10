@@ -3,6 +3,8 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { createActivityLogRoutes } from "../src/features/activityLogs/activityLogRoutes.js";
+import { createPrototypeApiRoutes } from "../src/features/prototype/prototypeApiRoutes.js";
+import { createPrototypeRoutes } from "../src/features/prototype/prototypeRoutes.js";
 import { createReservationRoutes } from "../src/features/reservations/reservationRoutes.js";
 import { createDashboardRoutes } from "../src/features/schedule/dashboardRoutes.js";
 import { createScheduleRoutes } from "../src/features/schedule/scheduleRoutes.js";
@@ -13,6 +15,10 @@ const TODAY = "2026-05-08";
 
 export function buildSmokePages() {
   return [
+    { path: "/", expectedText: "Barangay Sto. Niño - Basketball Court Scheduling" },
+    { path: "/prototype", expectedText: "/js/prototype-backend.js" },
+    { path: "/api/prototype/session", expectedText: "\"authenticated\":true" },
+    { path: "/api/prototype/reservations", expectedText: "Sto. Nino Youth Team" },
     { path: "/login", expectedText: "Login your account" },
     { path: "/dashboard", expectedText: "Basketball Court Schedule" },
     { path: "/schedule", expectedText: "Print Schedule" },
@@ -48,6 +54,21 @@ export function buildOfficeSmokeApp() {
     next();
   });
 
+  app.use(createPrototypeRoutes());
+  app.use(createPrototypeApiRoutes({
+    db: {},
+    todayProvider: () => TODAY,
+    repositories: {
+      createReservation: repositories.createReservation,
+      createUser: repositories.createUser,
+      findUserByUsername: repositories.findUserByUsername,
+      getReservationById: repositories.getReservationById,
+      listReservations: repositories.listReservations,
+      listUsers: repositories.listUsers,
+      updateReservation: repositories.updateReservation,
+      updateReservationStatus: repositories.updateReservationStatus
+    }
+  }));
   app.use(createAuthRoutes({
     db: {},
     repositories: {

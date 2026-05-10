@@ -42,8 +42,9 @@ function Invoke-SignoffCommand {
 function Write-ManualChecklist {
   Write-ReportLine ""
   Write-ReportLine "== Manual verification checklist =="
-  Write-ReportLine "[ ] Open http://localhost:3000/login from the barangay office browser."
-  Write-ReportLine "[ ] Log in with the starter admin account, then change the starter password."
+Write-ReportLine "[ ] Open http://localhost:3000/prototype from the barangay office browser."
+  Write-ReportLine "[ ] Log in with the starter admin account, then change the starter password, or log in with the active Admin account configured in .env."
+  Write-ReportLine "[ ] If the seeded admin account was retired, confirm the sign-off checks used VERIFY_LOGIN_USERNAME and VERIFY_LOGIN_PASSWORD for the active Admin account."
   Write-ReportLine "[ ] Create a staff account, then confirm duplicate usernames are rejected."
   Write-ReportLine "[ ] Add a reservation with representative name, contact number, address, purpose, date, and time."
   Write-ReportLine "[ ] Try adding an overlapping reservation and confirm the system blocks it."

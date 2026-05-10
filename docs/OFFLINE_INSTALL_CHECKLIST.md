@@ -6,7 +6,7 @@ Deployment is Windows-only for this project. Use the included `.bat` files and P
 
 ## What Offline Means
 
-- The reservation system opens at `http://localhost:3000/login`.
+- The reservation system opens at `http://localhost:3000/prototype`.
 - The database is local MySQL on the same office computer or barangay-controlled local network.
 - Residents do not reserve online.
 - No cloud database, online booking site, email service, SMS service, or payment service is required.
@@ -80,7 +80,7 @@ On the barangay office computer:
 8. Enter the local MySQL password when asked.
 9. Confirm the setup finishes without errors.
 10. Double-click `start-barangay-office.bat`.
-11. Open `http://localhost:3000/login`.
+11. Open `http://localhost:3000/prototype`.
 12. For final deployment sign-off, double-click `run-office-signoff.bat` and keep the generated report under `reports\office-signoff`.
 
 The start script checks Node.js, npm, `node_modules/`, `.env`, and the configured local MySQL/MariaDB database before opening the browser. If it reports a missing `.env`, run `setup-barangay-office.bat` first. If it reports a local database check failure, start MySQL/MariaDB or rerun setup.

@@ -13,6 +13,10 @@ test("builds the expected office workflow smoke page list", () => {
   assert.deepEqual(
     pages.map((page) => page.path),
     [
+      "/",
+      "/prototype",
+      "/api/prototype/session",
+      "/api/prototype/reservations",
       "/login",
       "/dashboard",
       "/schedule",
@@ -36,7 +40,7 @@ test("fetches all smoke pages and verifies their expected text", async () => {
   try {
     const results = await fetchSmokePages(`http://127.0.0.1:${server.address().port}`, buildSmokePages());
 
-    assert.equal(results.length, 11);
+    assert.equal(results.length, 15);
     assert.ok(results.every((result) => result.status === 200));
     assert.deepEqual(results.map((result) => result.path), buildSmokePages().map((page) => page.path));
   } finally {

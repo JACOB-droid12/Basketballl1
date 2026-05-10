@@ -25,7 +25,7 @@ test("builds runtime database config from local environment values", () => {
   });
 });
 
-test("runtime database readiness checks required seeded tables without writing data", async () => {
+test("runtime database readiness checks required seeded tables and an active admin without writing data", async () => {
   const calls = [];
   const connection = {
     execute: async (sql) => {
@@ -43,8 +43,21 @@ test("runtime database readiness checks required seeded tables without writing d
   assert.ok(calls.some((sql) => sql.includes("SELECT 1 AS ok")));
   assert.ok(calls.some((sql) => sql.includes("FROM reservation_statuses")));
   assert.ok(calls.some((sql) => sql.includes("FROM time_slots")));
-  assert.ok(calls.some((sql) => sql.includes("FROM users")));
+  assert.ok(calls.some((sql) => sql.includes("FROM users") && !sql.includes("username = 'admin'")));
   assert.equal(calls.some((sql) => /\bINSERT\b|\bUPDATE\b|\bDELETE\b/i.test(sql)), false);
+});
+
+test("runtime database readiness accepts a retired starter admin when another admin is active", async () => {
+  const connection = {
+    execute: async (sql) => {
+      if (sql.includes("reservation_statuses")) return [[{ count_value: 5 }]];
+      if (sql.includes("time_slots")) return [[{ count_value: 14 }]];
+      if (sql.includes("FROM users")) return [[{ count_value: 1 }]];
+      return [[{ ok: 1 }]];
+    }
+  };
+
+  await assertRuntimeDatabaseReady(connection);
 });
 
 test("runtime database readiness rejects missing seed data", async () => {

@@ -30,6 +30,8 @@ const requiredFiles = [
   "src/app.js",
   "src/server.js",
   "src/config/database.js",
+  "src/features/prototype/prototypeRoutes.js",
+  "src/features/prototype/prototypeApiRoutes.js",
   "scripts/create-offline-bundle.ps1",
   "scripts/check-office-readiness.ps1",
   "scripts/check-runtime-database.mjs",
@@ -38,7 +40,11 @@ const requiredFiles = [
   "scripts/setup-barangay-office.ps1",
   "views/login.ejs",
   "views/account/password.ejs",
-  "public/css/styles.css"
+  "public/css/styles.css",
+  "public/js/prototype-backend.js",
+  "public/prototype/sto-nino-court-reservation-system-prototype.html",
+  "public/vendor/html2canvas.min.js",
+  "public/vendor/jspdf.umd.min.js"
 ];
 
 const schemaChecks = [

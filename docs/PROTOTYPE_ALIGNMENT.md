@@ -6,7 +6,7 @@ The UI baseline is the local prototype file:
 
 `C:\Users\Emmy Lou\Downloads\Sto. Nino Court Reservation System Prototype final.html`
 
-This prototype is a single-file browser mockup. The production system keeps the same office-controlled workflow but implements it as an offline Express/EJS app backed by local MySQL.
+This prototype is a single-file browser mockup. The production system now serves this file as the visible frontend at `/`, `/prototype`, and `/app`, with a hidden backend adapter injected by Express. Reservation and account data still go through the offline Node.js backend and local MySQL database.
 
 ## Prototype Elements To Preserve
 
@@ -29,5 +29,7 @@ This prototype is a single-file browser mockup. The production system keeps the 
 
 - Residents still cannot book remotely; barangay personnel encode requests in person.
 - The production app keeps office functions required beyond the prototype, including reservation records, activity logs, local exports, print controls, backup/restore, and local MySQL verification.
+- The copied prototype file is kept intact as much as possible; backend behavior is attached through `public/js/prototype-backend.js` instead of changing the visible HTML layout.
+- Prototype PDF helper libraries are served from local `public/vendor/` files instead of CDN URLs so the page can load while offline.
 - The final target remains fully offline on a Windows barangay office computer with local Node.js and local MySQL.
 - No cloud database, email/SMS, online payment, OCR, or resident self-service is part of this version.

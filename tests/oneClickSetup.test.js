@@ -69,7 +69,7 @@ test("one-click PowerShell setup applies schema, seed, diagnostics, and live ver
   assert.doesNotMatch(script, /npm ci/);
 });
 
-test("one-click start batch opens the local login URL and starts npm", () => {
+test("one-click start batch opens the local prototype URL and starts npm", () => {
   const script = readFileSync("start-barangay-office.bat", "utf8");
 
   assert.match(script, /where node >nul 2>nul/i);
@@ -79,7 +79,7 @@ test("one-click start batch opens the local login URL and starts npm", () => {
   assert.match(script, /Local database check failed/i);
   assert.match(script, /setup-barangay-office\.bat/i);
   assert.match(script, /exit \/b 1/i);
-  assert.match(script, /http:\/\/localhost:3000\/login/);
+  assert.match(script, /http:\/\/localhost:3000\/prototype/);
   assert.match(script, /npm start/);
 });
 

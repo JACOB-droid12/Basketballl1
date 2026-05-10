@@ -1,0 +1,270 @@
+import assert from "node:assert/strict";
+import bcrypt from "bcryptjs";
+import express from "express";
+import test from "node:test";
+
+import { createPrototypeApiRoutes } from "../src/features/prototype/prototypeApiRoutes.js";
+import { ReservationConflictError } from "../src/features/reservations/reservationRepository.js";
+import { DuplicateUsernameError } from "../src/features/users/userRepository.js";
+
+const TODAY = "2026-05-10";
+
+test("prototype login verifies hashed passwords and stores a prototype-compatible session", async () => {
+  const session = {};
+  const passwordHash = await bcrypt.hash("secret123", 4);
+  const app = buildPrototypeApiTestApp({
+    session,
+    repositories: {
+      findUserByUsername: async (_db, username) => {
+        assert.equal(username, "admin");
+        return {
+          userId: 7,
+          fullName: "System Administrator",
+          username: "admin",
+          passwordHash,
+          role: "ADMIN"
+        };
+      }
+    }
+  });
+
+  const server = app.listen(0);
+
+  try {
+    const response = await postJson(server, "/api/prototype/login", {
+      username: "ADMIN",
+      password: "secret123"
+    });
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(response.body.user, {
+      userId: 7,
+      fullname: "System Administrator",
+      username: "admin",
+      role: "Admin"
+    });
+    assert.equal(session.user.userId, 7);
+    assert.equal(session.user.role, "ADMIN");
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("prototype reservation API validates input and uses hidden office defaults", async () => {
+  const session = {
+    user: {
+      userId: 3,
+      fullName: "Court Staff",
+      username: "staff",
+      role: "STAFF"
+    }
+  };
+  let createdReservation = null;
+  let createdOptions = null;
+  const app = buildPrototypeApiTestApp({
+    session,
+    repositories: {
+      createReservation: async (_db, reservation, options) => {
+        createdReservation = reservation;
+        createdOptions = options;
+        return 44;
+      },
+      getReservationById: async () => ({
+        reservationId: 44,
+        reservationDate: TODAY,
+        startTime: "07:00",
+        endTime: "08:00",
+        representativeName: "Sto. Nino Youth",
+        contactNo: "09171234567",
+        address: "Barangay Sto. Niño, Parañaque City",
+        purpose: "Basketball court reservation",
+        remarks: "",
+        statusCode: "RESERVED",
+        statusName: "Reserved",
+        createdByName: "Court Staff"
+      })
+    }
+  });
+
+  const server = app.listen(0);
+
+  try {
+    const response = await postJson(server, "/api/prototype/reservations", {
+      reservationDate: TODAY,
+      startTime: "07:00",
+      endTime: "08:00",
+      representativeName: "Sto. Nino Youth",
+      contactNo: "09171234567"
+    });
+
+    assert.equal(response.status, 201);
+    assert.equal(createdOptions.createdByUserId, 3);
+    assert.equal(createdReservation.address, "Barangay Sto. Niño, Parañaque City");
+    assert.equal(createdReservation.purpose, "Basketball court reservation");
+    assert.equal(createdReservation.statusCode, "RESERVED");
+    assert.equal(response.body.reservation.reservationId, 44);
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("prototype reservation API returns conflict when backend overlap prevention rejects a slot", async () => {
+  const app = buildPrototypeApiTestApp({
+    session: signedInStaffSession(),
+    repositories: {
+      createReservation: async () => {
+        throw new ReservationConflictError("Reservation overlaps an existing active reservation.");
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await postJson(server, "/api/prototype/reservations", {
+      reservationDate: TODAY,
+      startTime: "07:00",
+      endTime: "08:00",
+      representativeName: "Sto. Nino Youth",
+      contactNo: "09171234567"
+    });
+
+    assert.equal(response.status, 409);
+    assert.match(response.body.error, /overlaps/);
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("prototype account API is admin-only and maps duplicate username errors", async () => {
+  const staffApp = buildPrototypeApiTestApp({ session: signedInStaffSession() });
+  const staffServer = staffApp.listen(0);
+
+  try {
+    const staffResponse = await postJson(staffServer, "/api/prototype/accounts", {
+      fullName: "New Staff",
+      username: "newstaff",
+      password: "staff123",
+      role: "STAFF"
+    });
+
+    assert.equal(staffResponse.status, 403);
+  } finally {
+    await closeServer(staffServer);
+  }
+
+  let receivedUser = null;
+  const adminApp = buildPrototypeApiTestApp({
+    session: signedInAdminSession(),
+    repositories: {
+      createUser: async (_db, user) => {
+        receivedUser = user;
+        return {
+          userId: 9,
+          fullName: user.fullName,
+          username: user.username,
+          role: user.role
+        };
+      }
+    }
+  });
+  const adminServer = adminApp.listen(0);
+
+  try {
+    const response = await postJson(adminServer, "/api/prototype/accounts", {
+      fullName: "New Staff",
+      username: "newstaff",
+      password: "staff123",
+      role: "staff"
+    });
+
+    assert.equal(response.status, 201);
+    assert.equal(receivedUser.role, "STAFF");
+    assert.equal(response.body.account.role, "Staff");
+  } finally {
+    await closeServer(adminServer);
+  }
+
+  const duplicateApp = buildPrototypeApiTestApp({
+    session: signedInAdminSession(),
+    repositories: {
+      createUser: async () => {
+        throw new DuplicateUsernameError();
+      }
+    }
+  });
+  const duplicateServer = duplicateApp.listen(0);
+
+  try {
+    const response = await postJson(duplicateServer, "/api/prototype/accounts", {
+      fullName: "Existing Staff",
+      username: "staff",
+      password: "staff123",
+      role: "STAFF"
+    });
+
+    assert.equal(response.status, 409);
+    assert.deepEqual(response.body.errors, { username: "Username already exists." });
+  } finally {
+    await closeServer(duplicateServer);
+  }
+});
+
+function buildPrototypeApiTestApp({ session = {}, repositories = {} } = {}) {
+  const app = express();
+  app.use(express.json());
+  app.use((request, _response, next) => {
+    request.session = session;
+    next();
+  });
+  app.use(createPrototypeApiRoutes({
+    db: {},
+    repositories: {
+      findUserByUsername: async () => null,
+      listReservations: async () => [],
+      listUsers: async () => [],
+      updateReservationStatus: async () => {},
+      ...repositories
+    },
+    todayProvider: () => TODAY
+  }));
+  return app;
+}
+
+function signedInStaffSession() {
+  return {
+    user: {
+      userId: 4,
+      fullName: "Court Staff",
+      username: "staff",
+      role: "STAFF"
+    }
+  };
+}
+
+function signedInAdminSession() {
+  return {
+    user: {
+      userId: 1,
+      fullName: "System Administrator",
+      username: "admin",
+      role: "ADMIN"
+    }
+  };
+}
+
+async function postJson(server, pathName, payload) {
+  const response = await fetch(`http://127.0.0.1:${server.address().port}${pathName}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  return {
+    status: response.status,
+    body: await response.json()
+  };
+}
+
+async function closeServer(server) {
+  await new Promise((resolve) => server.close(resolve));
+}

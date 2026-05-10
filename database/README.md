@@ -70,6 +70,8 @@ Seed data includes:
 - Default hourly time slots from 7:00 AM to 9:00 PM
 - Court settings for Barangay Sto. Niño, Parañaque City
 
+If `seed.sql` is rerun after the starter `admin` account has been changed or deactivated, it does not reset the local password or reactivate the account. This keeps office account-retirement decisions intact after initial setup.
+
 ## Run Database Diagnostics
 
 After applying the schema and seed files on a real MySQL installation, run:
@@ -102,9 +104,9 @@ If `.env` already exists, `npm run setup:env` will refuse to overwrite it. `npm 
 npm run verify:mysql
 ```
 
-The verifier applies `schema.sql` and `seed.sql`, checks the starter admin account and reference data, creates and completes a temporary reservation through the app repository, confirms an activity-log entry was written, confirms the MySQL trigger rejects an overlapping direct insert, then logs in through the app over HTTP and checks the main authenticated office pages. Temporary verification rows are removed after the check.
+The verifier applies `schema.sql` and `seed.sql`, checks reference data, confirms at least one Admin account is active, checks that the starter admin password is still stored as a bcrypt hash, creates and completes a temporary reservation through the app repository, confirms an activity-log entry was written, confirms the MySQL trigger rejects an overlapping direct insert, then logs in through the app over HTTP and checks the main authenticated office pages. Temporary verification rows are removed after the check.
 
-If the starter `admin` password has already been changed, set `VERIFY_LOGIN_PASSWORD` in `.env` before rerunning `npm run verify:mysql`. Leave it blank during first setup to use `admin123`.
+If the starter `admin` password has already been changed, set `VERIFY_LOGIN_PASSWORD` in `.env` before rerunning `npm run verify:mysql`. If the starter account has been deactivated after creating a real Admin account, set both `VERIFY_LOGIN_USERNAME` and `VERIFY_LOGIN_PASSWORD` to that active Admin account. Leave the password blank during first setup to use `admin123`.
 
 For a no-database screen rendering check, run:
 
@@ -112,7 +114,7 @@ For a no-database screen rendering check, run:
 npm run verify:ui
 ```
 
-This renders the main office screens with safe sample data. It does not prove MySQL storage; use it alongside `npm run verify:mysql`.
+This renders the prototype frontend and the main office screens with safe sample data. It does not prove MySQL storage; use it alongside `npm run verify:mysql`.
 
 For the prepared offline folder, run this after `npm run bundle:offline`:
 

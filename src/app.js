@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 
 import { createDatabasePool } from "./config/database.js";
 import { createActivityLogRoutes } from "./features/activityLogs/activityLogRoutes.js";
+import { createPrototypeApiRoutes } from "./features/prototype/prototypeApiRoutes.js";
+import { createPrototypeRoutes } from "./features/prototype/prototypeRoutes.js";
 import { createReservationRoutes } from "./features/reservations/reservationRoutes.js";
 import { createDashboardRoutes } from "./features/schedule/dashboardRoutes.js";
 import { createScheduleRoutes } from "./features/schedule/scheduleRoutes.js";
@@ -43,15 +45,14 @@ export function createApp() {
     next();
   });
 
-  app.get("/", (_request, response) => {
-    response.redirect("/dashboard");
-  });
+  app.use(createPrototypeRoutes());
 
   app.get("/health", (_request, response) => {
     response.json({ status: "ok", milestone: "foundation" });
   });
 
   app.use(createAuthRoutes({ db }));
+  app.use(createPrototypeApiRoutes({ db }));
   app.use(requireSignedIn);
   app.use(createDashboardRoutes({ db }));
   app.use(createReservationRoutes({ db }));

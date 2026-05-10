@@ -39,12 +39,11 @@ export async function assertRuntimeDatabaseReady(connection) {
   const [[adminCount]] = await connection.execute(`
     SELECT COUNT(*) AS count_value
     FROM users
-    WHERE username = 'admin'
-      AND role = 'ADMIN'
+    WHERE role = 'ADMIN'
       AND account_status = 'ACTIVE'
   `);
   if (Number(adminCount?.count_value || 0) < 1) {
-    throw new Error("Local database check failed: the starter admin account is missing or inactive. Run setup-barangay-office.bat first.");
+    throw new Error("Local database check failed: no active Admin account was found. Create or reactivate an Admin account, or run setup-barangay-office.bat first.");
   }
 }
 

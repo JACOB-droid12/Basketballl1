@@ -89,7 +89,50 @@ export function isOverlapRejection(error) {
 
 export async function assertSeedData(connection, options = {}) {
   const comparePassword = options.comparePassword || bcrypt.compare;
-  const adminPassword = options.adminPassword || "admin123";
+  const loginUsername = options.loginUsername || "admin";
+  const loginPassword = options.loginPassword || options.adminPassword || "admin123";
+  const [[activeAdminCount]] = await connection.execute(`
+    SELECT COUNT(*) AS count_value
+    FROM users
+    WHERE role = 'ADMIN'
+      AND account_status = 'ACTIVE'
+  `);
+
+  if (Number(activeAdminCount?.count_value || 0) < 1) {
+    throw new Error("Seed verification failed: at least one active ADMIN account is required.");
+  }
+
+  const [[loginUser]] = await connection.execute(
+    `
+      SELECT username, password_hash, role, account_status
+      FROM users
+      WHERE username = :loginUsername
+      LIMIT 1
+    `,
+    { loginUsername }
+  );
+
+  if (!loginUser) {
+    throw new Error("Seed verification failed: configured verification Admin login was not found.");
+  }
+
+  if (loginUser.role !== "ADMIN") {
+    throw new Error("Seed verification failed: configured verification login must be an ADMIN account.");
+  }
+
+  if (loginUser.account_status !== "ACTIVE") {
+    throw new Error("Seed verification failed: configured verification Admin login is inactive.");
+  }
+
+  assertBcryptPasswordHash(
+    loginUser.password_hash,
+    "configured verification Admin login must use a bcrypt password hash"
+  );
+
+  if (!await comparePassword(loginPassword, loginUser.password_hash)) {
+    throw new Error("Seed verification failed: configured verification Admin password hash does not match VERIFY_LOGIN_PASSWORD.");
+  }
+
   const [[admin]] = await connection.execute(`
     SELECT username, password_hash, role, account_status
     FROM users
@@ -97,16 +140,15 @@ export async function assertSeedData(connection, options = {}) {
     LIMIT 1
   `);
 
-  if (!admin) {
-    throw new Error("Seed verification failed: starter admin account was not found.");
-  }
+  if (admin) {
+    if (admin.role !== "ADMIN") {
+      throw new Error("Seed verification failed: starter admin must remain an ADMIN account when present.");
+    }
 
-  if (admin.role !== "ADMIN" || admin.account_status !== "ACTIVE") {
-    throw new Error("Seed verification failed: starter admin must be an active ADMIN account.");
-  }
-
-  if (!await comparePassword(adminPassword, admin.password_hash)) {
-    throw new Error("Seed verification failed: starter admin password hash does not match the configured verification password.");
+    assertBcryptPasswordHash(
+      admin.password_hash,
+      "starter admin must use a bcrypt password hash"
+    );
   }
 
   await assertMinimumTableCount(connection, "reservation_statuses", 5);
@@ -304,7 +346,7 @@ export async function runMysqlVerification(options = {}) {
   });
 
   try {
-    await assertSeedData(pool, { adminPassword: verificationConfig.loginPassword });
+    await assertSeedData(pool, verificationConfig);
     await verifyRepositoryRoundTrip(pool, { marker, reservationDate: verificationDate });
     await verifyOverlapTrigger(pool, { marker: `${marker}_TRIGGER`, reservationDate: "2099-05-09" });
   } finally {
@@ -381,6 +423,14 @@ async function assertMinimumTableCount(connection, tableName, minimum) {
 
   if (Number(row?.count_value || 0) < minimum) {
     throw new Error(`Seed verification failed: expected at least ${minimum} rows in ${tableName}.`);
+  }
+}
+
+function assertBcryptPasswordHash(passwordHash, message) {
+  const value = String(passwordHash || "");
+
+  if (!/^\$2[aby]\$\d{2}\$/.test(value) || value.includes("admin123")) {
+    throw new Error(`Seed verification failed: ${message}.`);
   }
 }
 

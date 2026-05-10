@@ -45,10 +45,10 @@ if errorlevel 1 (
 )
 
 echo Open this address in the browser if it does not open automatically:
-echo http://localhost:3000/login
+echo http://localhost:3000/prototype
 echo.
 
-start "" http://localhost:3000/login
+start "" http://localhost:3000/prototype
 npm start
 
 echo.

@@ -6,7 +6,7 @@ Build the Basketball Court Scheduling System for Barangay Sto. Niño, Parañaque
 
 ## Current Milestone
 
-Milestone 5 usability/reporting/documentation is now partly in progress. Milestone 1 foundation is implemented, Milestone 2 core reservation logic is implemented in code and tests, Milestone 3 schedule/dashboard/detail screens are implemented and prototype-aligned, and Milestone 4 login/account management is implemented in code and tests. Edit-reservation, activity-log viewing, reservation CSV export, print controls, Windows-only offline setup scripts, SQL-only setup, and offline bundle creation are implemented in code and tests. Live SQL verification now passes against disposable local Oracle MySQL 9.7.0 and MariaDB 12.2.2 servers under ignored `tmp/`; final verification should still be repeated on the barangay office's target local MySQL/MariaDB installation.
+Milestone 5 usability/reporting/documentation is now partly in progress. Milestone 1 foundation is implemented, Milestone 2 core reservation logic is implemented in code and tests, Milestone 3 schedule/dashboard/detail screens are implemented, and Milestone 4 login/account management is implemented in code and tests. The supplied HTML prototype is now served as the visible frontend at `/`, `/prototype`, and `/app`, with a hidden backend bridge to the local Node/MySQL backend so the prototype UI stays intact. Edit-reservation, activity-log viewing, reservation CSV export, print controls, Windows-only offline setup scripts, SQL-only setup, and offline bundle creation are implemented in code and tests. Live SQL verification now passes against disposable local Oracle MySQL 9.7.0 and MariaDB 12.2.2 servers under ignored `tmp/`; final verification should still be repeated on the barangay office's target local MySQL/MariaDB installation.
 
 ## Completed Work
 
@@ -16,6 +16,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Created the MySQL schema with users, residents, statuses, slots, settings, reservations, activity logs, foreign keys, required fields, timestamp columns, and overlap-prevention triggers.
 - Hardened the MySQL schema so the database and every required table explicitly use `utf8mb4` / `utf8mb4_unicode_ci`, including conversion statements for older existing tables.
 - Created seed data for statuses, time slots, court settings, and a starter admin account with a bcrypt-hashed temporary password.
+- Hardened `database/seed.sql` so rerunning seed data does not reset the starter admin password or reactivate the starter `admin` account after the office retires it.
 - Implemented reservation validation, overlap detection, reservation listing/detail query builders, reservation creation, status updates, and activity log writes.
 - Implemented schedule service functions for daily slot display, dashboard summary counts, and nearest available slot search.
 - Implemented `/dashboard`, `/schedule`, `/reservations`, `/reservations/new`, `/reservations/:reservationId`, reservation creation, and reservation status update routes.
@@ -38,6 +39,12 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Extracted the Sto. Niño barangay logo from the presentation media into `public/images/barangay-logo.jpg`.
 - Restyled the app to follow the provided mockups: red top bars, gold sidebar, rounded white nav buttons, tan workspace, bordered week box, weekly schedule table, orange/red slot cards, account panels, and rounded form controls.
 - Added `docs/PROTOTYPE_ALIGNMENT.md` to make `C:\Users\Emmy Lou\Downloads\Sto. Nino Court Reservation System Prototype final.html` the documented UI baseline while keeping the production app offline and barangay-office controlled.
+- Copied `C:\Users\Emmy Lou\Downloads\Sto. Nino Court Reservation System Prototype final.html` into `public/prototype/sto-nino-court-reservation-system-prototype.html` and made it the visible frontend served by `/`, `/prototype`, and `/app`.
+- Added prototype backend routes that inject `public/js/prototype-backend.js` without editing the prototype's visible HTML layout.
+- Added prototype JSON APIs for local login, session, reservations, reservation status updates, and Admin account creation through the existing bcrypt, validation, and reservation repository logic.
+- Added the hidden prototype backend adapter to connect the prototype's existing login, reservation, detail/edit, clear-slot, and account creation functions to the offline backend.
+- Added local vendor copies of `html2canvas` and `jsPDF` and rewrote the served prototype response to use `/vendor/...` instead of CDN URLs, preserving offline loading.
+- Updated `start-barangay-office.bat` and setup docs so barangay staff open `http://localhost:3000/prototype` for daily use.
 - Tightened the prototype-aligned shell: primary Home/Schedule sidebar actions, Account and barangay logo pinned near the sidebar bottom, compact red top bars, status legend, status-aware weekly cells, and day-based schedule cards.
 - Hardened the one-click setup `.env` writer/reader so local values are encoded safely instead of being written as brittle raw `KEY=value` strings.
 - Added mobile-width CSS constraints so the weekly table scrolls inside its container instead of widening the whole page.
@@ -70,7 +77,8 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Added `README-FIRST-WINDOWS.txt` as the plain first file to open inside the offline bundle. It lists the Windows-only first-run flow, starter login, daily startup, database-only setup, and security notes.
 - Added `TROUBLESHOOT-WINDOWS.txt` as a plain Windows error-recovery guide for common setup, startup, database, login, and sign-off failures.
 - Hardened `start-barangay-office.bat` so it checks Node.js, npm, `node_modules\`, and `.env` before opening the browser and tells staff to run setup when `.env` is missing.
-- Added `npm run check:database` through `scripts/check-runtime-database.mjs`, and wired `start-barangay-office.bat` to run it before opening the browser. It confirms the configured local MySQL/MariaDB database is reachable and has seeded statuses, time slots, and an active admin account without writing data.
+- Added `npm run check:database` through `scripts/check-runtime-database.mjs`, and wired `start-barangay-office.bat` to run it before opening the browser. It confirms the configured local MySQL/MariaDB database is reachable and has seeded statuses, time slots, and at least one active Admin account without writing data.
+- Updated the runtime database guard, MySQL verifier, deployment docs, and office sign-off checklist so the documented flow of creating a real Admin account and deactivating the seeded `admin` account remains supported.
 - Added `run-office-signoff.bat` and `scripts/run-office-signoff.ps1` to run final Windows-only office sign-off checks and save a timestamped local report under `reports\office-signoff`.
 - Added `reports/` to `.gitignore` and to the offline-bundle forbidden-item verifier so generated office sign-off reports stay local.
 - Added `docs/OFFLINE_INSTALL_CHECKLIST.md` documenting how to prepare a complete offline project folder with `node_modules/` before bringing it to the barangay office.
@@ -85,7 +93,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Added `npm run verify:prereqs` through `scripts/verify-prereqs.mjs` to check Node.js, npm, MySQL client tools, `.env`, and required local config values before live MySQL setup.
 - Exposed `app.locals.db` from `createApp()` so verification scripts can close the app's MySQL pool cleanly after live HTTP checks.
 - Documented the prerequisite check, live MySQL verification, UI smoke verification, MySQL backup, and MySQL restore commands in `README.md`, `database/README.md`, and `docs/DEPLOYMENT_GUIDE.md`.
-- Final local refresh on 2026-05-10 passed `npm test` with 107/107 tests, `npm run verify:sql`, `npm run verify:foundation`, `npm run verify:ui`, `npm audit --omit=dev --json` with zero production vulnerabilities, and `git diff --check`.
+- Final local refresh on 2026-05-10 passed `npm test` with 126/126 tests, `npm run verify:sql`, `npm run verify:foundation`, `npm run verify:ui` for 15 screens, `npm run bundle:offline`, `npm run verify:bundle`, `npm run verify:mysql` against disposable local Oracle MySQL on `127.0.0.1:3391`, and `git diff --check`.
 
 ## Files Created or Changed
 
@@ -125,6 +133,8 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - `src/config/database.js`
 - `src/features/activityLogs/activityLogRepository.js`
 - `src/features/activityLogs/activityLogRoutes.js`
+- `src/features/prototype/prototypeRoutes.js`
+- `src/features/prototype/prototypeApiRoutes.js`
 - `src/features/reservations/reservationValidation.js`
 - `src/features/reservations/reservationExport.js`
 - `src/features/reservations/reservationOverlap.js`
@@ -156,6 +166,8 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - `tests/offlineBundle.test.js`
 - `tests/oneClickSetup.test.js`
 - `tests/prereqVerifier.test.js`
+- `tests/prototypeApiRoutes.test.js`
+- `tests/prototypeRoutes.test.js`
 - `tests/setupEnv.test.js`
 - `tests/sqlStaticVerifier.test.js`
 - `tests/uiSmokeVerifier.test.js`
@@ -175,7 +187,11 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - `views/reservations/show.ejs`
 - `views/schedule/index.ejs`
 - `public/css/styles.css`
+- `public/js/prototype-backend.js`
 - `public/images/barangay-logo.jpg`
+- `public/prototype/sto-nino-court-reservation-system-prototype.html`
+- `public/vendor/html2canvas.min.js`
+- `public/vendor/jspdf.umd.min.js`
 - `scripts/verify-foundation.mjs`
 - `scripts/backup-mysql.mjs`
 - `scripts/check-office-readiness.ps1`
@@ -207,16 +223,25 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 
 ## Tests Run
 
-- `npm test` - passed, 107 tests in the final 2026-05-10 local refresh.
-- `npm run verify:sql` - passed in the final 2026-05-10 local refresh.
-- `npm run verify:foundation` - passed in the final 2026-05-10 local refresh.
-- `npm run verify:ui` - passed for 11 office screens in the final 2026-05-10 local refresh.
-- `npm run bundle:offline` - passed in the final 2026-05-10 local refresh and rebuilt `dist\barangay-court-scheduler-offline`.
-- `npm run verify:bundle` - passed in the final 2026-05-10 local refresh and confirmed required runtime, SQL, docs, setup, and verification files are present while `.env` and backups are excluded.
-- `npm audit --omit=dev --json` - passed with zero production vulnerabilities in the final 2026-05-10 local refresh after registry access was allowed.
-- `git diff --check` - passed in the final 2026-05-10 local refresh; only Windows line-ending conversion warnings were printed.
-- `npm run verify:prereqs` - failed in the final 2026-05-10 local refresh only because `mysql` and `mysqldump` are not on PATH in this shell.
-- `npm run verify:mysql` - failed in the final 2026-05-10 local refresh with controlled `connect ECONNREFUSED 127.0.0.1:3306`, confirming no default local MySQL service is currently running.
+- `npm test -- tests\prototypeRoutes.test.js tests\prototypeApiRoutes.test.js tests\uiSmokeVerifier.test.js tests\offlineBundle.test.js tests\oneClickSetup.test.js` - passed, 21 focused tests for the copied prototype frontend routes, hidden backend bridge, prototype JSON APIs, UI smoke coverage, offline bundle requirements, and Windows start URL.
+- `npm test -- tests\prototypeRoutes.test.js tests\offlineBundle.test.js tests\uiSmokeVerifier.test.js` - passed, 13 focused tests after fixing bridge injection to use the final `</body>` and rewriting prototype CDN scripts to local vendor files.
+- `node --check src\features\prototype\prototypeRoutes.js`, `node --check src\features\prototype\prototypeApiRoutes.js`, `node --check scripts\verify-ui-smoke.mjs`, and `node --check public\js\prototype-backend.js` - passed after wiring the prototype frontend to the backend.
+- `node --check public\vendor\html2canvas.min.js` and `node --check public\vendor\jspdf.umd.min.js` - passed after adding local offline vendor scripts.
+- `npm test -- tests\mysqlVerifier.test.js tests\runtimeDatabaseCheck.test.js` - passed, 20 focused tests after the MySQL verifier was tightened to validate the configured active Admin login and still support a retired starter `admin` account.
+- `npm test` - passed, 126/126 tests after the prototype backend bridge, local vendor scripts, and configured-Admin MySQL verifier updates.
+- `npm run verify:sql` - passed after the prototype/configured-Admin refresh.
+- `npm run verify:foundation` - passed after the prototype/configured-Admin refresh.
+- `npm run verify:ui` - passed for 15 office screens after the prototype/configured-Admin refresh.
+- `npm run bundle:offline` - passed and refreshed `dist\barangay-court-scheduler-offline` after the prototype/configured-Admin refresh.
+- `npm run verify:bundle` - passed and confirmed required runtime, SQL, docs, setup, and verification files are present while `.env`, backups, and reports are excluded.
+- `git diff --check` - passed after the prototype/configured-Admin refresh; only Windows line-ending conversion warnings were printed.
+- `npm run verify:prereqs` - failed as expected after the active-Admin readiness fix only because `mysql` and `mysqldump` are not on PATH in this shell.
+- `npm run check:database` - failed safely after the active-Admin readiness fix because no default local MySQL/MariaDB service is running on `127.0.0.1:3306`.
+- Default `npm run verify:mysql` - failed safely with controlled `connect ECONNREFUSED 127.0.0.1:3306`, confirming no default local MySQL service is currently running.
+- `npm run verify:mysql` with `DB_HOST=127.0.0.1`, `DB_PORT=3391`, `DB_USER=root`, and `DB_NAME=barangay_court_scheduler` - passed against disposable local Oracle MySQL 9.7.0 after applying schema/seed, repository round trip, overlap trigger verification, and authenticated HTTP smoke.
+- Earlier 2026-05-10 local refresh before the active-Admin readiness fix: `npm test` passed 107/107 tests.
+- Earlier 2026-05-10 local refresh before the active-Admin readiness fix: `npm run verify:sql`, `npm run verify:foundation`, `npm run verify:ui`, `npm run bundle:offline`, `npm run verify:bundle`, `npm audit --omit=dev --json`, and `git diff --check` passed.
+- Earlier 2026-05-10 local refresh before the active-Admin readiness fix: `npm run verify:prereqs` and `npm run verify:mysql` failed only because `mysql` / `mysqldump` were not on PATH and no default local MySQL service was running.
 - `npm test -- tests\oneClickSetup.test.js tests\offlineBundle.test.js` - passed, 10 focused setup/bundle tests after adding `check-office-readiness.bat`.
 - `npm test` - passed, 108 tests after adding `check-office-readiness.bat`.
 - `npm run verify:sql` - passed after adding `check-office-readiness.bat`.
@@ -349,7 +374,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - `npm test` - passed, 106 tests after the SQL-only password-flow fix.
 - `npm audit --omit=dev --json` - passed with zero production vulnerabilities after the SQL-only password-flow fix.
 - Added self-service password change through `views/account/password.ejs`, `POST /account/password`, `validateChangePasswordInput`, and `updateUserPassword`.
-- Added `VERIFY_LOGIN_USERNAME`, `VERIFY_LOGIN_PASSWORD`, and `VERIFY_MYSQL_DATE` to `.env.example`; `npm run verify:mysql` now uses configurable login credentials so live verification can be rerun after the starter password changes.
+- Added `VERIFY_LOGIN_USERNAME`, `VERIFY_LOGIN_PASSWORD`, and `VERIFY_MYSQL_DATE` to `.env.example`; `npm run verify:mysql` now uses configurable login credentials so live verification can be rerun after the starter password changes or after the seeded starter account is retired.
 - `npm test -- tests/userValidation.test.js tests/userRepository.test.js tests/authRoutes.test.js` - passed, 20 focused account/password tests.
 - `npm test -- tests/mysqlVerifier.test.js` - passed, 12 tests after adding configurable live-verification login credentials.
 - `npm test -- tests/mysqlVerifier.test.js tests/setupEnv.test.js tests/prereqVerifier.test.js` - passed, 18 focused verifier/env/prerequisite tests.
@@ -513,6 +538,12 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Browser/IAB was unavailable earlier because no Codex IAB backend was discovered. Chrome DevTools was used as the fallback. DevTools screenshot capture timed out, so verification used accessibility snapshots plus computed layout/style checks.
 - Completed a first-usable-version audit in `docs/FIRST_USABLE_VERSION_AUDIT.md`; the implementation is broad enough for the first usable version, disposable Oracle MySQL and MariaDB live verification passed during development, and `npm run verify:mysql` remains the office-machine sign-off gate.
 - Reviewed `C:\Users\Emmy Lou\Downloads\Sto. Nino Court Reservation System Prototype final.html` as the UI/foundation baseline and documented the preserved UI elements in `docs/PROTOTYPE_ALIGNMENT.md`.
+- Browser-verified the served prototype frontend at `http://127.0.0.1:3188/prototype` with Chrome DevTools against disposable local MySQL 9.7.0 on `127.0.0.1:3391`.
+- Confirmed the prototype page title and Login/Home/Schedule/Account screens render without visible JavaScript text after fixing backend bridge injection to target the final `</body>`.
+- Confirmed browser network requests for the prototype use only local `127.0.0.1` document/script/API URLs after localizing `html2canvas` and `jsPDF` under `public/vendor/`.
+- Confirmed prototype login succeeds with the local `admin` account, prototype reservation creation writes through `/api/prototype/reservations` to MySQL, the Schedule screen shows the created reservation, and an overlapping reservation attempt returns a controlled conflict message.
+- Confirmed prototype Admin account creation writes through `/api/prototype/accounts` and appears in the Manage Accounts table.
+- Reran live MySQL verification after the configured-Admin verifier update by pointing `.env` overrides at the disposable local Oracle MySQL server on `127.0.0.1:3391`; schema/seed application, repository reservation round trip, overlap trigger verification, and authenticated HTTP smoke all passed.
 - Browser-verified the prototype-aligned dashboard and schedule pages through a temporary local smoke server at `http://127.0.0.1:3104` without needing MySQL.
 - Browser-verified at a narrow viewport that the schedule toolbar no longer creates document-level horizontal overflow after the responsive CSS fix; the dashboard weekly table stays contained inside its intended horizontal scroll wrapper.
 - Started a disposable MariaDB 12.2.2 server from the official Windows ZIP under ignored `tmp\mariadb-portable\`, listening only on `127.0.0.1:3390`, and used it to live-verify schema/seed, triggers, app HTTP smoke, backup, restore, and SQL diagnostics.
@@ -524,7 +555,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Oracle MySQL is still not installed as a normal system service in this sandbox, and no container runtime is available. Disposable Oracle MySQL 9.7.0 and MariaDB 12.2.2 servers both passed live verification locally, but setup and `npm run verify:mysql` should still be repeated on the actual barangay office database installation before presentation/deployment sign-off.
 - `setup-barangay-office.bat` is one-click after prerequisites are present, but it is not a bare-Windows installer. Node.js, local MySQL, and a prepared project folder with `node_modules\` must already be available from offline installers/bundle preparation.
 - Current Windows-only local audit is blocked only by the live environment: this shell has no normal `mysql` / `mysqldump` on PATH and no default local MySQL/MariaDB service on `127.0.0.1:3306`.
-- Add/list/edit/schedule/status/login/account/activity-log code is implemented and covered by automated tests, but live flows against a real MySQL database still need verification.
+- Add/list/edit/schedule/status/login/account/activity-log code is implemented and covered by automated tests and disposable local MySQL verification; the remaining live-flow check is against the actual barangay office database installation.
 - Live browser/printer output still needs a final check on the barangay office computer because print margins depend on the installed browser and printer.
 - Branch creation previously failed due `.git/HEAD.lock` permission denial, so work remains on the initial `master` branch in this sandbox.
 
