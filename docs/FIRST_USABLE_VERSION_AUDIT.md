@@ -65,7 +65,7 @@ Code, SQL, documentation, offline packaging, and prototype-aligned UI shell work
 
 ## Fresh Verification Evidence
 
-- Final local refresh on 2026-05-10: `npm test` passed 107/107 tests.
+- Final local refresh on 2026-05-10 after Windows runtime database guard: `npm test` passed 113/113 tests.
 - Final local refresh on 2026-05-10: `npm run verify:sql` passed, including the Oracle MySQL-compatible SQL-only setup runner check.
 - Final local refresh on 2026-05-10: `npm run verify:foundation` passed.
 - Final local refresh on 2026-05-10: `npm run verify:ui` passed for 11 office screens.
@@ -75,6 +75,10 @@ Code, SQL, documentation, offline packaging, and prototype-aligned UI shell work
 - Final local refresh on 2026-05-10: `git diff --check` passed with no whitespace errors.
 - Final local refresh on 2026-05-10: default `npm run verify:prereqs` fails only because `mysql` and `mysqldump` are not on PATH in this shell.
 - Final local refresh on 2026-05-10: default `npm run verify:mysql` fails with controlled `connect ECONNREFUSED 127.0.0.1:3306`, confirming no default local MySQL service is currently running.
+- Final local refresh on 2026-05-10 after Windows runtime database guard: `npm run verify:sql` passed.
+- Final local refresh on 2026-05-10 after Windows runtime database guard: `npm run verify:ui` passed for 11 office screens.
+- Final local refresh on 2026-05-10 after Windows runtime database guard: `npm run verify:prereqs` passed Node.js, npm, `.env`, `DB_NAME`, `DB_USER`, and `APP_SESSION_SECRET`, and failed only because `mysql` and `mysqldump` are not on PATH in this shell.
+- Final local refresh on 2026-05-10 after Windows runtime database guard: `npm run check:database` failed safely with a clear local MySQL/MariaDB connection message because no default database service is running on `127.0.0.1:3306`.
 - Added `check-office-readiness.bat` and `scripts/check-office-readiness.ps1` so the office computer can be checked before setup for Node.js, npm, MySQL tools, `node_modules/`, SQL files, and setup/start scripts.
 - Readiness-check iteration: `npm test` passed 108/108 tests after adding the checker.
 - Readiness-check iteration: `npm run verify:sql` and `npm run verify:ui` passed after adding the checker.
@@ -138,6 +142,7 @@ Code, SQL, documentation, offline packaging, and prototype-aligned UI shell work
 1. Live SQL execution has been verified on disposable local Oracle MySQL 9.7.0 and MariaDB 12.2.2, but not yet on the actual barangay office database installation.
 2. Print output needs a final check on the barangay office browser/printer.
 3. One-click setup is one-click after prerequisites are prepared; a bare Windows computer still needs offline Node.js/MySQL installers and the prepared bundle with `node_modules\`.
+4. This workspace cannot complete the final office sign-off because the default local MySQL/MariaDB service is not running and the normal `mysql` / `mysqldump` client tools are not on PATH.
 
 ## Required Next Step
 

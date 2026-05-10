@@ -221,6 +221,10 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - `npm test -- tests\oneClickSetup.test.js` - passed after hardening `start-barangay-office.bat` with Windows preflight checks.
 - `npm test -- tests\runtimeDatabaseCheck.test.js tests\oneClickSetup.test.js tests\offlineBundle.test.js` - passed after adding the read-only runtime database check and wiring it into the Windows start script.
 - `npm run check:database` - failed safely in this shell with a clear local MySQL/MariaDB connection message because no default database service is running on `127.0.0.1:3306`.
+- `npm run verify:sql` - passed in the final Windows runtime database guard audit refresh.
+- `npm run verify:ui` - passed for 11 office screens in the final Windows runtime database guard audit refresh.
+- `npm run verify:prereqs` - passed Node.js, npm, `.env`, `DB_NAME`, `DB_USER`, and `APP_SESSION_SECRET`, and failed only because `mysql` and `mysqldump` are not on PATH in this shell.
+- `npm run check:database` - failed safely in the final audit refresh because no local MySQL/MariaDB service is running on `127.0.0.1:3306`.
 - `npm test` - passed, 51 tests before the 2026-05-08 weekly dashboard update.
 - `npm test` - passed, 51 tests on 2026-05-08 foundation/status recheck.
 - `npm test` - passed, 52 tests after the 2026-05-08 weekly dashboard update.
@@ -508,6 +512,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 
 - Oracle MySQL is still not installed as a normal system service in this sandbox, and no container runtime is available. Disposable Oracle MySQL 9.7.0 and MariaDB 12.2.2 servers both passed live verification locally, but setup and `npm run verify:mysql` should still be repeated on the actual barangay office database installation before presentation/deployment sign-off.
 - `setup-barangay-office.bat` is one-click after prerequisites are present, but it is not a bare-Windows installer. Node.js, local MySQL, and a prepared project folder with `node_modules\` must already be available from offline installers/bundle preparation.
+- Current Windows-only local audit is blocked only by the live environment: this shell has no normal `mysql` / `mysqldump` on PATH and no default local MySQL/MariaDB service on `127.0.0.1:3306`.
 - Add/list/edit/schedule/status/login/account/activity-log code is implemented and covered by automated tests, but live flows against a real MySQL database still need verification.
 - Live browser/printer output still needs a final check on the barangay office computer because print margins depend on the installed browser and printer.
 - Branch creation previously failed due `.git/HEAD.lock` permission denial, so work remains on the initial `master` branch in this sandbox.
