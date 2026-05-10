@@ -71,6 +71,7 @@ Code, SQL, documentation, offline packaging, and prototype-backed frontend work 
 
 ## Fresh Verification Evidence
 
+- Current completion-audit pass on 2026-05-11: `npm run verify:sql`, `npm run verify:ui`, `npm run verify:foundation`, `npm run verify:bundle`, and full `npm test` passed with 128/128 tests. Live-environment probes still stop only at the actual machine dependency: `npm run verify:prereqs` fails because `mysql` and `mysqldump` are not on PATH in this shell, `npm run check:database` cannot connect to `127.0.0.1:3306/barangay_court_scheduler`, and `npm run verify:mysql` fails with `ECONNREFUSED 127.0.0.1:3306`.
 - Staff-friendly launcher iteration on 2026-05-11: `START-HERE.bat` was added as the root launcher for daily start, first-time setup, readiness check, office sign-off, database-only support, and quick instructions; `npm test -- tests\offlineBundle.test.js tests\oneClickSetup.test.js` passed with 12/12 focused tests, `npm run verify:foundation` passed, `npm run bundle:offline` refreshed the prepared folder, `npm run verify:bundle` confirmed `START-HERE.bat` is included, `npm test` passed with 127/127 tests, and `cmd /c "echo 7|START-HERE.bat"` confirmed the launcher opens and exits cleanly.
 - Backup launcher iteration on 2026-05-11: `backup-database.bat` was added and exposed through `START-HERE.bat` as `Back up the database now`; `npm test -- tests\offlineBundle.test.js tests\oneClickSetup.test.js tests\mysqlBackup.test.js` passed with 19/19 focused tests, `npm run verify:foundation` passed, `cmd /c "echo 8|START-HERE.bat"` confirmed the updated menu opens/exits cleanly, `cmd /c "(echo.|backup-database.bat) & exit /b 0"` confirmed the wrapper gives a clear missing-`mysqldump` prerequisite message in this shell, `npm run bundle:offline` refreshed the prepared folder, `npm run verify:bundle` confirmed `backup-database.bat` is included, and full `npm test` passed with 128/128 tests.
 - Prototype frontend pivot on 2026-05-10: `npm test -- tests\prototypeRoutes.test.js tests\prototypeApiRoutes.test.js tests\uiSmokeVerifier.test.js tests\offlineBundle.test.js tests\oneClickSetup.test.js` passed with 21/21 focused tests after `/`, `/prototype`, `/app`, the injected backend bridge, prototype API login/reservation/account routes, offline bundle requirements, and the Windows start URL were updated.
@@ -154,7 +155,7 @@ Code, SQL, documentation, offline packaging, and prototype-backed frontend work 
 1. Live SQL execution has been verified on disposable local Oracle MySQL 9.7.0 and MariaDB 12.2.2, but not yet on the actual barangay office database installation.
 2. Print output needs a final check on the barangay office browser/printer.
 3. One-click setup is one-click after prerequisites are prepared; a bare Windows computer still needs offline Node.js/MySQL installers and the prepared bundle with `node_modules\`.
-4. This workspace cannot complete the final office sign-off because the default local MySQL/MariaDB service is not running and the normal `mysql` / `mysqldump` client tools are not on PATH.
+4. This workspace cannot complete the final office sign-off because the default local MySQL/MariaDB service is not running and the normal `mysql` / `mysqldump` client tools are not on PATH. The 2026-05-11 completion-audit pass reconfirmed this exact blocker.
 
 ## Required Next Step
 
