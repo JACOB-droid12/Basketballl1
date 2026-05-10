@@ -46,6 +46,8 @@ The start file also checks the local MySQL/MariaDB database before opening the
 browser. If it says the local database check failed, start MySQL/MariaDB or run
 setup-barangay-office.bat again.
 
+If any message is unclear, open TROUBLESHOOT-WINDOWS.txt in this folder.
+
 DATABASE-ONLY SETUP
 
 If only the database needs to be created or checked, double-click:
@@ -61,4 +63,5 @@ IMPORTANT NOTES
 - Keep .env private.
 - Keep backups on a protected local drive or barangay-controlled external drive.
 - Use run-office-signoff.bat on the actual office computer before final sign-off.
+- Open TROUBLESHOOT-WINDOWS.txt for common Windows setup and startup errors.
 - For the detailed guide, open docs\OFFLINE_INSTALL_CHECKLIST.md and docs\DEPLOYMENT_GUIDE.md.

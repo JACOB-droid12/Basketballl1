@@ -40,6 +40,7 @@ dist\barangay-court-scheduler-offline
 
 - `node_modules/`
 - `README-FIRST-WINDOWS.txt`
+- `TROUBLESHOOT-WINDOWS.txt`
 - `package.json`
 - `package-lock.json`
 - `src/`
@@ -83,6 +84,8 @@ On the barangay office computer:
 12. For final deployment sign-off, double-click `run-office-signoff.bat` and keep the generated report under `reports\office-signoff`.
 
 The start script checks Node.js, npm, `node_modules/`, `.env`, and the configured local MySQL/MariaDB database before opening the browser. If it reports a missing `.env`, run `setup-barangay-office.bat` first. If it reports a local database check failure, start MySQL/MariaDB or rerun setup.
+
+If a Windows setup or startup error is unclear, open `TROUBLESHOOT-WINDOWS.txt` in the prepared folder.
 
 If only the database needs to be created or checked, double-click `setup-database-only.bat` instead. It does not start the app UI.
 

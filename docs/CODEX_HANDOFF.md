@@ -68,6 +68,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Added pure-offline setup files: `setup-barangay-office.bat`, `start-barangay-office.bat`, and `scripts/setup-barangay-office.ps1`.
 - Added `check-office-readiness.bat` and `scripts/check-office-readiness.ps1` so staff can double-click a local readiness check before setup. It checks Node.js, npm, MySQL tools, `node_modules/`, SQL files, and setup/start scripts without downloading anything.
 - Added `README-FIRST-WINDOWS.txt` as the plain first file to open inside the offline bundle. It lists the Windows-only first-run flow, starter login, daily startup, database-only setup, and security notes.
+- Added `TROUBLESHOOT-WINDOWS.txt` as a plain Windows error-recovery guide for common setup, startup, database, login, and sign-off failures.
 - Hardened `start-barangay-office.bat` so it checks Node.js, npm, `node_modules\`, and `.env` before opening the browser and tells staff to run setup when `.env` is missing.
 - Added `npm run check:database` through `scripts/check-runtime-database.mjs`, and wired `start-barangay-office.bat` to run it before opening the browser. It confirms the configured local MySQL/MariaDB database is reachable and has seeded statuses, time slots, and an active admin account without writing data.
 - Added `run-office-signoff.bat` and `scripts/run-office-signoff.ps1` to run final Windows-only office sign-off checks and save a timestamped local report under `reports\office-signoff`.
@@ -94,6 +95,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - `.gitignore`
 - `README.md`
 - `README-FIRST-WINDOWS.txt`
+- `TROUBLESHOOT-WINDOWS.txt`
 - `create-offline-bundle.bat`
 - `check-office-readiness.bat`
 - `run-office-signoff.bat`
@@ -233,6 +235,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - PowerShell parser check passed for `scripts\run-office-signoff.ps1`.
 - `npm test` - passed, 114 tests after adding the Windows office sign-off helper.
 - `npm run verify:foundation`, `npm run verify:sql`, `npm run verify:ui`, `npm run bundle:offline`, and `npm run verify:bundle` - passed after adding the Windows office sign-off helper.
+- `npm test -- tests\offlineBundle.test.js`, `npm run verify:foundation`, `npm run bundle:offline`, `npm run verify:bundle`, and `npm test` - passed after adding `TROUBLESHOOT-WINDOWS.txt`.
 - `npm test` - passed, 51 tests before the 2026-05-08 weekly dashboard update.
 - `npm test` - passed, 51 tests on 2026-05-08 foundation/status recheck.
 - `npm test` - passed, 52 tests after the 2026-05-08 weekly dashboard update.

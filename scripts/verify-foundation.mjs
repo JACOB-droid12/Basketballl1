@@ -9,6 +9,7 @@ const requiredFiles = [
   ".env.example",
   "README.md",
   "README-FIRST-WINDOWS.txt",
+  "TROUBLESHOOT-WINDOWS.txt",
   "create-offline-bundle.bat",
   "check-office-readiness.bat",
   "run-office-signoff.bat",

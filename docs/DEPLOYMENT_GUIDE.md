@@ -51,6 +51,8 @@ npm run verify:bundle
 
 Copy `dist\barangay-court-scheduler-offline` to the barangay office computer.
 
+The prepared folder includes `README-FIRST-WINDOWS.txt` for the shortest setup path and `TROUBLESHOOT-WINDOWS.txt` for common Windows setup/startup errors.
+
 ## One-Click Offline Setup
 
 After Node.js 20+ and MySQL 8+ are installed on the barangay office computer from local installers if needed, use:
@@ -78,6 +80,8 @@ run-office-signoff.bat
 ```
 
 This creates a timestamped text report under `reports\office-signoff`. It runs only local commands: prerequisite verification, runtime database readiness, live MySQL/app smoke verification, UI smoke verification, and a local MySQL backup. It also writes the manual office workflow checklist into the report. Generated sign-off reports are local deployment records and are ignored by git.
+
+If any setup, startup, or sign-off message is unclear, open `TROUBLESHOOT-WINDOWS.txt` before changing files manually.
 
 ## Configure Environment
 

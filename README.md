@@ -144,6 +144,8 @@ On the barangay office computer, after Node.js 20+ and MySQL 8+ are installed fr
 7. Open `http://localhost:3000/login`.
 8. For deployment sign-off, double-click `run-office-signoff.bat` and keep the generated report under `reports\office-signoff`.
 
+If a Windows setup or startup message is unclear, open `TROUBLESHOOT-WINDOWS.txt` in the prepared offline folder.
+
 `start-barangay-office.bat` checks for Node.js, npm, `node_modules/`, `.env`, and the local MySQL/MariaDB database before opening the browser. If a check fails, follow the message, start MySQL/MariaDB, and rerun setup if needed.
 
 For a database-only daily startup check without opening the app, run:
@@ -204,6 +206,7 @@ npm run restore:mysql -- backups\backup-file.sql
 - `docs/DEPLOYMENT_GUIDE.md` explains offline Windows + local MySQL installation, startup, backup, restore, and update steps.
 - `check-office-readiness.bat` checks whether a barangay office computer has the local files and tools needed before running setup.
 - `run-office-signoff.bat` runs final local verification on the office computer and saves a sign-off report.
+- `TROUBLESHOOT-WINDOWS.txt` lists common offline Windows setup/startup errors and the next action for each.
 - `docs/ISO_25010_EVALUATION.md` maps the system to ISO 25010 quality characteristics for project evaluation.
 - `docs/ARCHITECTURE.md` explains the chosen stack and module boundaries.
 - `docs/CODEX_HANDOFF.md` records the current milestone state, verification, risks, and next step.

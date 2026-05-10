@@ -1,0 +1,73 @@
+BARANGAY STO. NINO BASKETBALL COURT SCHEDULING SYSTEM
+WINDOWS OFFLINE TROUBLESHOOTING
+
+Use this file on the barangay office computer when a setup, startup, or
+sign-off check prints an error.
+
+1. "Node.js was not found" or "npm was not found"
+
+Install Node.js 20 or newer using the offline Windows installer. Close and
+reopen the Command Prompt or PowerShell window after installation.
+
+2. "mysql was not found" or "mysqldump was not found"
+
+Install local MySQL or MariaDB using the offline Windows installer. Add the
+MySQL or MariaDB bin folder to PATH, then reopen the terminal or double-click
+check-office-readiness.bat again.
+
+3. "node_modules was not found"
+
+This folder was not prepared for offline use. On the setup computer, run:
+
+npm install
+npm run bundle:offline
+npm run verify:bundle
+
+Then copy the refreshed dist\barangay-court-scheduler-offline folder to the
+barangay office computer.
+
+4. ".env was not found"
+
+Run setup-barangay-office.bat first. It creates the local .env file and asks
+for the local MySQL password.
+
+5. "Local database check failed"
+
+Start MySQL or MariaDB, then try start-barangay-office.bat again. If the same
+message appears, run setup-barangay-office.bat again so schema.sql and seed.sql
+are applied to the local database.
+
+6. Login does not work after setup
+
+For first setup, use:
+
+Username: admin
+Temporary password: admin123
+
+If the password was changed, use the current local admin password. If live
+verification must be rerun after changing the starter password, update
+VERIFY_LOGIN_PASSWORD in .env first.
+
+7. Browser opens but the app shows a database error
+
+Confirm MySQL or MariaDB is running. Then run:
+
+npm run check:database
+
+If it fails, run setup-barangay-office.bat or ask the local technical staff to
+check the .env database settings.
+
+8. Port 3000 is already in use
+
+Close the other running copy of the app. If needed, restart the computer and
+double-click start-barangay-office.bat again.
+
+9. Sign-off report fails
+
+Open the report under reports\office-signoff and fix the first failed step.
+Most failures are missing MySQL tools, MySQL not running, or setup not finished.
+
+10. Keep records private
+
+Do not share .env, backups, or reports publicly. These files may contain local
+deployment details or resident-related records.

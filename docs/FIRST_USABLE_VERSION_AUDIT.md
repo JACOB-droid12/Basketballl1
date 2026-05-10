@@ -50,6 +50,7 @@ Code, SQL, documentation, offline packaging, and prototype-aligned UI shell work
 | Office deployment sign-off report | `run-office-signoff.bat`; `scripts/run-office-signoff.ps1`; `reports\office-signoff` output; `tests/oneClickSetup.test.js`; `docs/DEPLOYMENT_GUIDE.md` | Implemented and tested; requires actual office MySQL/MariaDB for passing sign-off |
 | Local-only report protection | `.gitignore`; `scripts/verify-offline-bundle.mjs`; `tests/offlineBundle.test.js` reject copied `reports` data | Implemented and tested |
 | Windows first-run guide | `README-FIRST-WINDOWS.txt`; `docs/OFFLINE_INSTALL_CHECKLIST.md`; `tests/offlineBundle.test.js`; `npm run verify:bundle` | Implemented and tested |
+| Windows troubleshooting guide | `TROUBLESHOOT-WINDOWS.txt`; `README-FIRST-WINDOWS.txt`; `docs/OFFLINE_INSTALL_CHECKLIST.md`; `tests/offlineBundle.test.js`; `npm run verify:bundle` | Implemented and tested |
 | One-click local start | `start-barangay-office.bat`; `tests/oneClickSetup.test.js` | Implemented and tested |
 | Start-script setup guard | `start-barangay-office.bat` checks Node.js, npm, `node_modules\`, and `.env`; `tests/oneClickSetup.test.js` | Implemented and tested |
 | Start-script SQL readiness guard | `scripts/check-runtime-database.mjs`; `npm run check:database`; `start-barangay-office.bat`; `tests/runtimeDatabaseCheck.test.js`; `tests/oneClickSetup.test.js` | Implemented and tested; fails safely when local MySQL/MariaDB is not running |
@@ -91,6 +92,7 @@ Code, SQL, documentation, offline packaging, and prototype-aligned UI shell work
 - Windows start-script SQL guard iteration: `npm test -- tests\runtimeDatabaseCheck.test.js tests\oneClickSetup.test.js tests\offlineBundle.test.js` passed after adding the read-only local database startup check; `npm run check:database` failed safely in this shell because no default MySQL/MariaDB service is running.
 - Windows office sign-off iteration: `npm test -- tests\oneClickSetup.test.js tests\offlineBundle.test.js` passed after adding `run-office-signoff.bat` and `scripts\run-office-signoff.ps1`.
 - Windows office sign-off iteration: PowerShell parser check passed for `scripts\run-office-signoff.ps1`.
+- Windows troubleshooting guide iteration: `npm test -- tests\offlineBundle.test.js`, `npm run verify:foundation`, `npm run bundle:offline`, `npm run verify:bundle`, and `npm test` passed after adding `TROUBLESHOOT-WINDOWS.txt`.
 - `npm test -- tests/oneClickSetup.test.js tests/offlineBundle.test.js` passed with 9 focused offline setup/bundle tests after adding `setup-database-only.bat`.
 - `npm test` passed with 106 tests after adding the self-service password-change flow, updated UI smoke coverage, and configurable live-verification login credentials.
 - `npm test -- tests/userValidation.test.js tests/userRepository.test.js tests/authRoutes.test.js` passed with 20 focused account/password tests after adding self-service password changes.

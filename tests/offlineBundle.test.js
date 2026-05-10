@@ -22,6 +22,7 @@ test("offline bundle script copies runtime files and node_modules", () => {
   assert.match(script, /barangay-court-scheduler-offline/);
   assert.match(script, /node_modules was not found/);
   assert.match(script, /README-FIRST-WINDOWS\.txt/);
+  assert.match(script, /TROUBLESHOOT-WINDOWS\.txt/);
   assert.match(script, /setup-database-only\.bat/);
   assert.match(script, /check-office-readiness\.bat/);
   assert.match(script, /run-office-signoff\.bat/);
@@ -84,6 +85,7 @@ function createTemporaryBundle(options = {}) {
     ".env.example",
     "README.md",
     "README-FIRST-WINDOWS.txt",
+    "TROUBLESHOOT-WINDOWS.txt",
     "setup-database-only.bat",
     "check-office-readiness.bat",
     "run-office-signoff.bat",
