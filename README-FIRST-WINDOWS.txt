@@ -24,6 +24,8 @@ FIRST RUN
 6. Open http://localhost:3000/prototype in the office browser.
 7. For deployment sign-off, double-click run-office-signoff.bat and keep the
    generated report from reports\office-signoff.
+   The report asks staff to record the actual MySQL/MariaDB version, browser,
+   printer, readable print output, and barangay personnel sign-off.
 
 STARTER LOGIN
 
