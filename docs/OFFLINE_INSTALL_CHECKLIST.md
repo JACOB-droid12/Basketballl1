@@ -96,7 +96,7 @@ Starter login after setup:
 
 Change the starter password from Account > Change Password, or create a new Admin account before regular office use.
 
-`run-office-signoff.bat` runs local-only automated checks for prerequisites, configured database readiness, live MySQL/app smoke verification, UI smoke verification, and a local MySQL backup. It also writes a manual verification checklist into the report so the office can record login, password change, account creation, reservation, overlap rejection, status, activity-log, CSV, and print checks on the actual barangay computer. Reports are local records under `reports\office-signoff` and are not included in the prepared offline bundle.
+`run-office-signoff.bat` runs local-only automated checks for prerequisites, configured database readiness, live MySQL/app smoke verification, UI smoke verification, and a local MySQL backup. It also writes a manual verification checklist into the report so the office can record the actual MySQL/MariaDB service version, browser, login, password change, account creation, reservation, overlap rejection, status, activity-log, CSV, printer name, readable printed output, and barangay personnel sign-off on the actual barangay computer. Reports are local records under `reports\office-signoff` and are not included in the prepared offline bundle.
 
 ## Important
 

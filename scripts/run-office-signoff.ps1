@@ -42,7 +42,10 @@ function Invoke-SignoffCommand {
 function Write-ManualChecklist {
   Write-ReportLine ""
   Write-ReportLine "== Manual verification checklist =="
-Write-ReportLine "[ ] Open http://localhost:3000/prototype from the barangay office browser."
+  Write-ReportLine "[ ] Record the local MySQL/MariaDB service version used for office records: ______________________________"
+  Write-ReportLine "[ ] Record the MySQL client tools on PATH by running mysql --version and mysqldump --version."
+  Write-ReportLine "[ ] Open http://localhost:3000/prototype from the barangay office browser."
+  Write-ReportLine "[ ] Record the browser used for sign-off: ______________________________"
   Write-ReportLine "[ ] Log in with the starter admin account, then change the starter password, or log in with the active Admin account configured in .env."
   Write-ReportLine "[ ] If the seeded admin account was retired, confirm the sign-off checks used VERIFY_LOGIN_USERNAME and VERIFY_LOGIN_PASSWORD for the active Admin account."
   Write-ReportLine "[ ] Create a staff account, then confirm duplicate usernames are rejected."
@@ -53,6 +56,9 @@ Write-ReportLine "[ ] Open http://localhost:3000/prototype from the barangay off
   Write-ReportLine "[ ] View activity logs and confirm the actions were recorded."
   Write-ReportLine "[ ] Export reservation records to CSV."
   Write-ReportLine "[ ] Print the schedule or records using the actual office browser and printer."
+  Write-ReportLine "[ ] Record the printer used for sign-off: ______________________________"
+  Write-ReportLine "[ ] Confirm printed schedule/records are readable and not cut off."
+  Write-ReportLine "[ ] Barangay personnel sign-off name/date: ______________________________"
 }
 
 Write-Host "Barangay Basketball Court Scheduling System"

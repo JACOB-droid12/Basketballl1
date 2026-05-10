@@ -96,6 +96,11 @@ test("office sign-off batch file runs only local verification commands", () => {
   assert.match(powerShellScript, /npm run verify:ui/i);
   assert.match(powerShellScript, /npm run backup:mysql/i);
   assert.match(powerShellScript, /Manual verification checklist/i);
+  assert.match(powerShellScript, /Record the local MySQL\/MariaDB service version/);
+  assert.match(powerShellScript, /Record the browser used for sign-off/);
+  assert.match(powerShellScript, /Record the printer used for sign-off/);
+  assert.match(powerShellScript, /Confirm printed schedule\/records are readable and not cut off/);
+  assert.match(powerShellScript, /Barangay personnel sign-off name\/date/);
   assert.doesNotMatch(powerShellScript, /npm install/i);
   assert.doesNotMatch(powerShellScript, /npm ci/i);
   assert.doesNotMatch(powerShellScript, /npm audit/i);
