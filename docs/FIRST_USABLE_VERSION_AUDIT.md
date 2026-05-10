@@ -48,6 +48,7 @@ Code, SQL, documentation, offline packaging, and prototype-aligned UI shell work
 | One-click barangay setup | `setup-barangay-office.bat`; `scripts/setup-barangay-office.ps1`; `tests/oneClickSetup.test.js` | Implemented; requires local Node.js/MySQL already installed |
 | Office readiness check | `check-office-readiness.bat`; `scripts/check-office-readiness.ps1`; `tests/oneClickSetup.test.js`; `docs/OFFLINE_INSTALL_CHECKLIST.md` | Implemented and tested |
 | Office deployment sign-off report | `run-office-signoff.bat`; `scripts/run-office-signoff.ps1`; `reports\office-signoff` output; `tests/oneClickSetup.test.js`; `docs/DEPLOYMENT_GUIDE.md` | Implemented and tested; requires actual office MySQL/MariaDB for passing sign-off |
+| Local-only report protection | `.gitignore`; `scripts/verify-offline-bundle.mjs`; `tests/offlineBundle.test.js` reject copied `reports` data | Implemented and tested |
 | Windows first-run guide | `README-FIRST-WINDOWS.txt`; `docs/OFFLINE_INSTALL_CHECKLIST.md`; `tests/offlineBundle.test.js`; `npm run verify:bundle` | Implemented and tested |
 | One-click local start | `start-barangay-office.bat`; `tests/oneClickSetup.test.js` | Implemented and tested |
 | Start-script setup guard | `start-barangay-office.bat` checks Node.js, npm, `node_modules\`, and `.env`; `tests/oneClickSetup.test.js` | Implemented and tested |

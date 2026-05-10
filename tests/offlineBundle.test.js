@@ -57,7 +57,7 @@ test("offline bundle verifier accepts a complete prepared bundle", () => {
 test("offline bundle verifier rejects missing dependencies and copied local secrets", () => {
   const bundleRoot = createTemporaryBundle({
     omit: ["node_modules", "check-office-readiness.bat"],
-    includeForbidden: [".env"]
+    includeForbidden: [".env", "reports"]
   });
 
   try {
@@ -68,6 +68,7 @@ test("offline bundle verifier rejects missing dependencies and copied local secr
     assert.match(formatted, /\[FAIL\] required directory: node_modules/);
     assert.match(formatted, /\[FAIL\] required file: check-office-readiness\.bat/);
     assert.match(formatted, /\[FAIL\] excluded local-only item: \.env/);
+    assert.match(formatted, /\[FAIL\] excluded local-only item: reports/);
   } finally {
     rmSync(bundleRoot, { recursive: true, force: true });
   }

@@ -71,6 +71,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Hardened `start-barangay-office.bat` so it checks Node.js, npm, `node_modules\`, and `.env` before opening the browser and tells staff to run setup when `.env` is missing.
 - Added `npm run check:database` through `scripts/check-runtime-database.mjs`, and wired `start-barangay-office.bat` to run it before opening the browser. It confirms the configured local MySQL/MariaDB database is reachable and has seeded statuses, time slots, and an active admin account without writing data.
 - Added `run-office-signoff.bat` and `scripts/run-office-signoff.ps1` to run final Windows-only office sign-off checks and save a timestamped local report under `reports\office-signoff`.
+- Added `reports/` to `.gitignore` and to the offline-bundle forbidden-item verifier so generated office sign-off reports stay local.
 - Added `docs/OFFLINE_INSTALL_CHECKLIST.md` documenting how to prepare a complete offline project folder with `node_modules/` before bringing it to the barangay office.
 - Added `tests/oneClickSetup.test.js` to check the one-click setup applies schema/seed/diagnostics, runs verification, and does not call `npm install` or `npm ci`.
 - Added pure-offline bundle creation through `create-offline-bundle.bat`, `scripts/create-offline-bundle.ps1`, and `npm run bundle:offline`; the generated bundle includes `node_modules/` and excludes local `.env` secrets.

@@ -152,7 +152,7 @@ For a database-only daily startup check without opening the app, run:
 npm run check:database
 ```
 
-`run-office-signoff.bat` runs the office-focused local verification sequence and writes a timestamped report for presentation/deployment records. It does not download packages or use online services.
+`run-office-signoff.bat` runs the office-focused local verification sequence and writes a timestamped report for presentation/deployment records. It does not download packages or use online services. Generated reports stay local under `reports\office-signoff` and are ignored by git.
 
 See `docs/OFFLINE_INSTALL_CHECKLIST.md` for the full pure-offline checklist.
 

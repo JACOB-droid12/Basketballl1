@@ -39,7 +39,8 @@ const REQUIRED_BUNDLE_ITEMS = [
 
 const FORBIDDEN_BUNDLE_ITEMS = [
   ".env",
-  "backups"
+  "backups",
+  "reports"
 ];
 
 export function analyzeOfflineBundle(bundleRoot) {
@@ -65,7 +66,7 @@ export function analyzeOfflineBundle(bundleRoot) {
     checks.push({
       name: `excluded local-only item: ${itemPath}`,
       ok: !existsSync(fullPath),
-      detail: "offline bundle must not include local secrets or backup data"
+      detail: "offline bundle must not include local secrets, backup data, or sign-off reports"
     });
   }
 
