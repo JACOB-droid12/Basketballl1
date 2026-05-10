@@ -18,6 +18,7 @@ const projectRoot = path.resolve(__dirname, "..");
 export function createApp() {
   const app = express();
   const db = createDatabasePool();
+  app.locals.db = db;
 
   app.set("view engine", "ejs");
   app.set("views", path.join(projectRoot, "views"));
@@ -37,6 +38,10 @@ export function createApp() {
       }
     })
   );
+  app.use((request, response, next) => {
+    response.locals.currentUser = request.session?.user || null;
+    next();
+  });
 
   app.get("/", (_request, response) => {
     response.redirect("/dashboard");

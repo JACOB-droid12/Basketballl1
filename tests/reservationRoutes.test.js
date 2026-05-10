@@ -40,6 +40,54 @@ test("POST /reservations returns validation messages for missing required fields
   }
 });
 
+test("POST /reservations passes the signed-in user id as the reservation creator", async () => {
+  let createCall = null;
+  const app = express();
+  app.set("view engine", "ejs");
+  app.set("views", path.join(projectRoot, "views"));
+  app.use(express.urlencoded({ extended: false }));
+  app.use((request, _response, next) => {
+    request.session = { user: { userId: 42 } };
+    next();
+  });
+  app.use(
+    createReservationRoutes({
+      db: {},
+      todayProvider: () => "2026-05-07",
+      repositories: {
+        createReservation: async (_db, reservation, options) => {
+          createCall = { reservation, options };
+        }
+      }
+    })
+  );
+
+  const server = app.listen(0);
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/reservations`, {
+      method: "POST",
+      redirect: "manual",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        reservationDate: "2026-05-08",
+        startTime: "07:00",
+        endTime: "08:00",
+        representativeName: "Sto. Niño Youth Team",
+        contactNo: "09171234567",
+        address: "Purok 3",
+        purpose: "Practice"
+      })
+    });
+
+    assert.equal(response.status, 302);
+    assert.equal(response.headers.get("location"), "/reservations?reservationDate=2026-05-08");
+    assert.equal(createCall.options.createdByUserId, 42);
+    assert.equal(createCall.reservation.representativeName, "Sto. Niño Youth Team");
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 test("GET /reservations renders an export link that preserves filters", async () => {
   const app = express();
   app.set("view engine", "ejs");
@@ -116,6 +164,9 @@ test("GET /reservations/:reservationId renders representative detail information
     assert.match(body, /09171234567/);
     assert.match(body, /Purok 3/);
     assert.match(body, /Practice/);
+    assert.match(body, /return confirm\('Mark this reservation as missed\?'\)/);
+    assert.match(body, /return confirm\('Mark this reservation as completed\?'\)/);
+    assert.match(body, /return confirm\('Cancel this reservation\?'\)/);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
@@ -290,6 +341,51 @@ test("POST /reservations/:reservationId/edit updates a reservation and redirects
         remarks: "Updated remarks",
         statusCode: "RESERVED"
       }
+    });
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("POST /reservations/:reservationId/status passes the signed-in user id to the activity log path", async () => {
+  let statusCall = null;
+  const app = express();
+  app.set("view engine", "ejs");
+  app.set("views", path.join(projectRoot, "views"));
+  app.use(express.urlencoded({ extended: false }));
+  app.use((request, _response, next) => {
+    request.session = { user: { userId: 84 } };
+    next();
+  });
+  app.use(
+    createReservationRoutes({
+      db: {},
+      repositories: {
+        updateReservationStatus: async (_db, reservationId, statusCode, options) => {
+          statusCall = { reservationId, statusCode, options };
+        }
+      }
+    })
+  );
+
+  const server = app.listen(0);
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/reservations/7/status`, {
+      method: "POST",
+      redirect: "manual",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        statusCode: "COMPLETED",
+        returnTo: "/reservations/7"
+      })
+    });
+
+    assert.equal(response.status, 302);
+    assert.equal(response.headers.get("location"), "/reservations/7");
+    assert.deepEqual(statusCall, {
+      reservationId: "7",
+      statusCode: "COMPLETED",
+      options: { userId: 84 }
     });
   } finally {
     await new Promise((resolve) => server.close(resolve));

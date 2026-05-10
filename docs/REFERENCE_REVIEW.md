@@ -54,13 +54,16 @@ The slide media includes these usable UI references:
 
 The latest uploaded mockup images confirmed the intended visual direction:
 
+- Palette should use the supplied color card: Hot Paprika `#B53324`, Honeycomb `#E5A657`, Biscuit `#FDBC94`, and Crumpet `#F5E2CE`
 - Full-width red page title bars
 - Gold left navigation rail with rounded white navigation buttons
 - Barangay logo placed near the lower-left account area
 - Large bordered weekly schedule table on the Home screen
-- Orange/red bordered reservation cards on the Schedule screen
+- Weekly schedule cells should be clickable so staff can open a reservation detail or start a reservation for an available slot
+- Orange/red bordered reservation cards on the Schedule screen should open the matching reservation details
 - Large rounded red-bordered panels for details, account management, and forms
 - Annotation notes in the mockups are design guidance only and should not be copied as final office UI text
+- The login mockup includes a forgotten-password note, but password recovery is not part of the offline milestone and should not be shown as a working feature unless implemented later
 
 Implementation direction:
 
@@ -93,3 +96,7 @@ Milestone 1 keeps the same concepts but adapts names for implementation:
 - `LOGS` becomes `activity_logs`
 
 The diagram includes plaintext `password`. The implementation replaces this with `password_hash`.
+
+## HTML Prototype Reference
+
+The file `C:\Users\Emmy Lou\Downloads\Sto. Nino Court Reservation System Prototype final.html` is now the UI baseline for shell layout, Home/Schedule workflow, account flow, status colors, and prototype-style form/detail screens. See `docs/PROTOTYPE_ALIGNMENT.md`.

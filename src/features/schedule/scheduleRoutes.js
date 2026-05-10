@@ -23,6 +23,7 @@ export function createScheduleRoutes({ db, todayProvider = getTodayDate, reposit
         date,
         schedule: buildDailySchedule({ date, timeSlots, reservations }),
         displayWeekRange: formatWeekRange(date),
+        displayDateLabel: formatDisplayDate(date),
         errorMessage: ""
       });
     } catch (error) {
@@ -31,6 +32,7 @@ export function createScheduleRoutes({ db, todayProvider = getTodayDate, reposit
         date,
         schedule: [],
         displayWeekRange: formatWeekRange(date),
+        displayDateLabel: formatDisplayDate(date),
         errorMessage: databaseErrorMessage(error)
       });
     }
@@ -86,4 +88,23 @@ function formatWeekRange(dateString) {
   }
 
   return `${monthName} ${startDay} - ${endMonthName} ${endDay}, ${endYear}`;
+}
+
+function formatDisplayDate(dateString) {
+  const [year, month, day] = dateString.split("-").map(Number);
+  if (![year, month, day].every(Number.isInteger)) {
+    return dateString;
+  }
+
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (Number.isNaN(date.getTime())) {
+    return dateString;
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+    timeZone: "UTC"
+  }).format(date);
 }

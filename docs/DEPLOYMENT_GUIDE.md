@@ -2,7 +2,7 @@
 
 Offline local deployment guide for the Barangay Sto. Niño Basketball Court Scheduling System.
 
-The final target is a barangay office computer running the app and local MySQL. Internet access is only needed to install prerequisites or dependencies the first time.
+The final target is a barangay office computer running the app and local MySQL with no internet connection required during normal use. If installers or npm packages are not already available, use a separate setup computer to download them first, then bring the prepared offline folder and local installers to the barangay office.
 
 ## Required Software
 
@@ -39,9 +39,45 @@ For a repeatable installation using the committed lockfile:
 npm ci --ignore-scripts
 ```
 
+For a pure offline barangay-office install, run dependency installation before bringing the project folder to the office computer. The copied project folder must include `node_modules/`. The one-click barangay setup does not download npm packages.
+
+To create a prepared offline folder:
+
+```powershell
+npm install
+npm run bundle:offline
+npm run verify:bundle
+```
+
+Copy `dist\barangay-court-scheduler-offline` to the barangay office computer.
+
+## One-Click Offline Setup
+
+After Node.js 20+ and MySQL 8+ are installed on the barangay office computer from local installers if needed, use:
+
+```text
+setup-barangay-office.bat
+```
+
+This setup uses local files only. It creates `.env` if needed, asks for the local MySQL password, applies `database/schema.sql`, applies `database/seed.sql`, runs `database/diagnostics.sql`, and runs the live MySQL verifier.
+
+If `node_modules/` is missing, setup stops. Prepare the project folder with dependencies on another computer, then copy the complete folder to the barangay office computer.
+
+To start regular office use after setup:
+
+```text
+start-barangay-office.bat
+```
+
 ## Configure Environment
 
-Copy `.env.example` to `.env`.
+Create the local `.env` file:
+
+```powershell
+npm run setup:env
+```
+
+The setup command reads `.env.example`, generates a local `APP_SESSION_SECRET`, writes `.env`, and refuses to overwrite an existing `.env` file.
 
 Example local settings:
 
@@ -54,18 +90,37 @@ DB_NAME=barangay_court_scheduler
 DB_USER=root
 DB_PASSWORD=your-local-mysql-password
 DEFAULT_CREATED_BY_USER_ID=1
+VERIFY_LOGIN_USERNAME=admin
+VERIFY_LOGIN_PASSWORD=
+VERIFY_MYSQL_DATE=2099-05-08
 ```
 
 Use a strong `APP_SESSION_SECRET` for the barangay office installation.
+Set `DB_PASSWORD` to the local MySQL password before running the live verification commands.
+Leave `VERIFY_LOGIN_PASSWORD` blank during first setup so the verifier uses the seeded temporary password `admin123`. If the starter password has already been changed and you need to rerun `npm run verify:mysql`, set `VERIFY_LOGIN_PASSWORD` to the current local password first. Keep `.env` private.
 
 ## Create Local MySQL Database
+
+Before creating the database, run:
+
+```powershell
+npm run verify:prereqs
+```
+
+This checks Node.js, npm, MySQL client tools, `.env`, and required local configuration values.
 
 Run these commands from the project folder:
 
 ```powershell
-mysql -u root -p < database/schema.sql
-mysql -u root -p barangay_court_scheduler < database/seed.sql
+npm run verify:sql
+$env:MYSQL_PWD = Read-Host "MySQL password (leave blank if none)"
+cmd /c "mysql -h127.0.0.1 -P3306 -u root < database\schema.sql"
+cmd /c "mysql -h127.0.0.1 -P3306 -u root barangay_court_scheduler < database\seed.sql"
+cmd /c "mysql -h127.0.0.1 -P3306 -u root barangay_court_scheduler < database\diagnostics.sql"
+Remove-Item Env:\MYSQL_PWD -ErrorAction SilentlyContinue
 ```
+
+On Windows, `setup-database-only.bat` runs the same local setup without needing to type the redirection commands. It applies `database/schema.sql`, `database/seed.sql`, and `database/diagnostics.sql` as separate MySQL commands for Oracle MySQL 9 and MariaDB compatibility. `database/setup.sql` remains only as a convenience for clients that support `SOURCE` from redirected input.
 
 The schema creates:
 
@@ -78,18 +133,31 @@ The schema creates:
 - Activity logs
 - Overlap-prevention triggers
 
+The schema also forces `utf8mb4` / `utf8mb4_unicode_ci` at the database and table level so barangay names and resident names with Filipino characters are stored correctly. When rerun after an older installation, it converts the existing required tables to the same charset. Back up the database before rerunning schema changes on an office computer that already has live reservation records.
+
+`database/diagnostics.sql` is a read-only follow-up check. It reports PASS/FAIL rows for database charset, required tables, table engine/collation, foreign keys, trigger presence, seed statuses, default active slots, starter admin password hash, and court settings.
+
 ## Verify Installation
 
 Run:
 
 ```powershell
+npm run verify:prereqs
 npm run verify:foundation
+npm run verify:sql
+npm run verify:mysql
+npm run verify:ui
 npm test
 ```
 
 Expected result:
 
+- Prerequisite verification passes.
 - Foundation verification passes.
+- SQL static verification confirms required schema, seed, and diagnostics safeguards before live MySQL setup.
+- Database diagnostics prints PASS rows for the installed MySQL database setup checks.
+- MySQL verification applies the schema and seed, checks the starter admin, creates/completes a temporary reservation, verifies activity logging, confirms overlap-trigger rejection, and logs in through the app over HTTP to check authenticated office pages.
+- UI smoke verification renders the main office screens with sample data and confirms each page contains the expected workflow text.
 - Automated tests pass.
 
 ## Start the App
@@ -111,6 +179,8 @@ Seeded starter account:
 - Username: `admin`
 - Temporary password: `admin123`
 
+Change the seeded admin password from Account > Change Password before regular office use, or create a new Admin account and deactivate the seeded account.
+
 ## Office Startup Procedure
 
 1. Turn on the barangay office computer.
@@ -122,7 +192,7 @@ Seeded starter account:
 
 ## Optional Windows Shortcut
 
-Create a file named `start-scheduler.bat` outside the repo, for example on the desktop:
+The project includes `start-barangay-office.bat`. If a separate desktop shortcut is preferred, create a file named `start-scheduler.bat` outside the repo:
 
 ```bat
 @echo off
@@ -137,28 +207,25 @@ Use the real installed folder path if it is different.
 
 Back up the database before system changes and at the end of regular office intervals.
 
-Example backup command:
+Recommended backup command:
 
 ```powershell
-$stamp = Get-Date -Format "yyyy-MM-dd_HHmm"
-mysqldump -u root -p barangay_court_scheduler > "backups\barangay_court_scheduler_$stamp.sql"
+npm run backup:mysql
 ```
 
-Create the `backups` folder first:
+The command reads `.env`, creates `backups/` if needed, and writes a timestamped `.sql` file such as `barangay_court_scheduler_2026-05-08_1430.sql`. It passes the MySQL password through the child process environment instead of putting the password in the command text.
 
-```powershell
-mkdir backups
-```
-
-Keep backup files on a protected external drive or barangay-controlled storage.
+Keep backup files on a protected external drive or barangay-controlled storage. To store backups somewhere else, set `BACKUP_DIR` in `.env`.
 
 ## Restore Database
 
 Use restore only when necessary and only after confirming the target database can be replaced.
 
 ```powershell
-mysql -u root -p barangay_court_scheduler < backups\backup-file.sql
+npm run restore:mysql -- backups\backup-file.sql
 ```
+
+The restore command requires an explicit `.sql` file path and reads the MySQL password from `.env` rather than putting it in the command text.
 
 ## Update Procedure
 
@@ -176,9 +243,10 @@ mysql -u root -p barangay_court_scheduler < backups\backup-file.sql
 - Do not use cloud databases for the barangay office deployment.
 - Keep `.env` private.
 - Use individual Admin and Staff accounts instead of sharing one password.
+- Change the temporary starter password before regular office use.
 - Lock the computer when unattended.
 - Restrict database access to authorized technical staff.
 
 ## Current Deployment Limitation
 
-The Codex sandbox used to build this version does not include a running MySQL server. The SQL files and application code are prepared for local MySQL, but final live verification must be performed on the barangay office computer or another Windows computer with MySQL installed.
+This version has been live-verified during development against disposable local Oracle MySQL and MariaDB servers. That proves the schema, seed, reservation writes, overlap triggers, backup, restore, and diagnostics paths on MySQL-compatible engines. Final deployment sign-off must still be performed on the barangay office computer or another Windows computer using the actual local MySQL/MariaDB installation that will store office records.

@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
+import bcrypt from "bcryptjs";
 import test from "node:test";
 
 import {
+  buildUpdateUserPasswordQuery,
   buildUpdateUserStatusQuery,
   buildUserListQuery,
-  mapAccountUserRow
+  mapAccountUserRow,
+  updateUserPassword
 } from "../src/features/users/userRepository.js";
 
 test("builds account user list query without password hashes", () => {
@@ -26,6 +29,32 @@ test("builds user account status update query with parameters", () => {
     userId: 7,
     accountStatus: "INACTIVE"
   });
+});
+
+test("builds user password update query without plaintext password", () => {
+  const query = buildUpdateUserPasswordQuery(1, "$2a$12$hashed");
+
+  assert.match(query.sql, /password_hash = :passwordHash/);
+  assert.doesNotMatch(query.sql, /new-local-password/);
+  assert.deepEqual(query.params, {
+    userId: 1,
+    passwordHash: "$2a$12$hashed"
+  });
+});
+
+test("updateUserPassword stores a bcrypt hash", async () => {
+  let savedParams = null;
+  const db = {
+    execute: async (_sql, params) => {
+      savedParams = params;
+      return [{ affectedRows: 1 }];
+    }
+  };
+
+  await updateUserPassword(db, 1, "new-local-password");
+
+  assert.notEqual(savedParams.passwordHash, "new-local-password");
+  assert.equal(await bcrypt.compare("new-local-password", savedParams.passwordHash), true);
 });
 
 test("maps account user rows for the account management view", () => {

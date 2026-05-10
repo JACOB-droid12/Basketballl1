@@ -21,7 +21,7 @@ After `database/seed.sql` is applied:
 - Username: `admin`
 - Temporary password: `admin123`
 
-Change the starter password after installation by creating a real Admin account, confirming it works, then retiring the seeded account through a database administrator until account deactivation is added in the app.
+After installation, change the starter password from Account, then Change Password. Another safe option is to create a real Admin account, confirm that it can log in, then deactivate the seeded `admin` account from Account Management.
 
 ## Home Dashboard
 
@@ -105,12 +105,23 @@ To deactivate or reactivate an account:
 
 The currently signed-in Admin account cannot deactivate itself from the account page.
 
+To change your own password:
+
+1. Click Account.
+2. Click Change Password if you are on the Admin account list.
+3. Enter the current password.
+4. Enter and confirm the new password.
+5. Save the password.
+
+Staff accounts can use Account to open the Change Password screen directly.
+
 Validation rules:
 
 - All fields are required.
 - Username must be unique.
 - Role must be Admin or Staff.
 - Passwords are stored as hashes, not plaintext.
+- Changing a password requires the current password.
 
 Recommended role use:
 
@@ -161,6 +172,10 @@ If login fails:
 1. Check the username and password.
 2. Confirm the account is active in the database.
 3. Confirm the seeded admin account exists if this is a new installation.
+
+If you are using the starter Admin account for the first time, log in with `admin` / `admin123`, then change the password before regular office use.
+
+If technical staff rerun the live MySQL verification after the starter password changes, they should set `VERIFY_LOGIN_PASSWORD` in `.env` to the current local password first.
 
 If a reservation cannot be saved:
 

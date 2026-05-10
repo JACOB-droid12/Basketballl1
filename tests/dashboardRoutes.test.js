@@ -23,6 +23,20 @@ test("GET /dashboard renders summary counts from repository data", async () => {
           { slotId: 2, name: "8:00 AM - 9:00 AM", startTime: "08:00", endTime: "09:00" }
         ],
         listReservations: async (_db, filters) => {
+          if (filters.reservationDate === "2026-05-06") {
+            return [
+              {
+                reservationId: 3,
+                reservationDate: "2026-05-06",
+                startTime: "08:00",
+                endTime: "09:00",
+                statusCode: "RESERVED",
+                representativeName: "Wednesday Team",
+                purpose: "Practice"
+              }
+            ];
+          }
+
           if (filters.reservationDate === "2026-05-07") {
             return [
               {
@@ -60,9 +74,11 @@ test("GET /dashboard renders summary counts from repository data", async () => {
     const body = await response.text();
 
     assert.equal(response.status, 200);
-    assert.match(body, /Date and Schedule time of basketball court game/);
+    assert.match(body, /Basketball Court Schedule/);
+    assert.match(body, /Today:\s*<strong>2026-05-07<\/strong>/);
     assert.match(body, /Available Slots/);
     assert.match(body, /Team A/);
+    assert.match(body, /Wednesday Team/);
     assert.match(body, /Team B/);
   } finally {
     await new Promise((resolve) => server.close(resolve));

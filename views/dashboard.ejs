@@ -14,11 +14,17 @@
       <%- include("partials/navigation", { active }) %>
       <main class="workspace mockup-workspace">
         <section class="home-board" aria-labelledby="home-title">
-          <h2 id="home-title">Date and Schedule time of basketball court game</h2>
+          <h2 id="home-title">Basketball Court Schedule</h2>
 
           <% if (errorMessage) { %>
             <div class="alert"><%= errorMessage %></div>
           <% } %>
+
+          <div class="prototype-legend" aria-label="Schedule status legend">
+            <span><i class="legend-dot reserved"></i> Reserved</span>
+            <span><i class="legend-dot completed"></i> Completed</span>
+            <span><i class="legend-dot available"></i> Available</span>
+          </div>
 
           <div class="week-selector">
             <span aria-hidden="true">◀</span>
@@ -27,6 +33,7 @@
           </div>
 
           <div class="summary-strip" aria-label="Today schedule summary">
+            <span>Today: <strong><%= summary.today %></strong></span>
             <span>Reserved Slots: <strong><%= summary.reservedCount %></strong></span>
             <span>Available Slots: <strong><%= summary.availableCount %></strong></span>
             <span>Missed: <strong><%= summary.missedCount %></strong></span>
@@ -44,37 +51,33 @@
               <thead>
                 <tr>
                   <th>Time schedule of game</th>
-                  <th>Sunday</th>
-                  <th>Monday</th>
-                  <th>Tuesday</th>
-                  <th>Wednesday</th>
-                  <th>Thursday</th>
-                  <th>Friday</th>
-                  <th>Saturday</th>
+                  <% weeklySchedule.days.forEach((day) => { %>
+                    <th><%= day.name %></th>
+                  <% }) %>
                 </tr>
               </thead>
               <tbody>
-                <% if (todaySchedule.length === 0) { %>
+                <% if (weeklySchedule.rows.length === 0) { %>
                   <tr>
                     <td colspan="8">No schedule data available.</td>
                   </tr>
                 <% } %>
-                <% todaySchedule.forEach((slot) => { %>
+                <% weeklySchedule.rows.forEach((row) => { %>
                   <tr>
-                    <th><%= slot.name %></th>
-                    <% ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].forEach((_day, index) => { %>
-                      <% if (index === new Date(summary.today + "T00:00:00").getDay()) { %>
-                        <td class="<%= slot.isAvailableForBooking ? 'cell-available' : 'cell-reserved' %>">
-                          <% if (slot.reservation) { %>
+                    <th><%= row.name %></th>
+                    <% row.cells.forEach((slot, index) => { %>
+                      <td class="cell-<%= slot.statusCode.toLowerCase() %>">
+                        <% if (slot.reservation) { %>
+                          <a class="week-cell-link" href="/reservations/<%= slot.reservation.reservationId %>">
                             <strong><%= slot.reservation.purpose || slot.statusName %></strong>
                             <span><%= slot.reservation.representativeName || '' %></span>
-                          <% } else { %>
+                          </a>
+                        <% } else { %>
+                          <a class="week-cell-link" href="<%= "/reservations/new?date=" + encodeURIComponent(weeklySchedule.days[index].date) + "&startTime=" + encodeURIComponent(slot.startTime) + "&endTime=" + encodeURIComponent(slot.endTime) %>">
                             <span>Available</span>
-                          <% } %>
-                        </td>
-                      <% } else { %>
-                        <td></td>
-                      <% } %>
+                          </a>
+                        <% } %>
+                      </td>
                     <% }) %>
                   </tr>
                 <% }) %>

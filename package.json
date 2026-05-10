@@ -7,8 +7,18 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node --test --experimental-test-isolation=none",
-    "verify:foundation": "node scripts/verify-foundation.mjs"
+    "test": "node scripts/run-tests.mjs",
+    "bundle:offline": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/create-offline-bundle.ps1",
+    "setup:barangay": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-barangay-office.ps1",
+    "setup:env": "node scripts/setup-env.mjs",
+    "verify:sql": "node scripts/verify-sql-static.mjs",
+    "verify:prereqs": "node scripts/verify-prereqs.mjs",
+    "verify:foundation": "node scripts/verify-foundation.mjs",
+    "verify:bundle": "node scripts/verify-offline-bundle.mjs",
+    "verify:mysql": "node scripts/verify-mysql.mjs",
+    "verify:ui": "node scripts/verify-ui-smoke.mjs",
+    "backup:mysql": "node scripts/backup-mysql.mjs",
+    "restore:mysql": "node scripts/restore-mysql.mjs"
   },
   "engines": {
     "node": ">=20"

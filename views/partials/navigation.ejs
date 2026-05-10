@@ -1,12 +1,15 @@
 <aside class="sidebar" aria-label="Main navigation">
-  <nav>
+  <nav class="nav-links">
     <a class="<%= active === 'dashboard' ? 'active' : '' %>" href="/dashboard">Home</a>
     <a class="<%= active === 'schedule' ? 'active' : '' %>" href="/schedule">Schedule</a>
-    <a class="<%= active === 'reservations' ? 'active' : '' %>" href="/reservations">Reservations</a>
-    <a class="<%= active === 'activityLogs' ? 'active' : '' %>" href="/activity-logs">Activity Logs</a>
+    <div class="sidebar-tools" aria-label="Office tools">
+      <a class="<%= active === 'reservations' ? 'active' : '' %>" href="/reservations">Reservations</a>
+      <a class="<%= active === 'activityLogs' ? 'active' : '' %>" href="/activity-logs">Activity Logs</a>
+    </div>
   </nav>
   <div class="sidebar-footer">
-    <a class="<%= active === 'account' ? 'active' : '' %>" href="/account">Account</a>
+    <% const accountHref = typeof currentUser !== "undefined" && currentUser && currentUser.role !== "ADMIN" ? "/account/password" : "/account"; %>
+    <a class="<%= active === 'account' ? 'active' : '' %>" href="<%= accountHref %>">Account</a>
     <img src="/images/barangay-logo.jpg" alt="Sto. Niño Barangay Council logo">
   </div>
 </aside>

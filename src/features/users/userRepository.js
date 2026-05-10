@@ -103,8 +103,32 @@ export function buildUpdateUserStatusQuery(userId, accountStatus) {
   };
 }
 
+export function buildUpdateUserPasswordQuery(userId, passwordHash) {
+  return {
+    sql: `
+      UPDATE users
+      SET password_hash = :passwordHash
+      WHERE user_id = :userId
+    `,
+    params: {
+      userId: Number(userId),
+      passwordHash
+    }
+  };
+}
+
 export async function updateUserAccountStatus(db, userId, accountStatus) {
   const query = buildUpdateUserStatusQuery(userId, accountStatus);
+  const [result] = await db.execute(query.sql, query.params);
+
+  if (result.affectedRows === 0) {
+    throw new UserNotFoundError();
+  }
+}
+
+export async function updateUserPassword(db, userId, newPassword) {
+  const passwordHash = await bcrypt.hash(newPassword, 12);
+  const query = buildUpdateUserPasswordQuery(userId, passwordHash);
   const [result] = await db.execute(query.sql, query.params);
 
   if (result.affectedRows === 0) {

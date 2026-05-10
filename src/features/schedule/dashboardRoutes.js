@@ -1,7 +1,12 @@
 import { Router } from "express";
 
 import { getTimeSlots, listReservations } from "../reservations/reservationRepository.js";
-import { buildDailySchedule, buildDashboardSummary, findNearestAvailableSlot } from "./scheduleService.js";
+import {
+  buildDailySchedule,
+  buildDashboardSummary,
+  buildWeeklySchedule,
+  findNearestAvailableSlot
+} from "./scheduleService.js";
 
 export function createDashboardRoutes({
   db,
@@ -28,7 +33,19 @@ export function createDashboardRoutes({
         startDate: today,
         days: 14
       });
+      const weekStartDate = getWeekStartDate(today);
+      const weeklyReservations = await collectUpcomingReservations({
+        db,
+        repositories,
+        startDate: weekStartDate,
+        days: 7
+      });
       const todaySchedule = buildDailySchedule({ date: today, timeSlots, reservations: todayReservations });
+      const weeklySchedule = buildWeeklySchedule({
+        weekStartDate,
+        timeSlots,
+        reservations: weeklyReservations
+      });
       const summary = buildDashboardSummary({ today, todaySchedule, upcomingReservations });
       const nearestAvailableSlot = findNearestAvailableSlot({
         startDate: today,
@@ -41,6 +58,7 @@ export function createDashboardRoutes({
         active: "dashboard",
         summary,
         todaySchedule,
+        weeklySchedule,
         nearestAvailableSlot,
         displayWeekRange: formatWeekRange(today),
         errorMessage: ""
@@ -50,6 +68,11 @@ export function createDashboardRoutes({
         active: "dashboard",
         summary: buildDashboardSummary({ today, todaySchedule: [], upcomingReservations: [] }),
         todaySchedule: [],
+        weeklySchedule: buildWeeklySchedule({
+          weekStartDate: getWeekStartDate(today),
+          timeSlots: [],
+          reservations: []
+        }),
         nearestAvailableSlot: null,
         displayWeekRange: formatWeekRange(today),
         errorMessage: databaseErrorMessage(error)
@@ -96,6 +119,17 @@ function addDays(dateString, days) {
   const [year, month, day] = dateString.split("-").map(Number);
   const date = new Date(Date.UTC(year, month - 1, day + days));
   return date.toISOString().slice(0, 10);
+}
+
+function getWeekStartDate(dateString) {
+  const [year, month, day] = dateString.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  if (Number.isNaN(date.getTime())) {
+    return dateString;
+  }
+
+  return addDays(dateString, -date.getUTCDay());
 }
 
 function formatWeekRange(dateString) {

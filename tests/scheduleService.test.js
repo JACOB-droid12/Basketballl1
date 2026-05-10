@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   buildDailySchedule,
   buildDashboardSummary,
+  buildWeeklySchedule,
   findNearestAvailableSlot
 } from "../src/features/schedule/scheduleService.js";
 
@@ -87,6 +88,40 @@ test("ignores reservations from other dates", () => {
 
   assert.equal(schedule[0].statusCode, "AVAILABLE");
   assert.equal(schedule[0].isAvailableForBooking, true);
+});
+
+test("builds a Sunday to Saturday weekly schedule with reservation cells on the correct day", () => {
+  const weeklySchedule = buildWeeklySchedule({
+    weekStartDate: "2026-05-03",
+    timeSlots,
+    reservations: [
+      {
+        reservationId: 15,
+        reservationDate: "2026-05-05",
+        startTime: "08:00",
+        endTime: "09:00",
+        statusCode: "RESERVED",
+        representativeName: "Tuesday Team",
+        purpose: "Practice"
+      }
+    ]
+  });
+
+  assert.deepEqual(
+    weeklySchedule.days.map((day) => ({ name: day.name, date: day.date })),
+    [
+      { name: "Sunday", date: "2026-05-03" },
+      { name: "Monday", date: "2026-05-04" },
+      { name: "Tuesday", date: "2026-05-05" },
+      { name: "Wednesday", date: "2026-05-06" },
+      { name: "Thursday", date: "2026-05-07" },
+      { name: "Friday", date: "2026-05-08" },
+      { name: "Saturday", date: "2026-05-09" }
+    ]
+  );
+  assert.equal(weeklySchedule.rows[1].cells[2].statusCode, "RESERVED");
+  assert.equal(weeklySchedule.rows[1].cells[2].reservation.representativeName, "Tuesday Team");
+  assert.equal(weeklySchedule.rows[1].cells[0].statusCode, "AVAILABLE");
 });
 
 test("finds the nearest available slot starting today", () => {

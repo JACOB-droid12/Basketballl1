@@ -1,0 +1,87 @@
+# Pure Offline Install Checklist
+
+This system is designed to run without internet access in the barangay office.
+
+## What Offline Means
+
+- The reservation system opens at `http://localhost:3000/login`.
+- The database is local MySQL on the same office computer or barangay-controlled local network.
+- Residents do not reserve online.
+- No cloud database, online booking site, email service, SMS service, or payment service is required.
+
+## Prepare Before Bringing It To The Barangay Office
+
+Use a setup computer first. Internet is only needed here if installers or npm packages are not already available.
+
+1. Install project dependencies once:
+
+```powershell
+npm install
+```
+
+2. Confirm `node_modules/` exists in the project folder.
+
+3. Create the prepared offline bundle:
+
+```powershell
+npm run bundle:offline
+npm run verify:bundle
+```
+
+This creates:
+
+```text
+dist\barangay-court-scheduler-offline
+```
+
+4. Copy `dist\barangay-court-scheduler-offline` to a USB drive or local installer folder. It includes:
+
+- `node_modules/`
+- `package.json`
+- `package-lock.json`
+- `src/`
+- `views/`
+- `public/`
+- `database/`
+- `docs/`
+- `scripts/`
+- `tests/`
+- `setup-database-only.bat`
+- `setup-barangay-office.bat`
+- `start-barangay-office.bat`
+
+The `database/` folder includes `schema.sql`, `seed.sql`, `diagnostics.sql`, and `SQL_ONLY_SETUP.md` with exact manual commands. The root `setup-database-only.bat` file runs those SQL files locally for Windows users.
+
+`npm run verify:bundle` checks that the prepared folder includes the required app files, `node_modules/`, SQL setup files, and docs, and that local-only files such as `.env` and database backups were not copied into the bundle.
+
+5. Bring offline installers if the barangay computer does not already have them:
+
+- Node.js 20+ Windows installer
+- MySQL 8+ Windows installer
+- Chrome, Edge, or Firefox installer if needed
+
+## Barangay Office Setup
+
+On the barangay office computer:
+
+1. Install Node.js and MySQL from local/offline installers if needed.
+2. Make sure MySQL is running.
+3. Copy the prepared project folder to the computer.
+4. Double-click `setup-barangay-office.bat`.
+5. Enter the local MySQL password when asked.
+6. Confirm the setup finishes without errors.
+7. Double-click `start-barangay-office.bat`.
+8. Open `http://localhost:3000/login`.
+
+If only the database needs to be created or checked, double-click `setup-database-only.bat` instead. It does not start the app UI.
+
+Starter login after setup:
+
+- Username: `admin`
+- Temporary password: `admin123`
+
+Change the starter password from Account > Change Password, or create a new Admin account before regular office use.
+
+## Important
+
+The one-click setup does not download packages. If `node_modules/` is missing, setup stops and asks for a prepared offline project folder.

@@ -31,6 +31,38 @@ export function buildDailySchedule({ date, timeSlots = [], reservations = [] }) 
   });
 }
 
+export function buildWeeklySchedule({ weekStartDate, timeSlots = [], reservations = [] }) {
+  const days = Array.from({ length: 7 }, (_item, index) => {
+    const date = addDays(weekStartDate, index);
+    return {
+      date,
+      name: DAY_NAMES[index]
+    };
+  });
+
+  const dailySchedules = new Map(
+    days.map((day) => [
+      day.date,
+      buildDailySchedule({
+        date: day.date,
+        timeSlots,
+        reservations
+      })
+    ])
+  );
+
+  return {
+    days,
+    rows: timeSlots.map((slot, slotIndex) => ({
+      slotId: slot.slotId,
+      name: slot.name,
+      startTime: slot.startTime,
+      endTime: slot.endTime,
+      cells: days.map((day) => dailySchedules.get(day.date)[slotIndex])
+    }))
+  };
+}
+
 export function findNearestAvailableSlot({ startDate, timeSlots = [], reservations = [], searchDays = 14 }) {
   for (let offset = 0; offset < searchDays; offset += 1) {
     const date = addDays(startDate, offset);
@@ -81,6 +113,8 @@ function compareReservationsForSlot(a, b) {
 
   return Number(a.reservationId || 0) - Number(b.reservationId || 0);
 }
+
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 function addDays(dateString, days) {
   const [year, month, day] = dateString.split("-").map(Number);

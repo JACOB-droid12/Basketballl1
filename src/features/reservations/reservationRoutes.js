@@ -196,7 +196,9 @@ export function createReservationRoutes({ db, todayProvider = getTodayDate, repo
     }
 
     try {
-      await repo.createReservation(db, result.value);
+      await repo.createReservation(db, result.value, {
+        createdByUserId: request.session?.user?.userId
+      });
       response.redirect(`/reservations?reservationDate=${encodeURIComponent(result.value.reservationDate)}`);
     } catch (error) {
       const status = error instanceof ReservationConflictError ? 409 : 503;
@@ -219,7 +221,9 @@ export function createReservationRoutes({ db, todayProvider = getTodayDate, repo
     }
 
     try {
-      await repo.updateReservationStatus(db, request.params.reservationId, statusCode);
+      await repo.updateReservationStatus(db, request.params.reservationId, statusCode, {
+        userId: request.session?.user?.userId
+      });
       response.redirect(request.body.returnTo || "/reservations");
     } catch {
       response.status(503).redirect(request.body.returnTo || "/reservations");

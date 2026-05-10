@@ -103,6 +103,14 @@ test("GET /account shows account management for admin users", async () => {
         },
         {
           userId: 2,
+          fullName: "Maria Santos",
+          username: "maria_staff",
+          role: "STAFF",
+          accountStatus: "ACTIVE",
+          createdAt: "2026-05-08 09:30:00"
+        },
+        {
+          userId: 3,
           fullName: "John Dela Cruz",
           username: "johndc_staff",
           role: "STAFF",
@@ -123,7 +131,111 @@ test("GET /account shows account management for admin users", async () => {
     assert.match(body, /Create Account/);
     assert.match(body, /System Administrator/);
     assert.match(body, /johndc_staff/);
+    assert.match(body, /return confirm\('Deactivate this account\?'\)/);
     assert.match(body, /Reactivate/);
+    assert.match(body, /return confirm\('Reactivate this account\?'\)/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("GET /account/password shows password change form for signed-in staff", async () => {
+  const app = createTestApp({
+    sessionUser: { userId: 2, fullName: "Maria Santos", username: "maria_staff", role: "STAFF" }
+  });
+
+  const server = app.listen(0);
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/account/password`);
+    const body = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.match(body, /Change Password/);
+    assert.match(body, /Current Password/);
+    assert.match(body, /New Password/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("POST /account/password validates current password and updates the signed-in user password", async () => {
+  const passwordHash = await bcrypt.hash("admin123", 10);
+  let updatedPassword = null;
+  const app = createTestApp({
+    sessionUser: { userId: 1, fullName: "System Administrator", username: "admin", role: "ADMIN" },
+    repositories: {
+      findUserByUsername: async () => ({
+        userId: 1,
+        fullName: "System Administrator",
+        username: "admin",
+        passwordHash,
+        role: "ADMIN"
+      }),
+      updateUserPassword: async (_db, userId, newPassword) => {
+        updatedPassword = { userId, newPassword };
+      }
+    }
+  });
+
+  const server = app.listen(0);
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/account/password`, {
+      method: "POST",
+      redirect: "manual",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        currentPassword: "admin123",
+        newPassword: "new-local-password",
+        confirmPassword: "new-local-password"
+      })
+    });
+
+    assert.equal(response.status, 302);
+    assert.equal(response.headers.get("location"), "/account/password?updated=1");
+    assert.deepEqual(updatedPassword, {
+      userId: 1,
+      newPassword: "new-local-password"
+    });
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("POST /account/password rejects an incorrect current password", async () => {
+  const passwordHash = await bcrypt.hash("admin123", 10);
+  let updateWasCalled = false;
+  const app = createTestApp({
+    sessionUser: { userId: 1, fullName: "System Administrator", username: "admin", role: "ADMIN" },
+    repositories: {
+      findUserByUsername: async () => ({
+        userId: 1,
+        fullName: "System Administrator",
+        username: "admin",
+        passwordHash,
+        role: "ADMIN"
+      }),
+      updateUserPassword: async () => {
+        updateWasCalled = true;
+      }
+    }
+  });
+
+  const server = app.listen(0);
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/account/password`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        currentPassword: "wrong",
+        newPassword: "new-local-password",
+        confirmPassword: "new-local-password"
+      })
+    });
+    const body = await response.text();
+
+    assert.equal(response.status, 400);
+    assert.equal(updateWasCalled, false);
+    assert.match(body, /Current password is incorrect\./);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

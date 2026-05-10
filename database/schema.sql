@@ -2,6 +2,10 @@ CREATE DATABASE IF NOT EXISTS barangay_court_scheduler
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
+ALTER DATABASE barangay_court_scheduler
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
 USE barangay_court_scheduler;
 
 CREATE TABLE IF NOT EXISTS users (
@@ -18,7 +22,7 @@ CREATE TABLE IF NOT EXISTS users (
   UNIQUE KEY uq_users_username (username),
   CONSTRAINT chk_users_role CHECK (role IN ('ADMIN', 'STAFF')),
   CONSTRAINT chk_users_account_status CHECK (account_status IN ('ACTIVE', 'INACTIVE'))
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS residents (
   resident_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -30,7 +34,7 @@ CREATE TABLE IF NOT EXISTS residents (
   PRIMARY KEY (resident_id),
   KEY idx_residents_full_name (full_name),
   KEY idx_residents_contact_no (contact_no)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS reservation_statuses (
   status_id SMALLINT UNSIGNED NOT NULL,
@@ -41,7 +45,7 @@ CREATE TABLE IF NOT EXISTS reservation_statuses (
   PRIMARY KEY (status_id),
   UNIQUE KEY uq_reservation_statuses_code (status_code),
   CONSTRAINT chk_reservation_statuses_blocking CHECK (is_blocking IN (0, 1))
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS time_slots (
   slot_id SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -54,7 +58,7 @@ CREATE TABLE IF NOT EXISTS time_slots (
   UNIQUE KEY uq_time_slots_time_range (start_time, end_time),
   CONSTRAINT chk_time_slots_time_order CHECK (end_time > start_time),
   CONSTRAINT chk_time_slots_active CHECK (is_active IN (0, 1))
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS court_settings (
   setting_key VARCHAR(80) NOT NULL,
@@ -62,7 +66,7 @@ CREATE TABLE IF NOT EXISTS court_settings (
   description VARCHAR(255) NULL,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (setting_key)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS reservations (
   reservation_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -104,7 +108,7 @@ CREATE TABLE IF NOT EXISTS reservations (
     ON UPDATE CASCADE
     ON DELETE RESTRICT,
   CONSTRAINT chk_reservations_time_order CHECK (end_time > start_time)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS activity_logs (
   log_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -125,7 +129,15 @@ CREATE TABLE IF NOT EXISTS activity_logs (
     FOREIGN KEY (user_id) REFERENCES users (user_id)
     ON UPDATE CASCADE
     ON DELETE SET NULL
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE residents CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE reservation_statuses CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE time_slots CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE court_settings CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE reservations CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE activity_logs CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 DROP TRIGGER IF EXISTS prevent_reservation_overlap_before_insert;
 DROP TRIGGER IF EXISTS prevent_reservation_overlap_before_update;

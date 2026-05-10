@@ -34,6 +34,37 @@ export function validateCreateUserInput(input = {}) {
   };
 }
 
+export function validateChangePasswordInput(input = {}) {
+  const currentPassword = clean(input.currentPassword);
+  const newPassword = clean(input.newPassword);
+  const confirmPassword = clean(input.confirmPassword);
+  const errors = {};
+
+  if (!currentPassword) {
+    errors.currentPassword = "Current password is required.";
+  }
+
+  if (!newPassword) {
+    errors.newPassword = "New password is required.";
+  }
+
+  if (!confirmPassword) {
+    errors.confirmPassword = "Confirm password is required.";
+  } else if (newPassword && confirmPassword !== newPassword) {
+    errors.confirmPassword = "Confirm password must match the new password.";
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return { valid: false, errors };
+  }
+
+  return {
+    valid: true,
+    value: { currentPassword, newPassword },
+    errors: {}
+  };
+}
+
 function clean(value) {
   return String(value || "").trim();
 }

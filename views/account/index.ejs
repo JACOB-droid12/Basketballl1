@@ -17,6 +17,7 @@
           <h1 id="account-title">Account Management</h1>
           <div class="account-toolbar">
             <a class="button account-create-button" href="/account/create">Create Account</a>
+            <a class="button secondary" href="/account/password">Change Password</a>
           </div>
 
           <% if (errorMessage) { %>
@@ -52,8 +53,9 @@
                       <% if (Number(user.userId) === Number(currentUserId)) { %>
                         <span class="muted-action">Current account</span>
                       <% } else { %>
-                        <form method="post" action="/account/<%= user.userId %>/status">
-                          <% const nextStatus = user.accountStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE"; %>
+                        <% const nextStatus = user.accountStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE"; %>
+                        <% const confirmMessage = nextStatus === "ACTIVE" ? "Reactivate this account?" : "Deactivate this account?"; %>
+                        <form method="post" action="/account/<%= user.userId %>/status" onsubmit="return confirm('<%= confirmMessage %>')">
                           <input type="hidden" name="accountStatus" value="<%= nextStatus %>">
                           <button type="submit"><%= nextStatus === "ACTIVE" ? "Reactivate" : "Deactivate" %></button>
                         </form>

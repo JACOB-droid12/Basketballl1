@@ -37,13 +37,15 @@
             <div class="alert"><%= errorMessage %></div>
           <% } %>
 
-          <section class="office-panel">
-            <div class="slot-list">
+          <section class="office-panel schedule-day-panel">
+            <div class="day-section">
+              <h2 class="day-label"><%= displayDateLabel %></h2>
+              <div class="slot-list slots-grid">
               <% if (schedule.length === 0) { %>
                 <p>No schedule slots available.</p>
               <% } %>
               <% schedule.forEach((slot) => { %>
-                <article class="slot-row <%= slot.isAvailableForBooking ? 'available' : 'blocked' %>">
+                <article class="slot-row <%= slot.isAvailableForBooking ? 'available' : 'blocked' %> <%= slot.statusCode.toLowerCase() %>">
                   <div>
                     <strong><%= slot.name %></strong>
                     <span><%= slot.startTime %> - <%= slot.endTime %></span>
@@ -60,6 +62,7 @@
                   </div>
                 </article>
               <% }) %>
+              </div>
             </div>
           </section>
         </section>

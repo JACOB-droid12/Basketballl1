@@ -83,8 +83,13 @@
                     <td><%= reservation.purpose %></td>
                     <td><span class="status <%= reservation.statusCode.toLowerCase() %>"><%= reservation.statusName %></span></td>
                     <td class="actions print-hidden">
+                      <% const statusConfirmMessages = {
+                        MISSED: "Mark this reservation as missed?",
+                        COMPLETED: "Mark this reservation as completed?",
+                        CANCELLED: "Cancel this reservation?"
+                      }; %>
                       <% ["MISSED", "COMPLETED", "CANCELLED"].forEach((statusCode) => { %>
-                        <form method="post" action="/reservations/<%= reservation.reservationId %>/status">
+                        <form method="post" action="/reservations/<%= reservation.reservationId %>/status" onsubmit="return confirm('<%= statusConfirmMessages[statusCode] %>')">
                           <input type="hidden" name="statusCode" value="<%= statusCode %>">
                           <input type="hidden" name="returnTo" value="/reservations">
                           <button type="submit"><%= statusCode.charAt(0) + statusCode.slice(1).toLowerCase() %></button>

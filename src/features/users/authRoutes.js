@@ -7,11 +7,18 @@ import {
   findUserByUsername,
   listUsers,
   updateUserAccountStatus,
+  updateUserPassword,
   UserNotFoundError
 } from "./userRepository.js";
-import { validateCreateUserInput } from "./userValidation.js";
+import { validateChangePasswordInput, validateCreateUserInput } from "./userValidation.js";
 
-const defaultRepositories = { createUser, findUserByUsername, listUsers, updateUserAccountStatus };
+const defaultRepositories = {
+  createUser,
+  findUserByUsername,
+  listUsers,
+  updateUserAccountStatus,
+  updateUserPassword
+};
 
 export function createAuthRoutes({ db, repositories = {} } = {}) {
   const repo = { ...defaultRepositories, ...repositories };
@@ -65,6 +72,48 @@ export function createAuthRoutes({ db, repositories = {} } = {}) {
 
     request.session.user = null;
     response.redirect("/login");
+  });
+
+  router.get("/account/password", requireSignedIn, (request, response) => {
+    renderChangePassword(response, {
+      currentUser: request.session.user,
+      successMessage: request.query.updated === "1" ? "Password updated successfully." : ""
+    });
+  });
+
+  router.post("/account/password", requireSignedIn, async (request, response) => {
+    const result = validateChangePasswordInput(request.body);
+
+    if (!result.valid) {
+      renderChangePassword(response.status(400), {
+        currentUser: request.session.user,
+        errors: result.errors
+      });
+      return;
+    }
+
+    try {
+      const user = await repo.findUserByUsername(db, request.session.user.username);
+      const currentPasswordMatches = user ?
+        await bcrypt.compare(result.value.currentPassword, user.passwordHash) :
+        false;
+
+      if (!currentPasswordMatches) {
+        renderChangePassword(response.status(400), {
+          currentUser: request.session.user,
+          errors: { currentPassword: "Current password is incorrect." }
+        });
+        return;
+      }
+
+      await repo.updateUserPassword(db, request.session.user.userId, result.value.newPassword);
+      response.redirect("/account/password?updated=1");
+    } catch (error) {
+      renderChangePassword(response.status(503), {
+        currentUser: request.session.user,
+        errorMessage: databaseErrorMessage(error)
+      });
+    }
   });
 
   router.get("/account", requireAdmin, async (request, response) => {
@@ -153,7 +202,7 @@ export function createAuthRoutes({ db, repositories = {} } = {}) {
 }
 
 function requireAdmin(request, response, next) {
-  if (!request.session?.user) {
+  if (!isSignedIn(request)) {
     response.redirect("/login");
     return;
   }
@@ -164,6 +213,19 @@ function requireAdmin(request, response, next) {
   }
 
   next();
+}
+
+function requireSignedIn(request, response, next) {
+  if (!isSignedIn(request)) {
+    response.redirect("/login");
+    return;
+  }
+
+  next();
+}
+
+function isSignedIn(request) {
+  return Boolean(request.session?.user);
 }
 
 function renderLogin(response, options = {}) {
@@ -180,6 +242,16 @@ function renderCreateAccount(response, options = {}) {
     form: options.form || {},
     errors: options.errors || {},
     errorMessage: options.errorMessage || ""
+  });
+}
+
+function renderChangePassword(response, options = {}) {
+  response.render("account/password", {
+    active: "account",
+    currentUser: options.currentUser || null,
+    errors: options.errors || {},
+    errorMessage: options.errorMessage || "",
+    successMessage: options.successMessage || ""
   });
 }
 
