@@ -143,7 +143,13 @@ On the barangay office computer, after Node.js 20+ and MySQL 8+ are installed fr
 6. Double-click `start-barangay-office.bat`.
 7. Open `http://localhost:3000/login`.
 
-`start-barangay-office.bat` checks for Node.js, npm, `node_modules/`, and `.env` before opening the browser. If a check fails, follow the message and rerun setup if needed.
+`start-barangay-office.bat` checks for Node.js, npm, `node_modules/`, `.env`, and the local MySQL/MariaDB database before opening the browser. If a check fails, follow the message, start MySQL/MariaDB, and rerun setup if needed.
+
+For a database-only daily startup check without opening the app, run:
+
+```powershell
+npm run check:database
+```
 
 See `docs/OFFLINE_INSTALL_CHECKLIST.md` for the full pure-offline checklist.
 

@@ -99,6 +99,7 @@ function createTemporaryBundle(options = {}) {
     "docs/USER_GUIDE.md",
     "docs/DEPLOYMENT_GUIDE.md",
     "docs/OFFLINE_INSTALL_CHECKLIST.md",
+    "scripts/check-runtime-database.mjs",
     "scripts/check-office-readiness.ps1",
     "scripts/setup-barangay-office.ps1",
     "scripts/verify-mysql.mjs"

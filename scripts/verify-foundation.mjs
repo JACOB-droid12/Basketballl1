@@ -30,6 +30,7 @@ const requiredFiles = [
   "src/config/database.js",
   "scripts/create-offline-bundle.ps1",
   "scripts/check-office-readiness.ps1",
+  "scripts/check-runtime-database.mjs",
   "scripts/verify-offline-bundle.mjs",
   "scripts/setup-barangay-office.ps1",
   "views/login.ejs",

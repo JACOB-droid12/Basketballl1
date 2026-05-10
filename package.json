@@ -16,6 +16,7 @@
     "verify:foundation": "node scripts/verify-foundation.mjs",
     "verify:bundle": "node scripts/verify-offline-bundle.mjs",
     "verify:mysql": "node scripts/verify-mysql.mjs",
+    "check:database": "node scripts/check-runtime-database.mjs",
     "verify:ui": "node scripts/verify-ui-smoke.mjs",
     "backup:mysql": "node scripts/backup-mysql.mjs",
     "restore:mysql": "node scripts/restore-mysql.mjs"

@@ -36,6 +36,14 @@ if not exist ".env" (
   exit /b 1
 )
 
+npm run check:database
+if errorlevel 1 (
+  echo.
+  echo Local database check failed. Start MySQL/MariaDB or run setup-barangay-office.bat, then try again.
+  pause
+  exit /b 1
+)
+
 echo Open this address in the browser if it does not open automatically:
 echo http://localhost:3000/login
 echo.

@@ -29,6 +29,7 @@ const REQUIRED_BUNDLE_ITEMS = [
   { path: "docs/USER_GUIDE.md", type: "file" },
   { path: "docs/DEPLOYMENT_GUIDE.md", type: "file" },
   { path: "docs/OFFLINE_INSTALL_CHECKLIST.md", type: "file" },
+  { path: "scripts/check-runtime-database.mjs", type: "file" },
   { path: "scripts/check-office-readiness.ps1", type: "file" },
   { path: "scripts/setup-barangay-office.ps1", type: "file" },
   { path: "scripts/verify-mysql.mjs", type: "file" }
