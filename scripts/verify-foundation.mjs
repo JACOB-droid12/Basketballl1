@@ -8,6 +8,7 @@ const requiredFiles = [
   "package.json",
   ".env.example",
   "README.md",
+  "README-FIRST-WINDOWS.txt",
   "create-offline-bundle.bat",
   "check-office-readiness.bat",
   "setup-database-only.bat",

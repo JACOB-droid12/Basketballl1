@@ -121,7 +121,7 @@ npm test
 
 For the barangay office, prepare a complete offline project folder before bringing it to the office computer. The folder must include `node_modules/`; the one-click setup does not download npm packages.
 
-This setup path is Windows-only. The supported office workflow is `check-office-readiness.bat` -> `setup-barangay-office.bat` -> `start-barangay-office.bat`.
+This setup path is Windows-only. The supported office workflow is `README-FIRST-WINDOWS.txt` -> `check-office-readiness.bat` -> `setup-barangay-office.bat` -> `start-barangay-office.bat`.
 
 To create the prepared folder on a setup computer:
 
@@ -135,12 +135,13 @@ This creates `dist/barangay-court-scheduler-offline/`. Copy that folder to the b
 
 On the barangay office computer, after Node.js 20+ and MySQL 8+ are installed from local installers if needed:
 
-1. Double-click `check-office-readiness.bat`.
-2. Fix any failed readiness checks, such as missing Node.js, MySQL tools, or `node_modules/`.
-3. Double-click `setup-barangay-office.bat`.
-4. Enter the local MySQL password when asked.
-5. Double-click `start-barangay-office.bat`.
-6. Open `http://localhost:3000/login`.
+1. Open `README-FIRST-WINDOWS.txt`.
+2. Double-click `check-office-readiness.bat`.
+3. Fix any failed readiness checks, such as missing Node.js, MySQL tools, or `node_modules/`.
+4. Double-click `setup-barangay-office.bat`.
+5. Enter the local MySQL password when asked.
+6. Double-click `start-barangay-office.bat`.
+7. Open `http://localhost:3000/login`.
 
 See `docs/OFFLINE_INSTALL_CHECKLIST.md` for the full pure-offline checklist.
 

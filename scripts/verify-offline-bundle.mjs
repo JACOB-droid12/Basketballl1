@@ -11,6 +11,7 @@ const REQUIRED_BUNDLE_ITEMS = [
   { path: "package-lock.json", type: "file" },
   { path: ".env.example", type: "file" },
   { path: "README.md", type: "file" },
+  { path: "README-FIRST-WINDOWS.txt", type: "file" },
   { path: "setup-database-only.bat", type: "file" },
   { path: "check-office-readiness.bat", type: "file" },
   { path: "setup-barangay-office.bat", type: "file" },

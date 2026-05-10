@@ -47,6 +47,7 @@ Code, SQL, documentation, offline packaging, and prototype-aligned UI shell work
 | SQL-only manual setup | `setup-database-only.bat`; `database/SQL_ONLY_SETUP.md`; `npm run verify:sql` checks that setup applies schema, seed, and diagnostics; the batch runner passes the password through local `MYSQL_PWD` instead of using `mysql -p` while SQL input is redirected | Implemented, statically verified, and fixed for Oracle MySQL 9 |
 | One-click barangay setup | `setup-barangay-office.bat`; `scripts/setup-barangay-office.ps1`; `tests/oneClickSetup.test.js` | Implemented; requires local Node.js/MySQL already installed |
 | Office readiness check | `check-office-readiness.bat`; `scripts/check-office-readiness.ps1`; `tests/oneClickSetup.test.js`; `docs/OFFLINE_INSTALL_CHECKLIST.md` | Implemented and tested |
+| Windows first-run guide | `README-FIRST-WINDOWS.txt`; `docs/OFFLINE_INSTALL_CHECKLIST.md`; `tests/offlineBundle.test.js`; `npm run verify:bundle` | Implemented and tested |
 | One-click local start | `start-barangay-office.bat`; `tests/oneClickSetup.test.js` | Implemented and tested |
 | Pure offline bundle | `create-offline-bundle.bat`; `scripts/create-offline-bundle.ps1`; `npm run bundle:offline`; `tests/offlineBundle.test.js` | Implemented and tested |
 | Offline bundle verification | `scripts/verify-offline-bundle.mjs`; `npm run verify:bundle`; `tests/offlineBundle.test.js` | Implemented and tested |
@@ -77,6 +78,7 @@ Code, SQL, documentation, offline packaging, and prototype-aligned UI shell work
 - Readiness-check iteration: `npm run verify:sql` and `npm run verify:ui` passed after adding the checker.
 - Readiness-check iteration: `npm run verify:bundle` passed after rebuilding the offline bundle with `check-office-readiness.bat` and `scripts/check-office-readiness.ps1`.
 - Readiness-check iteration: running `scripts\check-office-readiness.ps1` in this shell passed Node.js/npm/local-file checks and failed only for missing `mysql` and `mysqldump`, which is the intended office-prerequisite warning.
+- Windows first-run guide iteration: `npm test -- tests\offlineBundle.test.js` passed after requiring `README-FIRST-WINDOWS.txt` in the offline bundle.
 - `npm test -- tests/oneClickSetup.test.js tests/offlineBundle.test.js` passed with 9 focused offline setup/bundle tests after adding `setup-database-only.bat`.
 - `npm test` passed with 106 tests after adding the self-service password-change flow, updated UI smoke coverage, and configurable live-verification login credentials.
 - `npm test -- tests/userValidation.test.js tests/userRepository.test.js tests/authRoutes.test.js` passed with 20 focused account/password tests after adding self-service password changes.
