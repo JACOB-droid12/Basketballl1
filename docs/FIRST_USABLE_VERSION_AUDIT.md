@@ -47,6 +47,7 @@ Code, SQL, documentation, offline packaging, and prototype-aligned UI shell work
 | SQL-only manual setup | `setup-database-only.bat`; `database/SQL_ONLY_SETUP.md`; `npm run verify:sql` checks that setup applies schema, seed, and diagnostics; the batch runner passes the password through local `MYSQL_PWD` instead of using `mysql -p` while SQL input is redirected | Implemented, statically verified, and fixed for Oracle MySQL 9 |
 | One-click barangay setup | `setup-barangay-office.bat`; `scripts/setup-barangay-office.ps1`; `tests/oneClickSetup.test.js` | Implemented; requires local Node.js/MySQL already installed |
 | Office readiness check | `check-office-readiness.bat`; `scripts/check-office-readiness.ps1`; `tests/oneClickSetup.test.js`; `docs/OFFLINE_INSTALL_CHECKLIST.md` | Implemented and tested |
+| Office deployment sign-off report | `run-office-signoff.bat`; `scripts/run-office-signoff.ps1`; `reports\office-signoff` output; `tests/oneClickSetup.test.js`; `docs/DEPLOYMENT_GUIDE.md` | Implemented and tested; requires actual office MySQL/MariaDB for passing sign-off |
 | Windows first-run guide | `README-FIRST-WINDOWS.txt`; `docs/OFFLINE_INSTALL_CHECKLIST.md`; `tests/offlineBundle.test.js`; `npm run verify:bundle` | Implemented and tested |
 | One-click local start | `start-barangay-office.bat`; `tests/oneClickSetup.test.js` | Implemented and tested |
 | Start-script setup guard | `start-barangay-office.bat` checks Node.js, npm, `node_modules\`, and `.env`; `tests/oneClickSetup.test.js` | Implemented and tested |
@@ -65,7 +66,7 @@ Code, SQL, documentation, offline packaging, and prototype-aligned UI shell work
 
 ## Fresh Verification Evidence
 
-- Final local refresh on 2026-05-10 after Windows runtime database guard: `npm test` passed 113/113 tests.
+- Final local refresh on 2026-05-10 after Windows office sign-off helper: `npm test` passed 114/114 tests.
 - Final local refresh on 2026-05-10: `npm run verify:sql` passed, including the Oracle MySQL-compatible SQL-only setup runner check.
 - Final local refresh on 2026-05-10: `npm run verify:foundation` passed.
 - Final local refresh on 2026-05-10: `npm run verify:ui` passed for 11 office screens.
@@ -87,6 +88,8 @@ Code, SQL, documentation, offline packaging, and prototype-aligned UI shell work
 - Windows first-run guide iteration: `npm test -- tests\offlineBundle.test.js` passed after requiring `README-FIRST-WINDOWS.txt` in the offline bundle.
 - Windows start-script guard iteration: `npm test -- tests\oneClickSetup.test.js` passed after adding Node.js, npm, `node_modules\`, and `.env` checks before browser launch.
 - Windows start-script SQL guard iteration: `npm test -- tests\runtimeDatabaseCheck.test.js tests\oneClickSetup.test.js tests\offlineBundle.test.js` passed after adding the read-only local database startup check; `npm run check:database` failed safely in this shell because no default MySQL/MariaDB service is running.
+- Windows office sign-off iteration: `npm test -- tests\oneClickSetup.test.js tests\offlineBundle.test.js` passed after adding `run-office-signoff.bat` and `scripts\run-office-signoff.ps1`.
+- Windows office sign-off iteration: PowerShell parser check passed for `scripts\run-office-signoff.ps1`.
 - `npm test -- tests/oneClickSetup.test.js tests/offlineBundle.test.js` passed with 9 focused offline setup/bundle tests after adding `setup-database-only.bat`.
 - `npm test` passed with 106 tests after adding the self-service password-change flow, updated UI smoke coverage, and configurable live-verification login credentials.
 - `npm test -- tests/userValidation.test.js tests/userRepository.test.js tests/authRoutes.test.js` passed with 20 focused account/password tests after adding self-service password changes.
@@ -151,7 +154,7 @@ On a computer with local MySQL installed and running, use the prepared offline b
 ```powershell
 cd path\to\barangay-court-scheduler-offline
 setup-barangay-office.bat
-npm run verify:mysql
+run-office-signoff.bat
 ```
 
-Then live-test login with `admin` / `admin123`, change the starter password, account creation/deactivation, add reservation, overlap rejection, edit reservation, mark missed/completed/cancelled, activity logs, CSV export, and print controls.
+Then complete the manual checklist written into the sign-off report: live-test login with `admin` / `admin123`, change the starter password, account creation/deactivation, add reservation, overlap rejection, edit reservation, mark missed/completed/cancelled, activity logs, CSV export, and print controls.

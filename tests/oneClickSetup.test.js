@@ -44,6 +44,7 @@ test("office readiness checker batch file invokes prerequisite checks without do
   assert.match(powerShellScript, /database\\seed\.sql/);
   assert.match(powerShellScript, /setup-barangay-office\.bat/);
   assert.match(powerShellScript, /start-barangay-office\.bat/);
+  assert.match(powerShellScript, /run-office-signoff\.bat/);
   assert.doesNotMatch(powerShellScript, /npm install/i);
   assert.doesNotMatch(powerShellScript, /npm ci/i);
 });
@@ -80,4 +81,22 @@ test("one-click start batch opens the local login URL and starts npm", () => {
   assert.match(script, /exit \/b 1/i);
   assert.match(script, /http:\/\/localhost:3000\/login/);
   assert.match(script, /npm start/);
+});
+
+test("office sign-off batch file runs only local verification commands", () => {
+  const batchScript = readFileSync("run-office-signoff.bat", "utf8");
+  const powerShellScript = readFileSync("scripts/run-office-signoff.ps1", "utf8");
+
+  assert.match(batchScript, /scripts\\run-office-signoff\.ps1/i);
+  assert.match(batchScript, /ExecutionPolicy Bypass/i);
+  assert.match(powerShellScript, /reports\\office-signoff/i);
+  assert.match(powerShellScript, /npm run verify:prereqs/i);
+  assert.match(powerShellScript, /npm run check:database/i);
+  assert.match(powerShellScript, /npm run verify:mysql/i);
+  assert.match(powerShellScript, /npm run verify:ui/i);
+  assert.match(powerShellScript, /npm run backup:mysql/i);
+  assert.match(powerShellScript, /Manual verification checklist/i);
+  assert.doesNotMatch(powerShellScript, /npm install/i);
+  assert.doesNotMatch(powerShellScript, /npm ci/i);
+  assert.doesNotMatch(powerShellScript, /npm audit/i);
 });

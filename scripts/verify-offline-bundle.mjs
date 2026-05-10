@@ -14,6 +14,7 @@ const REQUIRED_BUNDLE_ITEMS = [
   { path: "README-FIRST-WINDOWS.txt", type: "file" },
   { path: "setup-database-only.bat", type: "file" },
   { path: "check-office-readiness.bat", type: "file" },
+  { path: "run-office-signoff.bat", type: "file" },
   { path: "setup-barangay-office.bat", type: "file" },
   { path: "start-barangay-office.bat", type: "file" },
   { path: "src/server.js", type: "file" },
@@ -31,6 +32,7 @@ const REQUIRED_BUNDLE_ITEMS = [
   { path: "docs/OFFLINE_INSTALL_CHECKLIST.md", type: "file" },
   { path: "scripts/check-runtime-database.mjs", type: "file" },
   { path: "scripts/check-office-readiness.ps1", type: "file" },
+  { path: "scripts/run-office-signoff.ps1", type: "file" },
   { path: "scripts/setup-barangay-office.ps1", type: "file" },
   { path: "scripts/verify-mysql.mjs", type: "file" }
 ];

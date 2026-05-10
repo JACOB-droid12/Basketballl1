@@ -121,7 +121,7 @@ npm test
 
 For the barangay office, prepare a complete offline project folder before bringing it to the office computer. The folder must include `node_modules/`; the one-click setup does not download npm packages.
 
-This setup path is Windows-only. The supported office workflow is `README-FIRST-WINDOWS.txt` -> `check-office-readiness.bat` -> `setup-barangay-office.bat` -> `start-barangay-office.bat`.
+This setup path is Windows-only. The supported office workflow is `README-FIRST-WINDOWS.txt` -> `check-office-readiness.bat` -> `setup-barangay-office.bat` -> `start-barangay-office.bat` -> `run-office-signoff.bat`.
 
 To create the prepared folder on a setup computer:
 
@@ -142,6 +142,7 @@ On the barangay office computer, after Node.js 20+ and MySQL 8+ are installed fr
 5. Enter the local MySQL password when asked.
 6. Double-click `start-barangay-office.bat`.
 7. Open `http://localhost:3000/login`.
+8. For deployment sign-off, double-click `run-office-signoff.bat` and keep the generated report under `reports\office-signoff`.
 
 `start-barangay-office.bat` checks for Node.js, npm, `node_modules/`, `.env`, and the local MySQL/MariaDB database before opening the browser. If a check fails, follow the message, start MySQL/MariaDB, and rerun setup if needed.
 
@@ -150,6 +151,8 @@ For a database-only daily startup check without opening the app, run:
 ```powershell
 npm run check:database
 ```
+
+`run-office-signoff.bat` runs the office-focused local verification sequence and writes a timestamped report for presentation/deployment records. It does not download packages or use online services.
 
 See `docs/OFFLINE_INSTALL_CHECKLIST.md` for the full pure-offline checklist.
 
@@ -200,6 +203,7 @@ npm run restore:mysql -- backups\backup-file.sql
 - `docs/USER_GUIDE.md` explains the daily workflow for barangay Admin and Staff users.
 - `docs/DEPLOYMENT_GUIDE.md` explains offline Windows + local MySQL installation, startup, backup, restore, and update steps.
 - `check-office-readiness.bat` checks whether a barangay office computer has the local files and tools needed before running setup.
+- `run-office-signoff.bat` runs final local verification on the office computer and saves a sign-off report.
 - `docs/ISO_25010_EVALUATION.md` maps the system to ISO 25010 quality characteristics for project evaluation.
 - `docs/ARCHITECTURE.md` explains the chosen stack and module boundaries.
 - `docs/CODEX_HANDOFF.md` records the current milestone state, verification, risks, and next step.

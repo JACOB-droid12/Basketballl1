@@ -50,6 +50,7 @@ dist\barangay-court-scheduler-offline
 - `scripts/`
 - `tests/`
 - `check-office-readiness.bat`
+- `run-office-signoff.bat`
 - `setup-database-only.bat`
 - `setup-barangay-office.bat`
 - `start-barangay-office.bat`
@@ -79,6 +80,7 @@ On the barangay office computer:
 9. Confirm the setup finishes without errors.
 10. Double-click `start-barangay-office.bat`.
 11. Open `http://localhost:3000/login`.
+12. For final deployment sign-off, double-click `run-office-signoff.bat` and keep the generated report under `reports\office-signoff`.
 
 The start script checks Node.js, npm, `node_modules/`, `.env`, and the configured local MySQL/MariaDB database before opening the browser. If it reports a missing `.env`, run `setup-barangay-office.bat` first. If it reports a local database check failure, start MySQL/MariaDB or rerun setup.
 
@@ -90,6 +92,8 @@ Starter login after setup:
 - Temporary password: `admin123`
 
 Change the starter password from Account > Change Password, or create a new Admin account before regular office use.
+
+`run-office-signoff.bat` runs local-only automated checks for prerequisites, configured database readiness, live MySQL/app smoke verification, UI smoke verification, and a local MySQL backup. It also writes a manual verification checklist into the report so the office can record login, password change, account creation, reservation, overlap rejection, status, activity-log, CSV, and print checks on the actual barangay computer.
 
 ## Important
 

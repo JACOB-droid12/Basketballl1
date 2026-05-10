@@ -22,6 +22,8 @@ FIRST RUN
 4. Enter the local MySQL password when asked.
 5. Double-click start-barangay-office.bat.
 6. Open http://localhost:3000/login in the office browser.
+7. For deployment sign-off, double-click run-office-signoff.bat and keep the
+   generated report from reports\office-signoff.
 
 STARTER LOGIN
 
@@ -58,4 +60,5 @@ IMPORTANT NOTES
 - Do not use a cloud database for barangay office deployment.
 - Keep .env private.
 - Keep backups on a protected local drive or barangay-controlled external drive.
+- Use run-office-signoff.bat on the actual office computer before final sign-off.
 - For the detailed guide, open docs\OFFLINE_INSTALL_CHECKLIST.md and docs\DEPLOYMENT_GUIDE.md.

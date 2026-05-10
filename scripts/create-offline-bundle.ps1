@@ -49,6 +49,7 @@ $ItemsToCopy = @(
   "README-FIRST-WINDOWS.txt",
   "setup-database-only.bat",
   "check-office-readiness.bat",
+  "run-office-signoff.bat",
   "setup-barangay-office.bat",
   "start-barangay-office.bat",
   "src",

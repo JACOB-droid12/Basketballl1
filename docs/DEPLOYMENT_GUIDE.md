@@ -71,6 +71,14 @@ To start regular office use after setup:
 start-barangay-office.bat
 ```
 
+For final deployment sign-off on the office computer:
+
+```text
+run-office-signoff.bat
+```
+
+This creates a timestamped text report under `reports\office-signoff`. It runs only local commands: prerequisite verification, runtime database readiness, live MySQL/app smoke verification, UI smoke verification, and a local MySQL backup. It also writes the manual office workflow checklist into the report.
+
 ## Configure Environment
 
 Create the local `.env` file:
@@ -145,12 +153,15 @@ Run:
 
 ```powershell
 npm run verify:prereqs
+npm run check:database
 npm run verify:foundation
 npm run verify:sql
 npm run verify:mysql
 npm run verify:ui
 npm test
 ```
+
+On the actual office computer, `run-office-signoff.bat` runs the office-focused subset and saves a report for project presentation and deployment records.
 
 Expected result:
 

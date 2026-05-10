@@ -24,6 +24,7 @@ test("offline bundle script copies runtime files and node_modules", () => {
   assert.match(script, /README-FIRST-WINDOWS\.txt/);
   assert.match(script, /setup-database-only\.bat/);
   assert.match(script, /check-office-readiness\.bat/);
+  assert.match(script, /run-office-signoff\.bat/);
   assert.match(script, /setup-barangay-office\.bat/);
   assert.match(script, /start-barangay-office\.bat/);
   assert.match(script, /"node_modules"/);
@@ -84,6 +85,7 @@ function createTemporaryBundle(options = {}) {
     "README-FIRST-WINDOWS.txt",
     "setup-database-only.bat",
     "check-office-readiness.bat",
+    "run-office-signoff.bat",
     "setup-barangay-office.bat",
     "start-barangay-office.bat",
     "src/server.js",
@@ -101,6 +103,7 @@ function createTemporaryBundle(options = {}) {
     "docs/OFFLINE_INSTALL_CHECKLIST.md",
     "scripts/check-runtime-database.mjs",
     "scripts/check-office-readiness.ps1",
+    "scripts/run-office-signoff.ps1",
     "scripts/setup-barangay-office.ps1",
     "scripts/verify-mysql.mjs"
   ];

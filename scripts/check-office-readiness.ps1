@@ -120,6 +120,7 @@ Test-RequiredPath "database\diagnostics.sql" "file" "checks the installed local 
 Test-RequiredPath "setup-barangay-office.bat" "file" "main one-click setup"
 Test-RequiredPath "setup-database-only.bat" "file" "SQL-only fallback setup"
 Test-RequiredPath "start-barangay-office.bat" "file" "starts the local app"
+Test-RequiredPath "run-office-signoff.bat" "file" "runs final local sign-off checks"
 Test-RequiredPath "scripts\setup-barangay-office.ps1" "file" "setup implementation"
 Test-RequiredPath "scripts\verify-mysql.mjs" "file" "live MySQL verification"
 
