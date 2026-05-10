@@ -66,6 +66,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Added `setup-database-only.bat` as a Windows SQL-only local MySQL runner so barangay staff can apply `database\schema.sql`, `database\seed.sql`, and `database\diagnostics.sql` without typing shell redirection commands.
 - Hardened `setup-database-only.bat` so it asks for the local MySQL password before redirecting SQL input and passes it through local `MYSQL_PWD` instead of relying on `mysql -p`.
 - Added pure-offline setup files: `setup-barangay-office.bat`, `start-barangay-office.bat`, and `scripts/setup-barangay-office.ps1`.
+- Added `check-office-readiness.bat` and `scripts/check-office-readiness.ps1` so staff can double-click a local readiness check before setup. It checks Node.js, npm, MySQL tools, `node_modules/`, SQL files, and setup/start scripts without downloading anything.
 - Added `docs/OFFLINE_INSTALL_CHECKLIST.md` documenting how to prepare a complete offline project folder with `node_modules/` before bringing it to the barangay office.
 - Added `tests/oneClickSetup.test.js` to check the one-click setup applies schema/seed/diagnostics, runs verification, and does not call `npm install` or `npm ci`.
 - Added pure-offline bundle creation through `create-offline-bundle.bat`, `scripts/create-offline-bundle.ps1`, and `npm run bundle:offline`; the generated bundle includes `node_modules/` and excludes local `.env` secrets.
@@ -88,6 +89,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - `.gitignore`
 - `README.md`
 - `create-offline-bundle.bat`
+- `check-office-readiness.bat`
 - `setup-database-only.bat`
 - `setup-barangay-office.bat`
 - `start-barangay-office.bat`
@@ -167,6 +169,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - `public/images/barangay-logo.jpg`
 - `scripts/verify-foundation.mjs`
 - `scripts/backup-mysql.mjs`
+- `scripts/check-office-readiness.ps1`
 - `scripts/create-offline-bundle.ps1`
 - `scripts/restore-mysql.mjs`
 - `scripts/run-tests.mjs`
@@ -204,6 +207,12 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - `git diff --check` - passed in the final 2026-05-10 local refresh; only Windows line-ending conversion warnings were printed.
 - `npm run verify:prereqs` - failed in the final 2026-05-10 local refresh only because `mysql` and `mysqldump` are not on PATH in this shell.
 - `npm run verify:mysql` - failed in the final 2026-05-10 local refresh with controlled `connect ECONNREFUSED 127.0.0.1:3306`, confirming no default local MySQL service is currently running.
+- `npm test -- tests\oneClickSetup.test.js tests\offlineBundle.test.js` - passed, 10 focused setup/bundle tests after adding `check-office-readiness.bat`.
+- `npm test` - passed, 108 tests after adding `check-office-readiness.bat`.
+- `npm run verify:sql` - passed after adding `check-office-readiness.bat`.
+- `npm run verify:ui` - passed for 11 office screens after adding `check-office-readiness.bat`.
+- `npm run bundle:offline` - passed after adding `check-office-readiness.bat`.
+- `npm run verify:bundle` - passed after rebuilding the offline bundle with `check-office-readiness.bat` and `scripts\check-office-readiness.ps1`.
 - `npm test` - passed, 51 tests before the 2026-05-08 weekly dashboard update.
 - `npm test` - passed, 51 tests on 2026-05-08 foundation/status recheck.
 - `npm test` - passed, 52 tests after the 2026-05-08 weekly dashboard update.
@@ -484,6 +493,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Browser-verified the prototype-aligned dashboard and schedule pages through a temporary local smoke server at `http://127.0.0.1:3104` without needing MySQL.
 - Browser-verified at a narrow viewport that the schedule toolbar no longer creates document-level horizontal overflow after the responsive CSS fix; the dashboard weekly table stays contained inside its intended horizontal scroll wrapper.
 - Started a disposable MariaDB 12.2.2 server from the official Windows ZIP under ignored `tmp\mariadb-portable\`, listening only on `127.0.0.1:3390`, and used it to live-verify schema/seed, triggers, app HTTP smoke, backup, restore, and SQL diagnostics.
+- Ran `scripts\check-office-readiness.ps1`; it passed Node.js/npm/local-file checks and failed only because `mysql` and `mysqldump` are not on PATH in this shell. That is the intended office-prerequisite signal before setup.
 
 ## Known Risks
 
@@ -500,7 +510,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 
 ## Recommended Next Step
 
-Use `dist\barangay-court-scheduler-offline` for the barangay office copy. On the office computer, install Node.js and local MySQL from offline installers if they are not already installed, start MySQL, double-click `setup-barangay-office.bat`, then run `npm run verify:mysql` and live-test login using `admin` / `admin123`, changing the starter password, account creation, add/edit reservation, overlap rejection, schedule links, status updates, activity-log viewing, CSV export, print controls, and reservation details.
+Use `dist\barangay-court-scheduler-offline` for the barangay office copy. On the office computer, install Node.js and local MySQL from offline installers if they are not already installed, start MySQL, double-click `check-office-readiness.bat`, fix any failed checks, double-click `setup-barangay-office.bat`, then run `npm run verify:mysql` and live-test login using `admin` / `admin123`, changing the starter password, account creation, add/edit reservation, overlap rejection, schedule links, status updates, activity-log viewing, CSV export, print controls, and reservation details.
 
 ## Suggested Next Prompt
 

@@ -46,6 +46,7 @@ dist\barangay-court-scheduler-offline
 - `docs/`
 - `scripts/`
 - `tests/`
+- `check-office-readiness.bat`
 - `setup-database-only.bat`
 - `setup-barangay-office.bat`
 - `start-barangay-office.bat`
@@ -67,11 +68,13 @@ On the barangay office computer:
 1. Install Node.js and MySQL from local/offline installers if needed.
 2. Make sure MySQL is running.
 3. Copy the prepared project folder to the computer.
-4. Double-click `setup-barangay-office.bat`.
-5. Enter the local MySQL password when asked.
-6. Confirm the setup finishes without errors.
-7. Double-click `start-barangay-office.bat`.
-8. Open `http://localhost:3000/login`.
+4. Double-click `check-office-readiness.bat`.
+5. Fix any failed checks. The checker confirms Node.js, npm, MySQL tools, `node_modules/`, SQL files, and setup/start scripts are present.
+6. Double-click `setup-barangay-office.bat`.
+7. Enter the local MySQL password when asked.
+8. Confirm the setup finishes without errors.
+9. Double-click `start-barangay-office.bat`.
+10. Open `http://localhost:3000/login`.
 
 If only the database needs to be created or checked, double-click `setup-database-only.bat` instead. It does not start the app UI.
 

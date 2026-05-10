@@ -47,6 +47,7 @@ $ItemsToCopy = @(
   "package-lock.json",
   "README.md",
   "setup-database-only.bat",
+  "check-office-readiness.bat",
   "setup-barangay-office.bat",
   "start-barangay-office.bat",
   "src",
@@ -73,4 +74,4 @@ Write-Host ""
 Write-Host "Offline bundle created:"
 Write-Host $BundleRoot
 Write-Host ""
-Write-Host "Copy this folder to the barangay office computer, then run setup-barangay-office.bat."
+Write-Host "Copy this folder to the barangay office computer, run check-office-readiness.bat, then run setup-barangay-office.bat."

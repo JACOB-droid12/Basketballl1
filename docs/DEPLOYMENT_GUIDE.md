@@ -61,6 +61,8 @@ setup-barangay-office.bat
 
 This setup uses local files only. It creates `.env` if needed, asks for the local MySQL password, applies `database/schema.sql`, applies `database/seed.sql`, runs `database/diagnostics.sql`, and runs the live MySQL verifier.
 
+Before running setup on the office computer, double-click `check-office-readiness.bat`. It checks the local Node.js, npm, MySQL client tools, `node_modules/`, SQL files, and setup/start scripts without downloading anything.
+
 If `node_modules/` is missing, setup stops. Prepare the project folder with dependencies on another computer, then copy the complete folder to the barangay office computer.
 
 To start regular office use after setup:

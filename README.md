@@ -131,10 +131,12 @@ This creates `dist/barangay-court-scheduler-offline/`. Copy that folder to the b
 
 On the barangay office computer, after Node.js 20+ and MySQL 8+ are installed from local installers if needed:
 
-1. Double-click `setup-barangay-office.bat`.
-2. Enter the local MySQL password when asked.
-3. Double-click `start-barangay-office.bat`.
-4. Open `http://localhost:3000/login`.
+1. Double-click `check-office-readiness.bat`.
+2. Fix any failed readiness checks, such as missing Node.js, MySQL tools, or `node_modules/`.
+3. Double-click `setup-barangay-office.bat`.
+4. Enter the local MySQL password when asked.
+5. Double-click `start-barangay-office.bat`.
+6. Open `http://localhost:3000/login`.
 
 See `docs/OFFLINE_INSTALL_CHECKLIST.md` for the full pure-offline checklist.
 
@@ -184,6 +186,7 @@ npm run restore:mysql -- backups\backup-file.sql
 
 - `docs/USER_GUIDE.md` explains the daily workflow for barangay Admin and Staff users.
 - `docs/DEPLOYMENT_GUIDE.md` explains offline Windows + local MySQL installation, startup, backup, restore, and update steps.
+- `check-office-readiness.bat` checks whether a barangay office computer has the local files and tools needed before running setup.
 - `docs/ISO_25010_EVALUATION.md` maps the system to ISO 25010 quality characteristics for project evaluation.
 - `docs/ARCHITECTURE.md` explains the chosen stack and module boundaries.
 - `docs/CODEX_HANDOFF.md` records the current milestone state, verification, risks, and next step.

@@ -22,6 +22,7 @@ test("offline bundle script copies runtime files and node_modules", () => {
   assert.match(script, /barangay-court-scheduler-offline/);
   assert.match(script, /node_modules was not found/);
   assert.match(script, /setup-database-only\.bat/);
+  assert.match(script, /check-office-readiness\.bat/);
   assert.match(script, /setup-barangay-office\.bat/);
   assert.match(script, /start-barangay-office\.bat/);
   assert.match(script, /"node_modules"/);
@@ -53,7 +54,7 @@ test("offline bundle verifier accepts a complete prepared bundle", () => {
 
 test("offline bundle verifier rejects missing dependencies and copied local secrets", () => {
   const bundleRoot = createTemporaryBundle({
-    omit: ["node_modules"],
+    omit: ["node_modules", "check-office-readiness.bat"],
     includeForbidden: [".env"]
   });
 
@@ -63,6 +64,7 @@ test("offline bundle verifier rejects missing dependencies and copied local secr
 
     assert.equal(report.ok, false);
     assert.match(formatted, /\[FAIL\] required directory: node_modules/);
+    assert.match(formatted, /\[FAIL\] required file: check-office-readiness\.bat/);
     assert.match(formatted, /\[FAIL\] excluded local-only item: \.env/);
   } finally {
     rmSync(bundleRoot, { recursive: true, force: true });
@@ -79,6 +81,7 @@ function createTemporaryBundle(options = {}) {
     ".env.example",
     "README.md",
     "setup-database-only.bat",
+    "check-office-readiness.bat",
     "setup-barangay-office.bat",
     "start-barangay-office.bat",
     "src/server.js",
@@ -94,6 +97,7 @@ function createTemporaryBundle(options = {}) {
     "docs/USER_GUIDE.md",
     "docs/DEPLOYMENT_GUIDE.md",
     "docs/OFFLINE_INSTALL_CHECKLIST.md",
+    "scripts/check-office-readiness.ps1",
     "scripts/setup-barangay-office.ps1",
     "scripts/verify-mysql.mjs"
   ];

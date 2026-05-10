@@ -29,6 +29,25 @@ test("database-only setup batch file applies the SQL setup runner locally", () =
   assert.doesNotMatch(script, /npm ci/i);
 });
 
+test("office readiness checker batch file invokes prerequisite checks without downloading", () => {
+  const batchScript = readFileSync("check-office-readiness.bat", "utf8");
+  const powerShellScript = readFileSync("scripts/check-office-readiness.ps1", "utf8");
+
+  assert.match(batchScript, /scripts\\check-office-readiness\.ps1/i);
+  assert.match(batchScript, /ExecutionPolicy Bypass/i);
+  assert.match(powerShellScript, /Test-CommandAvailable "node"/);
+  assert.match(powerShellScript, /Test-RequiredCommand "npm"/);
+  assert.match(powerShellScript, /Test-RequiredCommand "mysql"/);
+  assert.match(powerShellScript, /Test-RequiredCommand "mysqldump"/);
+  assert.match(powerShellScript, /node_modules/);
+  assert.match(powerShellScript, /database\\schema\.sql/);
+  assert.match(powerShellScript, /database\\seed\.sql/);
+  assert.match(powerShellScript, /setup-barangay-office\.bat/);
+  assert.match(powerShellScript, /start-barangay-office\.bat/);
+  assert.doesNotMatch(powerShellScript, /npm install/i);
+  assert.doesNotMatch(powerShellScript, /npm ci/i);
+});
+
 test("one-click PowerShell setup applies schema, seed, diagnostics, and live verification", () => {
   const script = readFileSync("scripts/setup-barangay-office.ps1", "utf8");
 
