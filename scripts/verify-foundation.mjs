@@ -11,6 +11,7 @@ const requiredFiles = [
   "README.md",
   "README-FIRST-WINDOWS.txt",
   "TROUBLESHOOT-WINDOWS.txt",
+  "backup-database.bat",
   "create-offline-bundle.bat",
   "check-office-readiness.bat",
   "run-office-signoff.bat",

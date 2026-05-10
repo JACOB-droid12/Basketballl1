@@ -12,7 +12,7 @@ IF UNSURE, DOUBLE-CLICK THIS FIRST
 START-HERE.bat
 
 That file shows a simple menu for checking the computer, first-time setup,
-daily startup, sign-off reporting, and database-only support.
+daily startup, database backup, sign-off reporting, and database-only support.
 
 BEFORE SETUP
 
@@ -61,6 +61,12 @@ browser. If it says the local database check failed, start MySQL/MariaDB or run
 setup-barangay-office.bat again.
 
 If any message is unclear, open TROUBLESHOOT-WINDOWS.txt in this folder.
+
+BACKUP DATABASE
+
+1. Double-click START-HERE.bat.
+2. Choose "Back up the database now".
+3. Keep the generated backups folder on a protected local drive or barangay-controlled external drive.
 
 DATABASE-ONLY SETUP
 

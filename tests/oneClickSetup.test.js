@@ -8,15 +8,32 @@ test("staff launcher provides one menu for setup, startup, checks, and sign-off"
   assert.match(script, /Windows Offline Office Launcher/i);
   assert.match(script, /Start the system for daily use/i);
   assert.match(script, /First-time setup on this computer/i);
+  assert.match(script, /Back up the database now/i);
   assert.match(script, /Check this computer before setup/i);
   assert.match(script, /Create final office sign-off report/i);
   assert.match(script, /Database-only setup\/checks for IT support/i);
   assert.match(script, /call "%~dp0start-barangay-office\.bat"/i);
   assert.match(script, /call "%~dp0setup-barangay-office\.bat"/i);
+  assert.match(script, /call "%~dp0backup-database\.bat"/i);
   assert.match(script, /call "%~dp0check-office-readiness\.bat"/i);
   assert.match(script, /call "%~dp0run-office-signoff\.bat"/i);
   assert.match(script, /call "%~dp0setup-database-only\.bat"/i);
   assert.match(script, /notepad "%~dp0README-FIRST-WINDOWS\.txt"/i);
+  assert.doesNotMatch(script, /npm install/i);
+  assert.doesNotMatch(script, /npm ci/i);
+});
+
+test("backup batch file runs the local backup command with Windows preflight checks", () => {
+  const script = readFileSync("backup-database.bat", "utf8");
+
+  assert.match(script, /where node >nul 2>nul/i);
+  assert.match(script, /where npm >nul 2>nul/i);
+  assert.match(script, /where mysqldump >nul 2>nul/i);
+  assert.match(script, /if not exist "node_modules"/i);
+  assert.match(script, /if not exist "\.env"/i);
+  assert.match(script, /npm run backup:mysql/i);
+  assert.match(script, /Backup completed/i);
+  assert.match(script, /protected local or barangay-controlled external drive/i);
   assert.doesNotMatch(script, /npm install/i);
   assert.doesNotMatch(script, /npm ci/i);
 });
@@ -62,6 +79,7 @@ test("office readiness checker batch file invokes prerequisite checks without do
   assert.match(powerShellScript, /database\\schema\.sql/);
   assert.match(powerShellScript, /database\\seed\.sql/);
   assert.match(powerShellScript, /START-HERE\.bat/);
+  assert.match(powerShellScript, /backup-database\.bat/);
   assert.match(powerShellScript, /setup-barangay-office\.bat/);
   assert.match(powerShellScript, /start-barangay-office\.bat/);
   assert.match(powerShellScript, /run-office-signoff\.bat/);

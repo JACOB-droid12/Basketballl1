@@ -121,7 +121,7 @@ npm test
 
 For the barangay office, prepare a complete offline project folder before bringing it to the office computer. The folder must include `node_modules/`; the one-click setup does not download npm packages.
 
-This setup path is Windows-only. The simplest staff workflow is `START-HERE.bat`, which opens a menu for readiness checks, first-time setup, daily startup, office sign-off, database-only support, and quick instructions.
+This setup path is Windows-only. The simplest staff workflow is `START-HERE.bat`, which opens a menu for readiness checks, first-time setup, daily startup, local backup, office sign-off, database-only support, and quick instructions.
 
 To create the prepared folder on a setup computer:
 
@@ -192,6 +192,8 @@ After MySQL is installed and `.env` is configured, create a timestamped local ba
 ```powershell
 npm run backup:mysql
 ```
+
+For barangay staff, the easier path is `START-HERE.bat` -> `Back up the database now`, or double-click `backup-database.bat`.
 
 Backups are written to `backups/` by default. Set `BACKUP_DIR` in `.env` if the barangay office wants to store them on another local folder or protected external drive.
 

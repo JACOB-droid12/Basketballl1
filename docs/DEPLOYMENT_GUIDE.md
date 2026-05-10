@@ -51,7 +51,7 @@ npm run verify:bundle
 
 Copy `dist\barangay-court-scheduler-offline` to the barangay office computer.
 
-The prepared folder includes `START-HERE.bat` as the staff-friendly launcher, `README-FIRST-WINDOWS.txt` for the shortest written setup path, and `TROUBLESHOOT-WINDOWS.txt` for common Windows setup/startup errors.
+The prepared folder includes `START-HERE.bat` as the staff-friendly launcher, `README-FIRST-WINDOWS.txt` for the shortest written setup path, `backup-database.bat` for staff-friendly local backups, and `TROUBLESHOOT-WINDOWS.txt` for common Windows setup/startup errors.
 
 ## One-Click Offline Setup
 
@@ -61,7 +61,7 @@ For barangay staff, the simplest path is:
 START-HERE.bat
 ```
 
-That menu can check the computer, run first-time setup, start daily office use, create the sign-off report, and open the quick instructions.
+That menu can check the computer, run first-time setup, start daily office use, create a local database backup, create the sign-off report, and open the quick instructions.
 
 After Node.js 20+ and MySQL 8+ are installed on the barangay office computer from local installers if needed, use:
 
@@ -240,6 +240,8 @@ Recommended backup command:
 ```powershell
 npm run backup:mysql
 ```
+
+For barangay staff, use `START-HERE.bat` and choose `Back up the database now`, or double-click `backup-database.bat`.
 
 The command reads `.env`, creates `backups/` if needed, and writes a timestamped `.sql` file such as `barangay_court_scheduler_2026-05-08_1430.sql`. It passes the MySQL password through the child process environment instead of putting the password in the command text.
 

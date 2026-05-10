@@ -51,6 +51,7 @@ dist\barangay-court-scheduler-offline
 - `docs/`
 - `scripts/`
 - `tests/`
+- `backup-database.bat`
 - `check-office-readiness.bat`
 - `run-office-signoff.bat`
 - `setup-database-only.bat`
@@ -83,12 +84,15 @@ On the barangay office computer:
 10. Choose `Start the system for daily use`.
 11. Open `http://localhost:3000/prototype`.
 12. For final deployment sign-off, choose `Create final office sign-off report` and keep the generated report under `reports\office-signoff`.
+13. For regular local backups, choose `Back up the database now` from `START-HERE.bat`.
 
 The start script checks Node.js, npm, `node_modules/`, `.env`, and the configured local MySQL/MariaDB database before opening the browser. If it reports a missing `.env`, run `setup-barangay-office.bat` first. If it reports a local database check failure, start MySQL/MariaDB or rerun setup.
 
 If a Windows setup or startup error is unclear, open `TROUBLESHOOT-WINDOWS.txt` in the prepared folder.
 
 The older individual batch files remain in the folder for technical staff, but barangay personnel can use `START-HERE.bat` for normal setup and daily startup.
+
+`backup-database.bat` runs the local MySQL backup command and writes timestamped `.sql` files under `backups\` by default. Keep backup files on a protected local drive or barangay-controlled external drive.
 
 If only the database needs to be created or checked, double-click `setup-database-only.bat` instead. It does not start the app UI.
 
