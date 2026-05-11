@@ -282,3 +282,59 @@ test("office sign-off script can write a report to a supplied reports folder", (
     rmSync(tempRoot, { recursive: true, force: true });
   }
 });
+
+test("office sign-off report warns staff when an automated command fails", () => {
+  const tempRoot = mkdtempSync(join(tmpdir(), "barangay-signoff-fail-"));
+  const binDir = join(tempRoot, "bin");
+  const reportsDir = join(tempRoot, "reports");
+  const commandLog = join(tempRoot, "npm-commands.txt");
+
+  try {
+    mkdirSync(binDir);
+    writeFileSync(
+      join(binDir, "npm.cmd"),
+      [
+        "@echo off",
+        `echo %*>>"${commandLog}"`,
+        "echo fake npm %*",
+        "echo %* | findstr /C:\"verify:mysql\" >nul",
+        "if %errorlevel%==0 exit /b 7",
+        "exit /b 0"
+      ].join("\r\n")
+    );
+
+    const env = {
+      ...process.env,
+      PATH: `${binDir};${process.env.PATH || ""}`
+    };
+
+    const result = spawnSync(
+      "powershell",
+      [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "scripts/run-office-signoff.ps1",
+        "-ReportsRoot",
+        reportsDir
+      ],
+      { encoding: "utf8", env }
+    );
+
+    assert.equal(result.status, 1, result.stderr || result.stdout);
+    const commandOutput = readFileSync(commandLog, "utf8");
+    assert.match(commandOutput, /run verify:mysql/);
+    assert.match(commandOutput, /run verify:offline-runtime/);
+    assert.match(commandOutput, /run backup:mysql/);
+
+    const reportFiles = readdirSync(reportsDir).filter((file) => file.startsWith("office-signoff-"));
+    assert.equal(reportFiles.length, 1);
+    const report = readFileSync(join(reportsDir, reportFiles[0]), "utf8");
+    assert.match(report, /Result: FAIL, exit code 7/);
+    assert.match(report, /Automated sign-off checks finished with 1 failed step/);
+    assert.match(report, /Do not use this report as final deployment sign-off until failed automated checks pass/);
+  } finally {
+    rmSync(tempRoot, { recursive: true, force: true });
+  }
+});

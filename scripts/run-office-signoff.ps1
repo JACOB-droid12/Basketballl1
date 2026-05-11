@@ -99,6 +99,7 @@ Write-ReportLine "Report saved to: $ReportPath"
 
 if ($Failures -gt 0) {
   Write-ReportLine "Automated sign-off checks finished with $Failures failed step(s). Fix failed items, then rerun run-office-signoff.bat."
+  Write-ReportLine "Do not use this report as final deployment sign-off until failed automated checks pass."
   exit 1
 }
 
