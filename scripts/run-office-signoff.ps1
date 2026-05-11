@@ -81,6 +81,7 @@ Invoke-SignoffCommand "Verify local prerequisites" "npm run verify:prereqs"
 Invoke-SignoffCommand "Check configured local database" "npm run check:database"
 Invoke-SignoffCommand "Verify live MySQL setup and app smoke" "npm run verify:mysql"
 Invoke-SignoffCommand "Verify office UI screens" "npm run verify:ui"
+Invoke-SignoffCommand "Verify offline prototype runtime" "npm run verify:offline-runtime"
 Invoke-SignoffCommand "Create local MySQL backup" "npm run backup:mysql"
 
 Write-ManualChecklist

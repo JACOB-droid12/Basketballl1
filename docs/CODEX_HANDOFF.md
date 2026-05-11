@@ -62,6 +62,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Added `npm run verify:mysql` through `scripts/verify-mysql.mjs` so a real MySQL installation can be verified with one command after `.env` is configured.
 - Added `npm run verify:ui` through `scripts/verify-ui-smoke.mjs` to render the main office screens with sample data without requiring MySQL.
 - Added `npm run verify:offline-runtime` through `scripts/verify-offline-runtime.mjs` to start the local app on a temporary port, check `/health`, fetch `/prototype`, and fail if the served prototype contains external internet resource references.
+- Added `npm run verify:offline-runtime` to `scripts/run-office-signoff.ps1` so final office sign-off reports also prove the served prototype runtime remains local/offline before backup.
 - Added `npm run backup:mysql` through `scripts/backup-mysql.mjs` to create timestamped local `mysqldump` backups while keeping the MySQL password out of command arguments.
 - Added `npm run restore:mysql -- <backup.sql>` through `scripts/restore-mysql.mjs` to restore an explicitly named `.sql` backup through the MySQL client while keeping the password out of command arguments.
 - Updated the MySQL restore helper so tests can inject a backup read stream; production restore still reads the selected `.sql` file from disk.
@@ -250,6 +251,17 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 
 ## Tests Run
 
+- TDD red check: `npm test -- tests\oneClickSetup.test.js` failed as expected before implementation because `scripts\run-office-signoff.ps1` did not include `npm run verify:offline-runtime`.
+- `npm test -- tests\oneClickSetup.test.js` - passed with 11/11 tests after adding `npm run verify:offline-runtime` to the office sign-off report sequence.
+- PowerShell parser check for `scripts\run-office-signoff.ps1` - passed after the sign-off report update.
+- `npm test` - passed with 146/146 tests after the sign-off report update.
+- `npm run verify:offline-runtime` - passed at `http://127.0.0.1:63542/prototype` after the sign-off report update.
+- `npm run verify:foundation` - passed after the sign-off report update.
+- `npm run verify:sql` - passed after the sign-off report update.
+- `npm run verify:ui` - passed for 15 office screens after the sign-off report update.
+- `npm run bundle:offline` - passed and refreshed `dist\barangay-court-scheduler-offline` with the updated sign-off script and docs.
+- `npm run verify:bundle` - passed and confirmed the refreshed offline bundle still includes required runtime, SQL, script, and documentation files.
+- `git diff --check` - passed after the sign-off report update; only Windows line-ending warnings were printed.
 - `node --check scripts\verify-offline-runtime.mjs` - passed after adding the reusable offline runtime verifier.
 - `npm test -- tests\offlineRuntimeVerifier.test.js tests\offlineBundle.test.js` - passed with 8/8 focused tests after adding `npm run verify:offline-runtime`.
 - `npm run verify:offline-runtime` - passed at `http://127.0.0.1:53451/prototype` and loaded `/prototype` from a temporary local port with no external prototype resource references.

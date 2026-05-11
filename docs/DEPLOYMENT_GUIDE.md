@@ -101,7 +101,7 @@ For final deployment sign-off on the office computer:
 run-office-signoff.bat
 ```
 
-This creates a timestamped text report under `reports\office-signoff`. It runs only local commands: prerequisite verification, runtime database readiness, live MySQL/app smoke verification, UI smoke verification, and a local MySQL backup. It also writes the manual office workflow checklist into the report. Generated sign-off reports are local deployment records and are ignored by git.
+This creates a timestamped text report under `reports\office-signoff`. It runs only local commands: prerequisite verification, runtime database readiness, live MySQL/app smoke verification, UI smoke verification, offline prototype runtime verification, and a local MySQL backup. It also writes the manual office workflow checklist into the report. Generated sign-off reports are local deployment records and are ignored by git.
 
 If any setup, startup, or sign-off message is unclear, open `TROUBLESHOOT-WINDOWS.txt` before changing files manually.
 

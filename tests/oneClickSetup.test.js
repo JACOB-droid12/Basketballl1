@@ -213,6 +213,7 @@ test("office sign-off batch file runs only local verification commands", () => {
   assert.match(powerShellScript, /npm run check:database/i);
   assert.match(powerShellScript, /npm run verify:mysql/i);
   assert.match(powerShellScript, /npm run verify:ui/i);
+  assert.match(powerShellScript, /npm run verify:offline-runtime/i);
   assert.match(powerShellScript, /npm run backup:mysql/i);
   assert.match(powerShellScript, /Manual verification checklist/i);
   assert.match(powerShellScript, /Record the local MySQL\/MariaDB service version/);
