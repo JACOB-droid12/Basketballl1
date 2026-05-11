@@ -226,6 +226,41 @@ test("office sign-off batch file runs only local verification commands", () => {
   assert.doesNotMatch(powerShellScript, /npm audit/i);
 });
 
+test("office sign-off batch wrapper returns the sign-off script exit code", () => {
+  const tempRoot = mkdtempSync(join(tmpdir(), "barangay-signoff-wrapper-"));
+  const binDir = join(tempRoot, "bin");
+  const commandLog = join(tempRoot, "powershell-args.txt");
+
+  try {
+    mkdirSync(binDir);
+    writeFileSync(
+      join(binDir, "powershell.cmd"),
+      [
+        "@echo off",
+        `echo %*>>"${commandLog}"`,
+        "exit /b 7"
+      ].join("\r\n")
+    );
+
+    const env = {
+      ...process.env,
+      PATH: `${binDir};${process.env.PATH || ""}`
+    };
+
+    const result = spawnSync("cmd.exe", ["/c", "run-office-signoff.bat"], {
+      encoding: "utf8",
+      env,
+      input: "\r\n"
+    });
+
+    assert.equal(result.status, 7, result.stdout + result.stderr);
+    const commandOutput = readFileSync(commandLog, "utf8");
+    assert.match(commandOutput, /scripts\\run-office-signoff\.ps1/i);
+  } finally {
+    rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
 test("office sign-off script can write a report to a supplied reports folder", () => {
   const tempRoot = mkdtempSync(join(tmpdir(), "barangay-signoff-"));
   const binDir = join(tempRoot, "bin");

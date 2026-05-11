@@ -93,6 +93,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Hardened the office sign-off checklist so the generated report includes explicit fill-in fields for the actual MySQL/MariaDB service version, MySQL client tools, office browser, printer name, readable printed output, and barangay personnel sign-off.
 - Added an executable office sign-off test path with fake local `npm` commands and optional `-ReportsRoot` support so the report-writing flow can be verified without touching real office reports or requiring MySQL.
 - Hardened failed office sign-off reports so they explicitly warn staff not to use the report as final deployment sign-off until failed automated checks pass.
+- Added executable regression coverage confirming `run-office-signoff.bat` returns the underlying PowerShell sign-off script exit code, so installer/admin support tooling can detect failed sign-off runs.
 - Added `reports/` to `.gitignore` and to the offline-bundle forbidden-item verifier so generated office sign-off reports stay local.
 - Added `docs/OFFLINE_INSTALL_CHECKLIST.md` documenting how to prepare a complete offline project folder with `node_modules/` before bringing it to the barangay office.
 - Added `tests/oneClickSetup.test.js` to check the one-click setup applies schema/seed/diagnostics, runs verification, and does not call `npm install` or `npm ci`.
@@ -259,6 +260,15 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - `npm test -- tests\oneClickSetup.test.js` - passed with 12/12 tests after adding optional `-ReportsRoot` support and an executable fake-`npm` sign-off report test.
 - TDD red check: `npm test -- tests\oneClickSetup.test.js` failed as expected before adding the failed-signoff warning because the generated report did not tell staff to avoid final deployment sign-off while automated checks were failing.
 - `npm test -- tests\oneClickSetup.test.js` - passed with 13/13 tests after adding the failed-signoff warning and executable fake-`npm` failure-path coverage.
+- `npm test -- tests\oneClickSetup.test.js` - passed with 14/14 tests after adding executable regression coverage for the office sign-off batch wrapper exit code.
+- `npm test` - passed with 149/149 tests after the office sign-off wrapper regression coverage update.
+- `npm run verify:sql` - passed after the office sign-off wrapper regression coverage update.
+- `npm run verify:ui` - passed for 15 office screens after the office sign-off wrapper regression coverage update.
+- `npm run verify:foundation` - passed after the office sign-off wrapper regression coverage update.
+- `npm run bundle:offline` - passed and refreshed `dist\barangay-court-scheduler-offline` after the office sign-off wrapper regression coverage update.
+- `npm run verify:bundle` - passed after refreshing the offline bundle.
+- `npm run verify:offline-runtime` - passed at `http://127.0.0.1:50063/prototype` after the office sign-off wrapper regression coverage update.
+- Chrome DevTools browser check - passed by loading `http://127.0.0.1:3226/prototype/` from a temporary local Node server, rendering the prototype login screen, and confirming the network list used only local `127.0.0.1` requests plus embedded `data:` image resources.
 - PowerShell parser check for `scripts\run-office-signoff.ps1` - passed after the sign-off report update.
 - `npm test` - passed with 146/146 tests after the sign-off report update.
 - `npm run verify:offline-runtime` - passed at `http://127.0.0.1:63542/prototype` after the sign-off report update.
