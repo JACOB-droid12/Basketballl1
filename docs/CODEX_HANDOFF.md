@@ -267,6 +267,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - `npm run verify:bundle` - passed after refreshing the offline bundle with the MySQL/MariaDB deployment wording refresh.
 - `npm run verify:offline-runtime` - passed from a temporary local prototype URL after the MySQL/MariaDB deployment wording refresh.
 - `git diff --check` - passed after the MySQL/MariaDB deployment wording refresh; only Windows line-ending conversion warnings were printed.
+- Chrome DevTools browser check - passed after the MySQL/MariaDB deployment wording refresh by loading `http://127.0.0.1:3337/prototype/?docs-check=mysql-mariadb`, rendering the prototype login screen, confirming `/health` returned `{"status":"ok","milestone":"foundation"}`, and confirming network requests stayed local to `127.0.0.1` plus the embedded logo data image.
 - TDD red check: `npm test -- tests\documentation.test.js` failed as expected while `database/README.md` still said SQL was only statically checked and not applied to live MySQL.
 - `npm test -- tests\documentation.test.js` - passed with 1/1 test after updating `database/README.md` with the current disposable MySQL/MariaDB live-verification status and office rerun requirement.
 - `npm test` - passed with 153/153 tests after the database README documentation refresh.
@@ -691,6 +692,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Completed a first-usable-version audit in `docs/FIRST_USABLE_VERSION_AUDIT.md`; the implementation is broad enough for the first usable version, disposable Oracle MySQL and MariaDB live verification passed during development, and `npm run verify:mysql` remains the office-machine sign-off gate.
 - Reviewed `C:\Users\Emmy Lou\Downloads\Sto. Nino Court Reservation System Prototype final.html` as the UI/foundation baseline and documented the preserved UI elements in `docs/PROTOTYPE_ALIGNMENT.md`.
 - Browser-verified the latest served prototype at `http://127.0.0.1:3227/prototype/?check=forgot-fixed` with Chrome DevTools and confirmed the login page no longer visibly exposes the unsupported `Forgot/Change Password` control; the DOM still contains the prototype element for reference, but the served backend-injected style computes it to `display: none`.
+- Browser-verified the served prototype at `http://127.0.0.1:3337/prototype/?docs-check=mysql-mariadb` after the MySQL/MariaDB deployment wording refresh. Chrome DevTools rendered the prototype login screen, `/health` returned OK, and network requests stayed local to `127.0.0.1` plus the embedded logo data image.
 - Browser-verified the served prototype frontend at `http://127.0.0.1:3188/prototype` with Chrome DevTools against disposable local MySQL 9.7.0 on `127.0.0.1:3391`.
 - Confirmed the prototype page title and Login/Home/Schedule/Account screens render without visible JavaScript text after fixing backend bridge injection to target the final `</body>`.
 - Confirmed browser network requests for the prototype use only local `127.0.0.1` document/script/API URLs after localizing `html2canvas` and `jsPDF` under `public/vendor/`.
