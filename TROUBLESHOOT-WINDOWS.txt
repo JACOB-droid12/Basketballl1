@@ -59,8 +59,13 @@ check the .env database settings.
 
 8. Port 3000 is already in use
 
-Close the other running copy of the app. If needed, restart the computer and
-double-click start-barangay-office.bat again.
+If the Barangay Court Scheduler is already running, the daily shortcut should
+open the browser again automatically.
+
+If the message says the health check did not respond, another program may be
+using the same port. Close the other program, restart the computer if needed,
+then double-click Barangay Court Scheduler again. If the same message appears,
+ask technical support to change APP_PORT in .env.
 
 9. Sign-off report fails
 

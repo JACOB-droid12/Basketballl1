@@ -93,6 +93,8 @@ start-barangay-office.bat
 
 Keep the startup window open while the system is being used. It opens the browser only after the local server is listening.
 
+If staff click the daily shortcut while the app is already running, the startup helper checks the local `/health` endpoint. When it confirms the Barangay Court Scheduler is already running, it opens the existing local app instead of showing a Node.js port error.
+
 For final deployment sign-off on the office computer:
 
 ```text

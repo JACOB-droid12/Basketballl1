@@ -1,11 +1,23 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { buildOfficeUrl, openBrowser, shouldOpenBrowser, startServer } from "../src/serverStartup.js";
+import {
+  buildHealthUrl,
+  buildOfficeUrl,
+  handleStartupError,
+  isOfficeAppRunning,
+  openBrowser,
+  shouldOpenBrowser,
+  startServer
+} from "../src/serverStartup.js";
 
 test("buildOfficeUrl points staff to the prototype after the local server is ready", () => {
   assert.equal(buildOfficeUrl(3000), "http://localhost:3000/prototype");
   assert.equal(buildOfficeUrl(3188, "prototype"), "http://localhost:3188/prototype");
+});
+
+test("buildHealthUrl points duplicate-start checks to the local health endpoint", () => {
+  assert.equal(buildHealthUrl(3000), "http://localhost:3000/health");
 });
 
 test("shouldOpenBrowser only enables automatic browser launch for the office startup flag", () => {
@@ -34,13 +46,91 @@ test("openBrowser uses Windows shell startup without requiring internet", () => 
   assert.deepEqual(calls[1], { unref: true });
 });
 
+test("isOfficeAppRunning accepts only the expected local health response", async () => {
+  assert.equal(
+    await isOfficeAppRunning(3000, {
+      fetchFn: async (url) => ({
+        ok: url === "http://localhost:3000/health",
+        json: async () => ({ status: "ok" })
+      })
+    }),
+    true
+  );
+
+  assert.equal(
+    await isOfficeAppRunning(3000, {
+      fetchFn: async () => ({
+        ok: true,
+        json: async () => ({ status: "different-app" })
+      })
+    }),
+    false
+  );
+
+  assert.equal(
+    await isOfficeAppRunning(3000, {
+      fetchFn: async () => {
+        throw new Error("not reachable");
+      }
+    }),
+    false
+  );
+});
+
+test("handleStartupError reuses the running office app on duplicate daily startup", async () => {
+  const events = [];
+
+  await handleStartupError(
+    { code: "EADDRINUSE" },
+    {
+      port: 3000,
+      env: { OPEN_BROWSER: "1" },
+      logger: (message) => events.push(message),
+      errorLogger: (message) => events.push(`error:${message}`),
+      openBrowserFn: (url) => events.push(`open:${url}`),
+      exitProcess: (code) => events.push(`exit:${code}`),
+      appRunningCheck: async () => true
+    }
+  );
+
+  assert.deepEqual(events, [
+    "The local app is already running at http://localhost:3000.",
+    "Opening http://localhost:3000/prototype",
+    "open:http://localhost:3000/prototype",
+    "exit:0"
+  ]);
+});
+
+test("handleStartupError reports a clear port conflict when health check fails", async () => {
+  const events = [];
+
+  await handleStartupError(
+    { code: "EADDRINUSE" },
+    {
+      port: 3000,
+      env: { OPEN_BROWSER: "1" },
+      logger: (message) => events.push(message),
+      errorLogger: (message) => events.push(`error:${message}`),
+      openBrowserFn: (url) => events.push(`open:${url}`),
+      exitProcess: (code) => events.push(`exit:${code}`),
+      appRunningCheck: async () => false
+    }
+  );
+
+  assert.deepEqual(events, [
+    "error:Port 3000 is already in use, but the Barangay Court Scheduler health check did not respond.",
+    "error:Close the other app using this port, or ask technical support to change APP_PORT in .env.",
+    "exit:1"
+  ]);
+});
+
 test("startServer opens the browser from the listen callback only when requested", () => {
   const events = [];
   const app = {
     listen(port, callback) {
       events.push(`listen:${port}`);
       callback();
-      return { close: () => {} };
+      return { close: () => {}, on: () => {} };
     }
   };
 
@@ -67,7 +157,7 @@ test("startServer leaves the browser closed for normal npm start", () => {
     listen(port, callback) {
       events.push(`listen:${port}`);
       callback();
-      return { close: () => {} };
+      return { close: () => {}, on: () => {} };
     }
   };
 

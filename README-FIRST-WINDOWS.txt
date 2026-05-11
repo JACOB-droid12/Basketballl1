@@ -67,6 +67,9 @@ DAILY STARTUP
 If the Desktop shortcut has not been created yet, double-click START-HERE.bat
 and choose "Start the system for daily use".
 
+If the system is already running and the shortcut is clicked again, it should
+open the browser again instead of showing a technical error.
+
 If start-barangay-office.bat says Node.js, npm, node_modules, or .env is missing,
 fix that item first. If .env is missing, run setup-barangay-office.bat before
 starting the system.
