@@ -107,6 +107,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Added `npm run verify:prereqs` through `scripts/verify-prereqs.mjs` to check Node.js, npm, MySQL client tools, `.env`, and required local config values before live MySQL setup.
 - Exposed `app.locals.db` from `createApp()` so verification scripts can close the app's MySQL pool cleanly after live HTTP checks.
 - Documented the prerequisite check, live MySQL verification, UI smoke verification, MySQL backup, and MySQL restore commands in `README.md`, `database/README.md`, and `docs/DEPLOYMENT_GUIDE.md`.
+- Updated `database/README.md` so the database guide reflects the current live-verification evidence against disposable local Oracle MySQL and MariaDB while still requiring final rerun on the barangay office database.
 - Final local refresh on 2026-05-10 passed `npm test` with 126/126 tests, `npm run verify:sql`, `npm run verify:foundation`, `npm run verify:ui` for 15 screens, `npm run bundle:offline`, `npm run verify:bundle`, `npm run verify:mysql` against disposable local Oracle MySQL on `127.0.0.1:3391`, and `git diff --check`.
 - Staff-friendly launcher refresh on 2026-05-11 passed `npm test -- tests\offlineBundle.test.js tests\oneClickSetup.test.js` with 12/12 focused setup/bundle tests, `npm run verify:foundation`, `npm run bundle:offline`, `npm run verify:bundle`, full `npm test` with 127/127 tests, and `cmd /c "echo 7|START-HERE.bat"`; the offline bundle scripts/verifier now require `START-HERE.bat`.
 - Backup launcher refresh on 2026-05-11 passed `npm test -- tests\offlineBundle.test.js tests\oneClickSetup.test.js tests\mysqlBackup.test.js` with 19/19 focused tests, `npm run verify:foundation`, `cmd /c "echo 8|START-HERE.bat"`, `cmd /c "(echo.|backup-database.bat) & exit /b 0"`, `npm run bundle:offline`, `npm run verify:bundle`, and full `npm test` with 128/128 tests; the offline bundle scripts/verifier now require `backup-database.bat`.
@@ -255,6 +256,16 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 
 ## Tests Run
 
+- TDD red check: `npm test -- tests\documentation.test.js` failed as expected while `database/README.md` still said SQL was only statically checked and not applied to live MySQL.
+- `npm test -- tests\documentation.test.js` - passed with 1/1 test after updating `database/README.md` with the current disposable MySQL/MariaDB live-verification status and office rerun requirement.
+- `npm test` - passed with 153/153 tests after the database README documentation refresh.
+- `npm run verify:sql` - passed after the database README documentation refresh.
+- `npm run verify:ui` - passed for 15 office screens after the database README documentation refresh.
+- `npm run verify:foundation` - passed after the database README documentation refresh.
+- `npm run bundle:offline` - passed and refreshed `dist\barangay-court-scheduler-offline` after the database README documentation refresh.
+- `npm run verify:bundle` - passed after refreshing the offline bundle with the database README documentation refresh.
+- `npm run verify:offline-runtime` - passed at `http://127.0.0.1:55837/prototype` after the database README documentation refresh.
+- `git diff --check` - passed after the database README documentation refresh; only Windows line-ending conversion warnings were printed.
 - TDD red check: `npm test -- tests\prototypeRoutes.test.js` failed as expected before the injector fix because the unsupported-control style was inserted after the first real `</head>` when the prototype contained another `</head>` inside a PDF helper script string.
 - `npm test -- tests\prototypeRoutes.test.js tests\app.test.js` - passed with 9/9 focused tests after changing the unsupported-control CSS injection to target the real document head and adding full-app prototype response coverage.
 - `node --check src\features\prototype\prototypeRoutes.js` and `node --check src\app.js` - passed after the prototype injector fix.

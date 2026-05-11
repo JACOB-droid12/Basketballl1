@@ -7,7 +7,7 @@ The final system targets a local MySQL database running on the same barangay off
 - MySQL 8.0 or newer
 - A local database account allowed to create databases, tables, triggers, and foreign keys
 
-The current Codex sandbox does not have the `mysql` command installed, so the SQL files were prepared and statically checked but not applied to a live MySQL server in this milestone.
+This database setup has been live-verified against disposable local Oracle MySQL and MariaDB servers during development. Before deployment, rerun `npm run verify:mysql` on the barangay office's target local MySQL/MariaDB installation.
 
 ## SQL-Only One-Command Setup
 
