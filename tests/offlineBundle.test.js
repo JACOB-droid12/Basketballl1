@@ -98,6 +98,7 @@ function createTemporaryBundle(options = {}) {
     "setup-barangay-office.bat",
     "start-barangay-office.bat",
     "src/server.js",
+    "src/serverStartup.js",
     "src/app.js",
     "src/features/prototype/prototypeRoutes.js",
     "src/features/prototype/prototypeApiRoutes.js",

@@ -44,11 +44,14 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo Open this address in the browser if it does not open automatically:
+echo Keep this window open while the system is being used.
+echo The browser will open after the local app is ready.
+echo.
+echo If the browser does not open automatically, open this address:
 echo http://localhost:3000/prototype
 echo.
 
-start "" http://localhost:3000/prototype
+set "OPEN_BROWSER=1"
 npm start
 
 echo.

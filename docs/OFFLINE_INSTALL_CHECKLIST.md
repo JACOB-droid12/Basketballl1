@@ -90,7 +90,7 @@ On the barangay office computer:
 13. For final deployment sign-off, choose `Create final office sign-off report` and keep the generated report under `reports\office-signoff`.
 14. For regular local backups, choose `Back up the database now` from the maintenance launcher.
 
-The start script checks Node.js, npm, `node_modules/`, `.env`, and the configured local MySQL/MariaDB database before opening the browser. If it reports a missing `.env`, run `setup-barangay-office.bat` first. If it reports a local database check failure, start MySQL/MariaDB or rerun setup.
+The start script checks Node.js, npm, `node_modules/`, `.env`, and the configured local MySQL/MariaDB database before starting the app. It opens the browser only after the local server is listening. Keep the startup window open while the system is being used. If it reports a missing `.env`, run `setup-barangay-office.bat` first. If it reports a local database check failure, start MySQL/MariaDB or rerun setup.
 
 If a Windows setup or startup error is unclear, open `TROUBLESHOOT-WINDOWS.txt` in the prepared folder.
 

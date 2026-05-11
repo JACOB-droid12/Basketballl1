@@ -32,6 +32,7 @@ const requiredFiles = [
   "docs/superpowers/plans/2026-05-07-basketball-court-scheduling-system.md",
   "src/app.js",
   "src/server.js",
+  "src/serverStartup.js",
   "src/config/database.js",
   "src/features/prototype/prototypeRoutes.js",
   "src/features/prototype/prototypeApiRoutes.js",

@@ -149,7 +149,7 @@ On the barangay office computer, after Node.js 20+ and MySQL 8+ are installed fr
 
 If a Windows setup or startup message is unclear, open `TROUBLESHOOT-WINDOWS.txt` in the prepared offline folder.
 
-`start-barangay-office.bat` checks for Node.js, npm, `node_modules/`, `.env`, and the local MySQL/MariaDB database before opening the browser. If a check fails, follow the message, start MySQL/MariaDB, and rerun setup if needed.
+`start-barangay-office.bat` checks for Node.js, npm, `node_modules/`, `.env`, and the local MySQL/MariaDB database before starting the app. It opens the browser only after the local server is listening. Keep the startup window open while the system is being used. If a check fails, follow the message, start MySQL/MariaDB, and rerun setup if needed.
 
 For a database-only daily startup check without opening the app, run:
 

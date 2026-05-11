@@ -177,8 +177,11 @@ test("one-click start batch opens the local prototype URL and starts npm", () =>
   assert.match(script, /Local database check failed/i);
   assert.match(script, /setup-barangay-office\.bat/i);
   assert.match(script, /exit \/b 1/i);
+  assert.match(script, /The browser will open after the local app is ready/i);
   assert.match(script, /http:\/\/localhost:3000\/prototype/);
+  assert.match(script, /set "OPEN_BROWSER=1"/i);
   assert.match(script, /npm start/);
+  assert.doesNotMatch(script, /start "" http:\/\/localhost:3000\/prototype/i);
 });
 
 test("office sign-off batch file runs only local verification commands", () => {

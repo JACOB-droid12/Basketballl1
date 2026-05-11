@@ -22,6 +22,7 @@ const REQUIRED_BUNDLE_ITEMS = [
   { path: "setup-barangay-office.bat", type: "file" },
   { path: "start-barangay-office.bat", type: "file" },
   { path: "src/server.js", type: "file" },
+  { path: "src/serverStartup.js", type: "file" },
   { path: "src/app.js", type: "file" },
   { path: "src/features/prototype/prototypeRoutes.js", type: "file" },
   { path: "src/features/prototype/prototypeApiRoutes.js", type: "file" },

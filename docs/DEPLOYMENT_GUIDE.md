@@ -71,7 +71,7 @@ For ordinary barangay staff after setup, the simplest daily path is:
 Barangay Court Scheduler
 ```
 
-That Desktop shortcut runs `start-barangay-office.bat`, checks the local database, starts the local app, and opens the browser.
+That Desktop shortcut runs `start-barangay-office.bat`, checks the local database, starts the local app, and opens the browser after the server is ready.
 
 After Node.js 20+ and MySQL 8+ are installed on the barangay office computer from local installers if needed, use:
 
@@ -90,6 +90,8 @@ To start regular office use after setup:
 ```text
 start-barangay-office.bat
 ```
+
+Keep the startup window open while the system is being used. It opens the browser only after the local server is listening.
 
 For final deployment sign-off on the office computer:
 
