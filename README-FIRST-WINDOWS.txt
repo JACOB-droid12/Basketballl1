@@ -40,7 +40,7 @@ Manual steps:
 3. Double-click setup-barangay-office.bat.
 4. Enter the local MySQL password when asked.
 5. Double-click start-barangay-office.bat.
-6. Open http://localhost:3000/prototype in the office browser.
+6. If the browser does not open automatically, use the address shown in the startup window.
 7. For deployment sign-off, double-click run-office-signoff.bat and keep the
    generated report from reports\office-signoff.
    The report asks staff to record the actual MySQL/MariaDB version, browser,

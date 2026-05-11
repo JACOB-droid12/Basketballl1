@@ -8,7 +8,7 @@ The intended deployment separates ordinary staff use from technical maintenance:
 
 ## What Offline Means
 
-- The reservation system opens at `http://localhost:3000/prototype`.
+- The reservation system opens at `http://localhost:3000/prototype` by default. If `APP_PORT` is changed in `.env`, use the address shown in the startup window.
 - The database is local MySQL/MariaDB on the same office computer or barangay-controlled local network.
 - Residents do not reserve online.
 - No cloud database, online booking site, email service, SMS service, or payment service is required.

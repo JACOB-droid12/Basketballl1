@@ -44,6 +44,13 @@ test("daily staff guide keeps ordinary use separate from maintenance", () => {
   assert.doesNotMatch(guide, /npm ci/i);
 });
 
+test("first-run guide tells staff to use the startup window address", () => {
+  const guide = readFileSync("README-FIRST-WINDOWS.txt", "utf8");
+
+  assert.match(guide, /address shown in the startup window/i);
+  assert.doesNotMatch(guide, /Open http:\/\/localhost:3000\/prototype in the office browser/i);
+});
+
 test("desktop shortcut batch creates daily-use and maintenance shortcuts without downloading", () => {
   const batchScript = readFileSync("create-desktop-shortcut.bat", "utf8");
   const powerShellScript = readFileSync("scripts/create-desktop-shortcut.ps1", "utf8");
@@ -219,10 +226,13 @@ test("office sign-off batch file runs only local verification commands", () => {
   assert.match(powerShellScript, /npm run backup:mysql/i);
   assert.match(powerShellScript, /Manual verification checklist/i);
   assert.match(powerShellScript, /Record the local MySQL\/MariaDB service version/);
+  assert.match(powerShellScript, /Get-OfficeUrl/);
+  assert.match(powerShellScript, /print-office-url\.mjs/);
   assert.match(powerShellScript, /Record the browser used for sign-off/);
   assert.match(powerShellScript, /Record the printer used for sign-off/);
   assert.match(powerShellScript, /Confirm printed schedule\/records are readable and not cut off/);
   assert.match(powerShellScript, /Barangay personnel sign-off name\/date/);
+  assert.doesNotMatch(powerShellScript, /Open http:\/\/localhost:3000\/prototype/);
   assert.doesNotMatch(powerShellScript, /npm install/i);
   assert.doesNotMatch(powerShellScript, /npm ci/i);
   assert.doesNotMatch(powerShellScript, /npm audit/i);
@@ -280,6 +290,14 @@ test("office sign-off script can write a report to a supplied reports folder", (
         "exit /b 0"
       ].join("\r\n")
     );
+    writeFileSync(
+      join(binDir, "node.cmd"),
+      [
+        "@echo off",
+        "echo http://localhost:3456/prototype",
+        "exit /b 0"
+      ].join("\r\n")
+    );
 
     const env = {
       ...process.env,
@@ -314,6 +332,8 @@ test("office sign-off script can write a report to a supplied reports folder", (
     const report = readFileSync(join(reportsDir, reportFiles[0]), "utf8");
     assert.match(report, /Verify offline prototype runtime/);
     assert.match(report, /Command: npm run verify:offline-runtime/);
+    assert.match(report, /Open http:\/\/localhost:3456\/prototype from the barangay office browser/);
+    assert.doesNotMatch(report, /Open http:\/\/localhost:3000\/prototype from the barangay office browser/);
     assert.match(report, /Automated sign-off checks passed/);
   } finally {
     rmSync(tempRoot, { recursive: true, force: true });

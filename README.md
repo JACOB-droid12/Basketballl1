@@ -177,7 +177,7 @@ For a database-only local setup fallback, double-click `setup-database-only.bat`
 npm start
 ```
 
-Useful local URLs:
+Useful local URLs, assuming the default `APP_PORT=3000`:
 
 - `http://localhost:3000/prototype` - prototype frontend used by barangay staff
 - `http://localhost:3000/login`

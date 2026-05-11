@@ -216,6 +216,8 @@ Open:
 http://localhost:3000/prototype
 ```
 
+This is the default address. If `APP_PORT` is changed in `.env`, use the address shown in the startup window instead.
+
 Seeded starter account:
 
 - Username: `admin`

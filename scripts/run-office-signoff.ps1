@@ -47,12 +47,35 @@ function Invoke-SignoffCommand {
   }
 }
 
+function Get-OfficeUrl {
+  $DefaultOfficeUrl = "http://localhost:3000/prototype"
+  $UrlScript = Join-Path $ProjectRoot "scripts\print-office-url.mjs"
+
+  try {
+    $Output = & node $UrlScript 2>$null
+    if ($LASTEXITCODE -eq 0) {
+      foreach ($Line in @($Output)) {
+        $Candidate = ([string] $Line).Trim()
+        if (-not [string]::IsNullOrWhiteSpace($Candidate)) {
+          return $Candidate
+        }
+      }
+    }
+  } catch {
+    return $DefaultOfficeUrl
+  }
+
+  return $DefaultOfficeUrl
+}
+
 function Write-ManualChecklist {
+  $OfficeUrl = Get-OfficeUrl
+
   Write-ReportLine ""
   Write-ReportLine "== Manual verification checklist =="
   Write-ReportLine "[ ] Record the local MySQL/MariaDB service version used for office records: ______________________________"
   Write-ReportLine "[ ] Record the MySQL client tools on PATH by running mysql --version and mysqldump --version."
-  Write-ReportLine "[ ] Open http://localhost:3000/prototype from the barangay office browser."
+  Write-ReportLine "[ ] Open $OfficeUrl from the barangay office browser."
   Write-ReportLine "[ ] Record the browser used for sign-off: ______________________________"
   Write-ReportLine "[ ] Log in with the starter admin account, then change the starter password, or log in with the active Admin account configured in .env."
   Write-ReportLine "[ ] If the seeded admin account was retired, confirm the sign-off checks used VERIFY_LOGIN_USERNAME and VERIFY_LOGIN_PASSWORD for the active Admin account."

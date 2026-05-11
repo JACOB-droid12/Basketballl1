@@ -85,6 +85,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Added `create-desktop-shortcut.bat` and `scripts/create-desktop-shortcut.ps1` so staff can create two Desktop shortcuts: `Barangay Court Scheduler` for daily use through `start-barangay-office.bat`, and `Barangay Court Scheduler - Maintenance` for setup, backup, database checks, sign-off, and support through `START-HERE.bat`.
 - Added `src/serverStartup.js` and updated `start-barangay-office.bat` so the daily-use shortcut opens the browser only after the local Express server is listening, avoiding a confusing early browser error for barangay staff.
 - Added `scripts/print-office-url.mjs` and updated `start-barangay-office.bat` so the startup window prints the local office URL from the actual `APP_PORT` value instead of hardcoding port 3000.
+- Updated `scripts/run-office-signoff.ps1` so the generated sign-off report uses the same local office URL helper as the daily startup path, keeping the manual browser checklist aligned with `APP_PORT`.
 - Added `TROUBLESHOOT-WINDOWS.txt` as a plain Windows error-recovery guide for common setup, startup, database, login, and sign-off failures.
 - Hardened `start-barangay-office.bat` so it checks Node.js, npm, `node_modules\`, and `.env` before opening the browser and tells staff to run setup when `.env` is missing.
 - Added `npm run check:database` through `scripts/check-runtime-database.mjs`, and wired `start-barangay-office.bat` to run it before opening the browser. It confirms the configured local MySQL/MariaDB database is reachable and has seeded statuses, time slots, and at least one active Admin account without writing data.
@@ -257,6 +258,14 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 
 ## Tests Run
 
+- Sign-off URL alignment on 2026-05-12: TDD red checks first failed while the office sign-off report and first-run guide still used a hardcoded `http://localhost:3000/prototype` browser instruction. `scripts\run-office-signoff.ps1` now uses `scripts\print-office-url.mjs` for the report checklist URL, and `README-FIRST-WINDOWS.txt`, `README.md`, `docs\DEPLOYMENT_GUIDE.md`, and `docs\OFFLINE_INSTALL_CHECKLIST.md` now describe `localhost:3000` as the default address while telling staff to use the startup-window address when `APP_PORT` changes.
+- `npm test -- tests\oneClickSetup.test.js tests\officeUrlPrinter.test.js` - passed with 18/18 focused tests after the sign-off URL alignment.
+- PowerShell parser check for `scripts\run-office-signoff.ps1` - passed after the sign-off URL alignment.
+- `node scripts\print-office-url.mjs` - printed `http://localhost:3000/prototype` with default configuration.
+- `APP_PORT=3456 node scripts\print-office-url.mjs` - printed `http://localhost:3456/prototype` after the sign-off URL alignment.
+- `npm run verify:sql`, `npm run verify:foundation`, and `npm run verify:ui` - passed after the sign-off URL alignment; UI smoke still covers 15 office screens.
+- `npm run bundle:offline`, `npm run verify:bundle`, and `npm run verify:offline-runtime` - passed after the sign-off URL alignment and refreshed the copy-ready offline folder.
+- `npm test` - passed with 155/155 tests after the sign-off URL alignment.
 - Completion-audit refresh on 2026-05-12: `npm test` passed with 154/154 tests, `npm run verify:sql` passed, `npm run verify:ui` passed for 15 office screens, `npm run verify:foundation` passed, `npm run bundle:offline` refreshed `dist\barangay-court-scheduler-offline`, `npm run verify:bundle` passed, and `npm run verify:offline-runtime` passed from a temporary local prototype URL.
 - Completion-audit live-environment probes on 2026-05-12: `npm run verify:prereqs` failed only because normal `mysql` and `mysqldump` client tools are not on PATH in this shell, `npm run check:database` failed because no default local database is reachable at `127.0.0.1:3306/barangay_court_scheduler`, and `npm run verify:mysql` failed safely with `connect ECONNREFUSED 127.0.0.1:3306`.
 - Chrome DevTools completion-audit browser check on 2026-05-12: loaded `http://127.0.0.1:3341/prototype?completion-audit=2026-05-12`, rendered the supplied prototype login screen, confirmed `/health` returned `{"status":"ok","milestone":"foundation"}`, confirmed `/api/prototype/session` returned unauthenticated local JSON, and confirmed the network list stayed local to `127.0.0.1` plus the embedded data-image logo.
