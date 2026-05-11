@@ -40,6 +40,7 @@ const requiredFiles = [
   "scripts/check-office-readiness.ps1",
   "scripts/create-desktop-shortcut.ps1",
   "scripts/check-runtime-database.mjs",
+  "scripts/print-office-url.mjs",
   "scripts/run-office-signoff.ps1",
   "scripts/verify-offline-bundle.mjs",
   "scripts/setup-barangay-office.ps1",

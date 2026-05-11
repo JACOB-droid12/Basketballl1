@@ -42,6 +42,7 @@ const REQUIRED_BUNDLE_ITEMS = [
   { path: "docs/DEPLOYMENT_GUIDE.md", type: "file" },
   { path: "docs/OFFLINE_INSTALL_CHECKLIST.md", type: "file" },
   { path: "scripts/check-runtime-database.mjs", type: "file" },
+  { path: "scripts/print-office-url.mjs", type: "file" },
   { path: "scripts/check-office-readiness.ps1", type: "file" },
   { path: "scripts/create-desktop-shortcut.ps1", type: "file" },
   { path: "scripts/run-office-signoff.ps1", type: "file" },

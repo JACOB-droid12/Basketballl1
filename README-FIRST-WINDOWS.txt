@@ -61,7 +61,7 @@ DAILY STARTUP
 
 1. Start MySQL if it is not already running.
 2. Double-click the Desktop shortcut named Barangay Court Scheduler.
-3. Open http://localhost:3000/prototype if the browser does not open automatically.
+3. If the browser does not open automatically, use the address shown in the startup window.
 4. Keep the startup window open while the system is being used.
 
 If the Desktop shortcut has not been created yet, double-click START-HERE.bat

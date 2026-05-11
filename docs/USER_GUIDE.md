@@ -6,8 +6,8 @@ This guide is for authorized barangay personnel who encode and monitor basketbal
 
 ## Daily Use
 
-1. Start the local app on the barangay office computer.
-2. Open `http://localhost:3000/prototype` in the browser.
+1. Double-click the Desktop shortcut named `Barangay Court Scheduler`.
+2. If the browser does not open automatically, use the address shown in the startup window.
 3. Log in with an Admin or Staff account.
 4. Use Home for today's schedule summary.
 5. Use Schedule to check available and reserved court slots.

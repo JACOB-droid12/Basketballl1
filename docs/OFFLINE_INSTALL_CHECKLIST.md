@@ -85,12 +85,12 @@ On the barangay office computer:
 8. Enter the local MySQL password when asked.
 9. Confirm the setup finishes without errors.
 10. Choose `Create desktop shortcut`.
-11. For daily use, double-click `Barangay Court Scheduler`. If the browser does not open automatically, open `http://localhost:3000/prototype`.
+11. For daily use, double-click `Barangay Court Scheduler`. If the browser does not open automatically, use the address shown in the startup window.
 12. For setup, backup, checks, or support, double-click `Barangay Court Scheduler - Maintenance` or reopen `START-HERE.bat`.
 13. For final deployment sign-off, choose `Create final office sign-off report` and keep the generated report under `reports\office-signoff`.
 14. For regular local backups, choose `Back up the database now` from the maintenance launcher.
 
-The start script checks Node.js, npm, `node_modules/`, `.env`, and the configured local MySQL/MariaDB database before starting the app. It opens the browser only after the local server is listening. Keep the startup window open while the system is being used. If it reports a missing `.env`, run `setup-barangay-office.bat` first. If it reports a local database check failure, start MySQL/MariaDB or rerun setup.
+The start script checks Node.js, npm, `node_modules/`, `.env`, and the configured local MySQL/MariaDB database before starting the app. It opens the browser only after the local server is listening and prints the correct local address from `APP_PORT`. Keep the startup window open while the system is being used. If it reports a missing `.env`, run `setup-barangay-office.bat` first. If it reports a local database check failure, start MySQL/MariaDB or rerun setup.
 
 If a Windows setup or startup error is unclear, open `TROUBLESHOOT-WINDOWS.txt` in the prepared folder.
 

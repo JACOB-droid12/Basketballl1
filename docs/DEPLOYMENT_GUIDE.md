@@ -91,7 +91,7 @@ To start regular office use after setup:
 start-barangay-office.bat
 ```
 
-Keep the startup window open while the system is being used. It opens the browser only after the local server is listening.
+Keep the startup window open while the system is being used. It opens the browser only after the local server is listening and prints the correct local address from `APP_PORT`.
 
 If staff click the daily shortcut while the app is already running, the startup helper checks the local `/health` endpoint. When it confirms the Barangay Court Scheduler is already running, it opens the existing local app instead of showing a Node.js port error.
 
@@ -228,7 +228,7 @@ Rerunning setup or live verification after deactivating the seeded account will 
 1. Turn on the barangay office computer.
 2. Start MySQL if it does not start automatically.
 3. Double-click the Desktop shortcut named `Barangay Court Scheduler`.
-4. Open `http://localhost:3000/prototype` if the browser does not open automatically.
+4. Use the address shown in the startup window if the browser does not open automatically.
 5. Log in as Admin or Staff.
 
 ## Optional Windows Shortcut
