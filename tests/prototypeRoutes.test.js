@@ -26,8 +26,9 @@ test("injectBackendBridge uses the final body close so prototype script literals
 
 test("injectBackendBridge does not duplicate the adapter script", () => {
   const html = '<html><body><script src="/js/prototype-backend.js"></script></body></html>';
+  const bridged = injectBackendBridge(html);
 
-  assert.equal(injectBackendBridge(html), html);
+  assert.equal(bridged.match(/\/js\/prototype-backend\.js/g).length, 1);
 });
 
 test("injectBackendBridge rewrites prototype CDN scripts to local offline vendor files", () => {
@@ -43,6 +44,39 @@ test("injectBackendBridge rewrites prototype CDN scripts to local offline vendor
   assert.match(bridged, /src="\/vendor\/jspdf\.umd\.min\.js"/);
   assert.doesNotMatch(bridged, /cdnjs\.cloudflare\.com/);
   assert.doesNotMatch(bridged, /fonts\.googleapis\.com/);
+});
+
+test("injectBackendBridge hides unsupported prototype password recovery controls", () => {
+  const html = `
+    <html>
+      <head></head>
+      <body>
+        <div class="forgot-pw" onclick="showPage('forgot-page')">Forgot/Change Password</div>
+      </body>
+    </html>
+  `;
+  const bridged = injectBackendBridge(html);
+
+  assert.match(bridged, /id="prototype-backend-unsupported-style"/);
+  assert.match(bridged, /\.forgot-pw\s*\{\s*display:\s*none\s*!important;\s*\}/);
+});
+
+test("injectBackendBridge inserts unsupported-control CSS into the real document head", () => {
+  const html = `
+    <html>
+      <head><title>Prototype</title></head>
+      <body>
+        <script>doc.write(\`<html><head></head><body>print</body></html>\`);</script>
+        <div class="forgot-pw">Forgot/Change Password</div>
+      </body>
+    </html>
+  `;
+  const bridged = injectBackendBridge(html);
+  const firstHeadClose = bridged.toLowerCase().indexOf("</head>");
+  const injectedStyle = bridged.indexOf("prototype-backend-unsupported-style");
+
+  assert.ok(injectedStyle > -1);
+  assert.ok(injectedStyle < firstHeadClose);
 });
 
 test("prototype routes serve the supplied frontend as the app entry point", async () => {

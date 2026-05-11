@@ -31,5 +31,6 @@ This prototype is a single-file browser mockup. The production system now serves
 - The production app keeps office functions required beyond the prototype, including reservation records, activity logs, local exports, print controls, backup/restore, and local MySQL verification.
 - The copied prototype file is kept intact as much as possible; backend behavior is attached through `public/js/prototype-backend.js` instead of changing the visible HTML layout.
 - Prototype PDF helper libraries are served from local `public/vendor/` files instead of CDN URLs so the page can load while offline.
+- The served prototype hides the login-page forgotten-password control through a backend-injected style in the real document head because password recovery is not part of the offline milestone; signed-in users change passwords from Account instead.
 - The final target remains fully offline on a Windows barangay office computer with local Node.js and local MySQL.
 - No cloud database, email/SMS, online payment, OCR, or resident self-service is part of this version.

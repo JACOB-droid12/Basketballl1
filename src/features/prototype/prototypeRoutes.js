@@ -29,7 +29,7 @@ export function createPrototypeRoutes(options = {}) {
 
 export function injectBackendBridge(html) {
   const bridge = '<script src="/js/prototype-backend.js"></script>';
-  const source = rewriteOfflineVendorScripts(String(html));
+  const source = injectUnsupportedPrototypeStyles(rewriteOfflineVendorScripts(String(html)));
 
   if (source.includes(bridge)) {
     return source;
@@ -57,4 +57,19 @@ function rewriteOfflineVendorScripts(html) {
       /https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/jspdf\/2\.5\.1\/jspdf\.umd\.min\.js/g,
       "/vendor/jspdf.umd.min.js"
     );
+}
+
+function injectUnsupportedPrototypeStyles(html) {
+  const style = '<style id="prototype-backend-unsupported-style">.forgot-pw { display: none !important; }</style>';
+
+  if (html.includes('id="prototype-backend-unsupported-style"')) {
+    return html;
+  }
+
+  const headCloseIndex = html.toLowerCase().indexOf("</head>");
+  if (headCloseIndex >= 0) {
+    return `${html.slice(0, headCloseIndex)}  ${style}\n${html.slice(headCloseIndex)}`;
+  }
+
+  return `${style}\n${html}`;
 }

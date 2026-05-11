@@ -12,3 +12,22 @@ test("createApp exposes the database pool for verification shutdown hooks", asyn
     await app.locals.db?.end?.();
   }
 });
+
+test("createApp serves the backend-injected prototype at the office URL", async () => {
+  const app = createApp();
+  const server = app.listen(0);
+
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/prototype/`);
+    const body = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.match(body, /id="prototype-backend-unsupported-style"/);
+    assert.match(body, /\/js\/prototype-backend\.js/);
+    assert.doesNotMatch(body, /cdnjs\.cloudflare\.com/);
+    assert.doesNotMatch(body, /fonts\.googleapis\.com/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await app.locals.db?.end?.();
+  }
+});

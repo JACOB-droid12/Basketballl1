@@ -52,7 +52,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Re-verified the Milestone 1 foundation on 2026-05-08 after the user supplied the proposal PDF, presentation deck, and database diagram again.
 - Updated `README.md` so its current-milestone text matches this handoff instead of describing the older Milestone 4 state.
 - Applied the supplied palette card to the shared UI tokens: Hot Paprika `#B53324`, Honeycomb `#E5A657`, Biscuit `#FDBC94`, and Crumpet `#F5E2CE`.
-- Removed the login mockup's forgotten-password text because offline password recovery is not implemented in this milestone.
+- Hid the served prototype's login-page forgotten-password control through backend route injection into the real document head because offline password recovery is not implemented in this milestone; signed-in users change passwords from Account instead.
 - Changed the Home weekly schedule grid to render the full Sunday-Saturday week instead of only filling today's column.
 - Made Home weekly grid cells actionable: reserved cells link to reservation details and available cells link to add-reservation with date/time prefilled.
 - Added an explicit Today label to the dashboard summary so staff can immediately see the viewed office date.
@@ -116,6 +116,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Port-aware daily-start fallback on 2026-05-11 updated `scripts/print-office-url.mjs`, `start-barangay-office.bat`, and staff docs so the fallback browser address comes from `APP_PORT`; verification passed with `npm test -- tests\officeUrlPrinter.test.js tests\oneClickSetup.test.js tests\offlineBundle.test.js` at 18/18 tests, `node --check scripts\print-office-url.mjs`, `node scripts\print-office-url.mjs`, `APP_PORT=3199 node scripts\print-office-url.mjs`, `npm run verify:sql`, `npm run verify:ui`, `npm run verify:foundation`, full `npm test` at 142/142 tests, and a headless Chrome `/prototype` load from a temporary custom-port local server after `/health` readiness.
 - Staff daily-use guide iteration on 2026-05-11 added `STAFF-DAILY-USE.txt`, changed `START-HERE.bat` quick instructions to open it, and updated foundation/offline bundle requirements so the prepared folder includes it.
 - Prototype offline resource hardening on 2026-05-11 removed the remaining Google Fonts/CDN requests from the served prototype path; `npm test -- tests\prototypeRoutes.test.js tests\oneClickSetup.test.js tests\offlineBundle.test.js` passed with 21/21 tests, and Playwright browser verification loaded `/prototype` from `http://127.0.0.1:3210/prototype` with only same-origin local resources.
+- Prototype password-recovery cleanup on 2026-05-11 hid the unsupported `Forgot/Change Password` login control in the served prototype while preserving the supplied source file and backend bridge pattern.
 - Offline runtime verifier iteration on 2026-05-11 added `scripts/verify-offline-runtime.mjs` and `npm run verify:offline-runtime`; focused tests passed with `npm test -- tests\offlineRuntimeVerifier.test.js tests\offlineBundle.test.js` at 8/8 tests, `node --check scripts\verify-offline-runtime.mjs` passed, `npm run verify:offline-runtime` passed at `http://127.0.0.1:53451/prototype`, `npm test` passed with 146/146 tests, and the foundation/offline bundle verifiers now require the script. Chrome DevTools also loaded `http://127.0.0.1:3210/prototype/` from the local backend, rendered the prototype login screen, confirmed `/health` returned `{"status":"ok","milestone":"foundation"}`, confirmed `/api/prototype/session` returned JSON, and found zero external HTTP resources.
 - Current completion-audit pass on 2026-05-11: `npm test -- tests\offlineRuntimeVerifier.test.js tests\offlineBundle.test.js`, `node --check scripts\verify-offline-runtime.mjs`, `npm run verify:offline-runtime`, `npm run verify:foundation`, `npm run verify:sql`, `npm run verify:ui`, full `npm test`, `npm run bundle:offline`, `npm run verify:bundle`, `git diff --check`, and Chrome DevTools browser verification passed for the offline runtime iteration. The remaining live office blockers are still actual MySQL/MariaDB installation/sign-off and printer/browser output on the barangay office computer.
 
@@ -254,6 +255,18 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 
 ## Tests Run
 
+- TDD red check: `npm test -- tests\prototypeRoutes.test.js` failed as expected before the injector fix because the unsupported-control style was inserted after the first real `</head>` when the prototype contained another `</head>` inside a PDF helper script string.
+- `npm test -- tests\prototypeRoutes.test.js tests\app.test.js` - passed with 9/9 focused tests after changing the unsupported-control CSS injection to target the real document head and adding full-app prototype response coverage.
+- `node --check src\features\prototype\prototypeRoutes.js` and `node --check src\app.js` - passed after the prototype injector fix.
+- `npm test` - passed with 152/152 tests after the prototype injector fix.
+- `npm run verify:sql` - passed after the prototype injector fix.
+- `npm run verify:ui` - passed for 15 office screens after the prototype injector fix.
+- `npm run verify:foundation` - passed after the prototype injector fix.
+- `npm run bundle:offline` - passed and refreshed `dist\barangay-court-scheduler-offline` after the prototype injector fix.
+- `npm run verify:bundle` - passed after refreshing the offline bundle with the prototype injector fix.
+- `npm run verify:offline-runtime` - passed at `http://127.0.0.1:65399/prototype` after the prototype injector fix.
+- `git diff --check` - passed after the prototype injector fix; only Windows line-ending conversion warnings were printed.
+- Chrome DevTools browser check - passed by loading `http://127.0.0.1:3227/prototype/?check=forgot-fixed`, confirming the visible login page no longer exposes `Forgot/Change Password`, and confirming `.forgot-pw` computes to `display: none` with `prototype-backend-unsupported-style` and `/js/prototype-backend.js` present.
 - TDD red check: `npm test -- tests\oneClickSetup.test.js` failed as expected before implementation because `scripts\run-office-signoff.ps1` did not include `npm run verify:offline-runtime`.
 - `npm test -- tests\oneClickSetup.test.js` - passed with 11/11 tests after adding `npm run verify:offline-runtime` to the office sign-off report sequence.
 - TDD red check: `npm test -- tests\oneClickSetup.test.js` failed as expected before adding `-ReportsRoot` support because the office sign-off script ignored the supplied report folder and wrote only to the default local `reports\office-signoff` path.
@@ -655,6 +668,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Browser/IAB was unavailable earlier because no Codex IAB backend was discovered. Chrome DevTools was used as the fallback. DevTools screenshot capture timed out, so verification used accessibility snapshots plus computed layout/style checks.
 - Completed a first-usable-version audit in `docs/FIRST_USABLE_VERSION_AUDIT.md`; the implementation is broad enough for the first usable version, disposable Oracle MySQL and MariaDB live verification passed during development, and `npm run verify:mysql` remains the office-machine sign-off gate.
 - Reviewed `C:\Users\Emmy Lou\Downloads\Sto. Nino Court Reservation System Prototype final.html` as the UI/foundation baseline and documented the preserved UI elements in `docs/PROTOTYPE_ALIGNMENT.md`.
+- Browser-verified the latest served prototype at `http://127.0.0.1:3227/prototype/?check=forgot-fixed` with Chrome DevTools and confirmed the login page no longer visibly exposes the unsupported `Forgot/Change Password` control; the DOM still contains the prototype element for reference, but the served backend-injected style computes it to `display: none`.
 - Browser-verified the served prototype frontend at `http://127.0.0.1:3188/prototype` with Chrome DevTools against disposable local MySQL 9.7.0 on `127.0.0.1:3391`.
 - Confirmed the prototype page title and Login/Home/Schedule/Account screens render without visible JavaScript text after fixing backend bridge injection to target the final `</body>`.
 - Confirmed browser network requests for the prototype use only local `127.0.0.1` document/script/API URLs after localizing `html2canvas` and `jsPDF` under `public/vendor/`.
