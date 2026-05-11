@@ -42,6 +42,7 @@ dist\barangay-court-scheduler-offline
 
 - `node_modules/`
 - `START-HERE.bat`
+- `STAFF-DAILY-USE.txt`
 - `README-FIRST-WINDOWS.txt`
 - `TROUBLESHOOT-WINDOWS.txt`
 - `package.json`
@@ -95,6 +96,8 @@ The start script checks Node.js, npm, `node_modules/`, `.env`, and the configure
 If a Windows setup or startup error is unclear, open `TROUBLESHOOT-WINDOWS.txt` in the prepared folder.
 
 The older individual batch files remain in the folder for technical staff, but barangay personnel can use the daily Desktop shortcut for normal startup and the maintenance shortcut for setup/support tasks.
+
+For ordinary staff, `STAFF-DAILY-USE.txt` is the shortest root-level guide. `README-FIRST-WINDOWS.txt` remains the installer/admin first-run guide.
 
 `backup-database.bat` runs the local MySQL backup command and writes timestamped `.sql` files under `backups\` by default. Keep backup files on a protected local drive or barangay-controlled external drive.
 

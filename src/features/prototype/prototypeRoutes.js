@@ -46,6 +46,10 @@ export function injectBackendBridge(html) {
 function rewriteOfflineVendorScripts(html) {
   return html
     .replace(
+      /@import\s+url\(['"]https:\/\/fonts\.googleapis\.com\/css2\?family=Lato:wght@400;700;900&family=Merriweather:wght@400;700&display=swap['"]\);\s*/g,
+      ""
+    )
+    .replace(
       /https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/html2canvas\/1\.4\.1\/html2canvas\.min\.js/g,
       "/vendor/html2canvas.min.js"
     )

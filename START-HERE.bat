@@ -91,10 +91,12 @@ goto after_action
 
 :open_instructions
 cls
-if exist "%~dp0README-FIRST-WINDOWS.txt" (
+if exist "%~dp0STAFF-DAILY-USE.txt" (
+  start "" notepad "%~dp0STAFF-DAILY-USE.txt"
+) else if exist "%~dp0README-FIRST-WINDOWS.txt" (
   start "" notepad "%~dp0README-FIRST-WINDOWS.txt"
 ) else (
-  echo README-FIRST-WINDOWS.txt was not found.
+  echo STAFF-DAILY-USE.txt and README-FIRST-WINDOWS.txt were not found.
 )
 goto after_action
 

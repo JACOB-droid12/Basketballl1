@@ -123,7 +123,7 @@ npm test
 
 For the barangay office, prepare a complete offline project folder before bringing it to the office computer. The folder must include `node_modules/`; the one-click setup does not download npm packages.
 
-This setup path is Windows-only. The installer/admin workflow uses `START-HERE.bat`, which opens a menu for readiness checks, first-time setup, daily startup, local backup, desktop shortcut creation, office sign-off, database-only support, and quick instructions. The ordinary staff workflow uses a Desktop shortcut named `Barangay Court Scheduler` that starts daily use directly.
+This setup path is Windows-only. The installer/admin workflow uses `START-HERE.bat`, which opens a menu for readiness checks, first-time setup, daily startup, local backup, desktop shortcut creation, office sign-off, database-only support, and quick instructions. The ordinary staff workflow uses a Desktop shortcut named `Barangay Court Scheduler` that starts daily use directly. The root `STAFF-DAILY-USE.txt` file is the plain daily-use sheet for non-technical staff.
 
 To create the prepared folder on a setup computer:
 
@@ -209,6 +209,7 @@ npm run restore:mysql -- backups\backup-file.sql
 ## Documentation
 
 - `docs/USER_GUIDE.md` explains the daily workflow for barangay Admin and Staff users.
+- `STAFF-DAILY-USE.txt` is the shortest daily-use sheet for ordinary barangay staff.
 - `docs/DEPLOYMENT_GUIDE.md` explains offline Windows + local MySQL installation, startup, backup, restore, and update steps.
 - `check-office-readiness.bat` checks whether a barangay office computer has the local files and tools needed before running setup.
 - `run-office-signoff.bat` runs final local verification on the office computer and saves a sign-off report.

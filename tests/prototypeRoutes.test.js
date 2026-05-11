@@ -32,6 +32,7 @@ test("injectBackendBridge does not duplicate the adapter script", () => {
 
 test("injectBackendBridge rewrites prototype CDN scripts to local offline vendor files", () => {
   const html = `
+    <style>@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Merriweather:wght@400;700&display=swap');</style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     </body>
@@ -41,6 +42,7 @@ test("injectBackendBridge rewrites prototype CDN scripts to local offline vendor
   assert.match(bridged, /src="\/vendor\/html2canvas\.min\.js"/);
   assert.match(bridged, /src="\/vendor\/jspdf\.umd\.min\.js"/);
   assert.doesNotMatch(bridged, /cdnjs\.cloudflare\.com/);
+  assert.doesNotMatch(bridged, /fonts\.googleapis\.com/);
 });
 
 test("prototype routes serve the supplied frontend as the app entry point", async () => {

@@ -8,6 +8,7 @@ const requiredFiles = [
   "package.json",
   ".env.example",
   "START-HERE.bat",
+  "STAFF-DAILY-USE.txt",
   "README.md",
   "README-FIRST-WINDOWS.txt",
   "TROUBLESHOOT-WINDOWS.txt",

@@ -1,0 +1,65 @@
+BARANGAY COURT SCHEDULER
+DAILY STAFF USE
+
+Use this file after the system has already been set up by the installer or
+administrator.
+
+WHAT TO CLICK EACH DAY
+
+Double-click this Desktop shortcut:
+
+Barangay Court Scheduler
+
+The shortcut starts the local system and opens the office browser when the
+system is ready.
+
+IMPORTANT
+
+- Keep the black startup window open while using the system.
+- Do not close the startup window until the office is finished using the
+  scheduler.
+- If the browser does not open, use the address shown in the startup window.
+- If the shortcut says MySQL or the database is not ready, ask the installer,
+  admin, or IT support to use Barangay Court Scheduler - Maintenance.
+
+LOGIN
+
+Use the Admin or Staff account given by the barangay office.
+
+Starter account after first setup:
+
+Username: admin
+Temporary password: admin123
+
+The starter password should be changed before regular office use.
+
+NORMAL OFFICE TASKS
+
+Home
+  Check today's court schedule and upcoming reservations.
+
+Schedule
+  View available and reserved time slots.
+
+Reservations
+  Add reservations, edit records, cancel reservations, and mark missed or
+  completed reservations.
+
+Account
+  Change your own password. Admin users can also manage accounts.
+
+BACKUPS, SETUP, OR SUPPORT
+
+Do not use the daily shortcut for setup or maintenance.
+
+For setup, backups, database checks, sign-off, or support, double-click:
+
+Barangay Court Scheduler - Maintenance
+
+Then choose the needed option from the menu.
+
+OFFLINE REMINDER
+
+This system runs on the barangay office computer. The browser address uses
+localhost, which means the system is local, not an online public booking site.
+Residents still coordinate with barangay personnel in person.

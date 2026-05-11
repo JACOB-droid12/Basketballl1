@@ -15,6 +15,13 @@ That file shows a simple maintenance menu for checking the computer,
 first-time setup, daily startup, database backup, desktop shortcut creation,
 sign-off reporting, and database-only support.
 
+For ordinary daily staff use after setup, open:
+
+STAFF-DAILY-USE.txt
+
+That file is the shortest plain-language guide for the daily Desktop shortcut,
+login, schedule work, and when to ask for maintenance support.
+
 BEFORE SETUP
 
 1. Install Node.js 20 or newer from an offline Windows installer.

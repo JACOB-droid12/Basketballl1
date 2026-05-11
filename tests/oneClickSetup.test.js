@@ -16,6 +16,7 @@ test("staff launcher provides one menu for setup, startup, checks, and sign-off"
   assert.match(script, /Check this computer before setup/i);
   assert.match(script, /Create final office sign-off report/i);
   assert.match(script, /Database-only setup\/checks for IT support/i);
+  assert.match(script, /STAFF-DAILY-USE\.txt/i);
   assert.match(script, /call "%~dp0start-barangay-office\.bat"/i);
   assert.match(script, /call "%~dp0setup-barangay-office\.bat"/i);
   assert.match(script, /call "%~dp0backup-database\.bat"/i);
@@ -23,9 +24,24 @@ test("staff launcher provides one menu for setup, startup, checks, and sign-off"
   assert.match(script, /call "%~dp0check-office-readiness\.bat"/i);
   assert.match(script, /call "%~dp0run-office-signoff\.bat"/i);
   assert.match(script, /call "%~dp0setup-database-only\.bat"/i);
+  assert.match(script, /notepad "%~dp0STAFF-DAILY-USE\.txt"/i);
   assert.match(script, /notepad "%~dp0README-FIRST-WINDOWS\.txt"/i);
   assert.doesNotMatch(script, /npm install/i);
   assert.doesNotMatch(script, /npm ci/i);
+});
+
+test("daily staff guide keeps ordinary use separate from maintenance", () => {
+  const guide = readFileSync("STAFF-DAILY-USE.txt", "utf8");
+
+  assert.match(guide, /Double-click this Desktop shortcut:/i);
+  assert.match(guide, /Barangay Court Scheduler/);
+  assert.match(guide, /Keep the black startup window open/i);
+  assert.match(guide, /Barangay Court Scheduler - Maintenance/);
+  assert.match(guide, /setup, backups, database checks, sign-off, or support/i);
+  assert.match(guide, /localhost/i);
+  assert.match(guide, /not an online public booking site/i);
+  assert.doesNotMatch(guide, /npm install/i);
+  assert.doesNotMatch(guide, /npm ci/i);
 });
 
 test("desktop shortcut batch creates daily-use and maintenance shortcuts without downloading", () => {

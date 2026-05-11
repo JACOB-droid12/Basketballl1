@@ -51,7 +51,7 @@ npm run verify:bundle
 
 Copy `dist\barangay-court-scheduler-offline` to the barangay office computer.
 
-The prepared folder includes `START-HERE.bat` as the maintenance launcher, `README-FIRST-WINDOWS.txt` for the shortest written setup path, `backup-database.bat` for staff-friendly local backups, `create-desktop-shortcut.bat` for optional Desktop shortcuts, and `TROUBLESHOOT-WINDOWS.txt` for common Windows setup/startup errors.
+The prepared folder includes `START-HERE.bat` as the maintenance launcher, `STAFF-DAILY-USE.txt` as the shortest ordinary staff guide, `README-FIRST-WINDOWS.txt` for the installer/admin first-run setup path, `backup-database.bat` for staff-friendly local backups, `create-desktop-shortcut.bat` for optional Desktop shortcuts, and `TROUBLESHOOT-WINDOWS.txt` for common Windows setup/startup errors.
 
 The intended office workflow separates daily use from maintenance. The daily Desktop shortcut is named `Barangay Court Scheduler` and starts the local system directly. The maintenance Desktop shortcut is named `Barangay Court Scheduler - Maintenance` and opens setup, backup, database checks, sign-off, and support tools.
 
@@ -63,7 +63,7 @@ For the installer/admin, the simplest setup and maintenance path is:
 START-HERE.bat
 ```
 
-That menu can check the computer, run first-time setup, create Desktop shortcuts, start daily office use, create a local database backup, create the sign-off report, and open the quick instructions.
+That menu can check the computer, run first-time setup, create Desktop shortcuts, start daily office use, create a local database backup, create the sign-off report, and open the quick instructions from `STAFF-DAILY-USE.txt`.
 
 For ordinary barangay staff after setup, the simplest daily path is:
 
