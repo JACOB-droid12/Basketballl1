@@ -257,6 +257,9 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 
 ## Tests Run
 
+- Completion-audit refresh on 2026-05-12: `npm test` passed with 154/154 tests, `npm run verify:sql` passed, `npm run verify:ui` passed for 15 office screens, `npm run verify:foundation` passed, `npm run bundle:offline` refreshed `dist\barangay-court-scheduler-offline`, `npm run verify:bundle` passed, and `npm run verify:offline-runtime` passed from a temporary local prototype URL.
+- Completion-audit live-environment probes on 2026-05-12: `npm run verify:prereqs` failed only because normal `mysql` and `mysqldump` client tools are not on PATH in this shell, `npm run check:database` failed because no default local database is reachable at `127.0.0.1:3306/barangay_court_scheduler`, and `npm run verify:mysql` failed safely with `connect ECONNREFUSED 127.0.0.1:3306`.
+- Chrome DevTools completion-audit browser check on 2026-05-12: loaded `http://127.0.0.1:3341/prototype?completion-audit=2026-05-12`, rendered the supplied prototype login screen, confirmed `/health` returned `{"status":"ok","milestone":"foundation"}`, confirmed `/api/prototype/session` returned unauthenticated local JSON, and confirmed the network list stayed local to `127.0.0.1` plus the embedded data-image logo.
 - TDD red check: `npm test -- tests\documentation.test.js tests\oneClickSetup.test.js` failed as expected while deployment docs and the one-click setup script still described setup as MySQL-only.
 - `npm test -- tests\documentation.test.js tests\oneClickSetup.test.js` - passed with 16/16 focused tests after aligning README, database setup, deployment guide, offline checklist, and one-click setup wording around local MySQL 8+ by default or verified local MariaDB.
 - `npm test` - passed with 154/154 tests after the MySQL/MariaDB deployment wording refresh.
@@ -707,12 +710,14 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Started a disposable MariaDB 12.2.2 server from the official Windows ZIP under ignored `tmp\mariadb-portable\`, listening only on `127.0.0.1:3390`, and used it to live-verify schema/seed, triggers, app HTTP smoke, backup, restore, and SQL diagnostics.
 - Ran `scripts\check-office-readiness.ps1`; it passed Node.js/npm/local-file checks and failed only because `mysql` and `mysqldump` are not on PATH in this shell. That is the intended office-prerequisite signal before setup.
 - Confirmed the deployment focus is Windows only; do not add non-Windows setup wrappers unless the project scope changes.
+- Browser-verified the served prototype at `http://127.0.0.1:3341/prototype?completion-audit=2026-05-12` with Chrome DevTools during the 2026-05-12 completion-audit refresh. The visible login screen rendered, `/health` returned OK, `/api/prototype/session` returned unauthenticated JSON, and all observed network requests were local `127.0.0.1` or embedded `data:` resources.
+- Reconfirmed during the 2026-05-12 completion-audit refresh that this shell still cannot complete real office sign-off: `npm run verify:prereqs` is missing `mysql` and `mysqldump`, `npm run check:database` cannot reach `127.0.0.1:3306/barangay_court_scheduler`, and `npm run verify:mysql` reports `connect ECONNREFUSED 127.0.0.1:3306`.
 
 ## Known Risks
 
 - Oracle MySQL is still not installed as a normal system service in this sandbox, and no container runtime is available. Disposable Oracle MySQL 9.7.0 and MariaDB 12.2.2 servers both passed live verification locally, but setup and `npm run verify:mysql` should still be repeated on the actual barangay office database installation before presentation/deployment sign-off.
 - `setup-barangay-office.bat` is one-click after prerequisites are present, but it is not a bare-Windows installer. Node.js, local MySQL/MariaDB, and a prepared project folder with `node_modules\` must already be available from offline installers/bundle preparation.
-- Current Windows-only local audit is blocked only by the live environment: this shell has no normal `mysql` / `mysqldump` on PATH and no default local MySQL/MariaDB service on `127.0.0.1:3306`.
+- Current Windows-only local audit is blocked only by the live environment: this shell has no normal `mysql` / `mysqldump` on PATH and no default local MySQL/MariaDB service on `127.0.0.1:3306`. The 2026-05-12 completion-audit refresh reconfirmed this with `npm run verify:prereqs`, `npm run check:database`, and `npm run verify:mysql`.
 - Add/list/edit/schedule/status/login/account/activity-log code is implemented and covered by automated tests and disposable local MySQL verification; the remaining live-flow check is against the actual barangay office database installation.
 - Live browser/printer output still needs a final check on the barangay office computer because print margins depend on the installed browser and printer.
 - Work is currently on `main`; earlier branch creation issues are no longer an active blocker for this workspace.
