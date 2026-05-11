@@ -44,6 +44,7 @@ const requiredFiles = [
   "scripts/print-office-url.mjs",
   "scripts/run-office-signoff.ps1",
   "scripts/verify-offline-bundle.mjs",
+  "scripts/verify-offline-runtime.mjs",
   "scripts/setup-barangay-office.ps1",
   "views/login.ejs",
   "views/account/password.ejs",

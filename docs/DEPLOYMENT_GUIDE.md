@@ -185,6 +185,7 @@ npm run verify:foundation
 npm run verify:sql
 npm run verify:mysql
 npm run verify:ui
+npm run verify:offline-runtime
 npm test
 ```
 
@@ -198,6 +199,7 @@ Expected result:
 - Database diagnostics prints PASS rows for the installed MySQL database setup checks.
 - MySQL verification applies the schema and seed, checks reference data, confirms at least one active Admin account, verifies the starter account still uses a bcrypt password hash, creates/completes a temporary reservation, verifies activity logging, confirms overlap-trigger rejection, and logs in through the app over HTTP to check authenticated office pages.
 - UI smoke verification renders the prototype frontend and the main office screens with sample data and confirms each page contains the expected workflow text.
+- Offline runtime verification starts the local app on a temporary port, checks `/health`, loads `/prototype`, and fails if the served prototype contains external internet resource references.
 - Automated tests pass.
 
 ## Start the App

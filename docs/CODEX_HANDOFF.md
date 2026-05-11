@@ -61,6 +61,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Created `docs/FIRST_USABLE_VERSION_AUDIT.md` to map the acceptance criteria against implemented artifacts, automated verification, and remaining live-environment gaps.
 - Added `npm run verify:mysql` through `scripts/verify-mysql.mjs` so a real MySQL installation can be verified with one command after `.env` is configured.
 - Added `npm run verify:ui` through `scripts/verify-ui-smoke.mjs` to render the main office screens with sample data without requiring MySQL.
+- Added `npm run verify:offline-runtime` through `scripts/verify-offline-runtime.mjs` to start the local app on a temporary port, check `/health`, fetch `/prototype`, and fail if the served prototype contains external internet resource references.
 - Added `npm run backup:mysql` through `scripts/backup-mysql.mjs` to create timestamped local `mysqldump` backups while keeping the MySQL password out of command arguments.
 - Added `npm run restore:mysql -- <backup.sql>` through `scripts/restore-mysql.mjs` to restore an explicitly named `.sql` backup through the MySQL client while keeping the password out of command arguments.
 - Updated the MySQL restore helper so tests can inject a backup read stream; production restore still reads the selected `.sql` file from disk.
@@ -111,7 +112,8 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Port-aware daily-start fallback on 2026-05-11 updated `scripts/print-office-url.mjs`, `start-barangay-office.bat`, and staff docs so the fallback browser address comes from `APP_PORT`; verification passed with `npm test -- tests\officeUrlPrinter.test.js tests\oneClickSetup.test.js tests\offlineBundle.test.js` at 18/18 tests, `node --check scripts\print-office-url.mjs`, `node scripts\print-office-url.mjs`, `APP_PORT=3199 node scripts\print-office-url.mjs`, `npm run verify:sql`, `npm run verify:ui`, `npm run verify:foundation`, full `npm test` at 142/142 tests, and a headless Chrome `/prototype` load from a temporary custom-port local server after `/health` readiness.
 - Staff daily-use guide iteration on 2026-05-11 added `STAFF-DAILY-USE.txt`, changed `START-HERE.bat` quick instructions to open it, and updated foundation/offline bundle requirements so the prepared folder includes it.
 - Prototype offline resource hardening on 2026-05-11 removed the remaining Google Fonts/CDN requests from the served prototype path; `npm test -- tests\prototypeRoutes.test.js tests\oneClickSetup.test.js tests\offlineBundle.test.js` passed with 21/21 tests, and Playwright browser verification loaded `/prototype` from `http://127.0.0.1:3210/prototype` with only same-origin local resources.
-- Current completion-audit pass on 2026-05-11: `npm run verify:sql`, `npm run verify:ui`, `npm run verify:foundation`, `npm run verify:bundle`, and full `npm test` passed with 128/128 tests. `npm run verify:prereqs` failed only for missing `mysql` and `mysqldump` client tools, `npm run check:database` failed only because no service is listening at `127.0.0.1:3306/barangay_court_scheduler`, and `npm run verify:mysql` failed only with `ECONNREFUSED 127.0.0.1:3306`.
+- Offline runtime verifier iteration on 2026-05-11 added `scripts/verify-offline-runtime.mjs` and `npm run verify:offline-runtime`; focused tests passed with `npm test -- tests\offlineRuntimeVerifier.test.js tests\offlineBundle.test.js` at 8/8 tests, `node --check scripts\verify-offline-runtime.mjs` passed, `npm run verify:offline-runtime` passed at `http://127.0.0.1:53451/prototype`, `npm test` passed with 146/146 tests, and the foundation/offline bundle verifiers now require the script. Chrome DevTools also loaded `http://127.0.0.1:3210/prototype/` from the local backend, rendered the prototype login screen, confirmed `/health` returned `{"status":"ok","milestone":"foundation"}`, confirmed `/api/prototype/session` returned JSON, and found zero external HTTP resources.
+- Current completion-audit pass on 2026-05-11: `npm test -- tests\offlineRuntimeVerifier.test.js tests\offlineBundle.test.js`, `node --check scripts\verify-offline-runtime.mjs`, `npm run verify:offline-runtime`, `npm run verify:foundation`, `npm run verify:sql`, `npm run verify:ui`, full `npm test`, `npm run bundle:offline`, `npm run verify:bundle`, `git diff --check`, and Chrome DevTools browser verification passed for the offline runtime iteration. The remaining live office blockers are still actual MySQL/MariaDB installation/sign-off and printer/browser output on the barangay office computer.
 
 ## Files Created or Changed
 
@@ -186,6 +188,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - `tests/mysqlRestore.test.js`
 - `tests/mysqlVerifier.test.js`
 - `tests/offlineBundle.test.js`
+- `tests/offlineRuntimeVerifier.test.js`
 - `tests/oneClickSetup.test.js`
 - `tests/prereqVerifier.test.js`
 - `tests/prototypeApiRoutes.test.js`
@@ -225,6 +228,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - `scripts/setup-barangay-office.ps1`
 - `scripts/setup-env.mjs`
 - `scripts/verify-offline-bundle.mjs`
+- `scripts/verify-offline-runtime.mjs`
 - `scripts/verify-sql-static.mjs`
 - `scripts/verify-prereqs.mjs`
 - `scripts/verify-mysql.mjs`
@@ -246,6 +250,13 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 
 ## Tests Run
 
+- `node --check scripts\verify-offline-runtime.mjs` - passed after adding the reusable offline runtime verifier.
+- `npm test -- tests\offlineRuntimeVerifier.test.js tests\offlineBundle.test.js` - passed with 8/8 focused tests after adding `npm run verify:offline-runtime`.
+- `npm run verify:offline-runtime` - passed at `http://127.0.0.1:53451/prototype` and loaded `/prototype` from a temporary local port with no external prototype resource references.
+- Chrome DevTools browser check - passed by loading `http://127.0.0.1:3210/prototype/`, rendering the prototype login screen, confirming `/health` and `/api/prototype/session` backend JSON responses, and confirming no external HTTP resources were loaded.
+- `npm test` - passed with 146/146 tests after adding the offline runtime verifier.
+- `npm run bundle:offline` - passed and refreshed `dist\barangay-court-scheduler-offline` with `scripts\verify-offline-runtime.mjs`.
+- `npm run verify:bundle` - passed and confirmed `scripts\verify-offline-runtime.mjs` is included in the offline bundle.
 - `npm test -- tests\officeUrlPrinter.test.js tests\oneClickSetup.test.js tests\offlineBundle.test.js` - passed with 18/18 tests after making the startup fallback URL follow `APP_PORT`.
 - `node --check scripts\print-office-url.mjs` - passed.
 - `node scripts\print-office-url.mjs` - printed `http://localhost:3000/prototype`.

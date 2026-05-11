@@ -121,6 +121,7 @@ function createTemporaryBundle(options = {}) {
     "docs/OFFLINE_INSTALL_CHECKLIST.md",
     "scripts/check-runtime-database.mjs",
     "scripts/print-office-url.mjs",
+    "scripts/verify-offline-runtime.mjs",
     "scripts/check-office-readiness.ps1",
     "scripts/create-desktop-shortcut.ps1",
     "scripts/run-office-signoff.ps1",

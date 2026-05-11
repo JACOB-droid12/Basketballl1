@@ -66,6 +66,8 @@ The `database/` folder includes `schema.sql`, `seed.sql`, `diagnostics.sql`, and
 
 `npm run verify:bundle` checks that the prepared folder includes the required app files, `node_modules/`, SQL setup files, and docs, and that local-only files such as `.env` and database backups were not copied into the bundle.
 
+Optional but recommended before copying the folder: run `npm run verify:offline-runtime`. It starts the app locally, checks `/health`, loads `/prototype`, and fails if the served prototype still contains any external internet resource references.
+
 5. Bring offline installers if the barangay computer does not already have them:
 
 - Node.js 20+ Windows installer

@@ -113,7 +113,15 @@ npm run verify:ui
 
 This command renders the prototype frontend plus the main office screens with safe sample data and checks the prototype backend bridge, login, dashboard, schedule, reservation, account, and activity-log pages.
 
-10. Run the automated tests:
+10. Run the local offline runtime check:
+
+```powershell
+npm run verify:offline-runtime
+```
+
+This starts the local app on a temporary port, checks `/health`, loads `/prototype`, and fails if the served prototype contains external `http://` or `https://` font, script, image, or stylesheet references. It is a fast offline safety gate; it does not replace the real browser/manual sign-off on the barangay office computer.
+
+11. Run the automated tests:
 
 ```powershell
 npm test
@@ -211,6 +219,7 @@ npm run restore:mysql -- backups\backup-file.sql
 - `docs/USER_GUIDE.md` explains the daily workflow for barangay Admin and Staff users.
 - `STAFF-DAILY-USE.txt` is the shortest daily-use sheet for ordinary barangay staff.
 - `docs/DEPLOYMENT_GUIDE.md` explains offline Windows + local MySQL installation, startup, backup, restore, and update steps.
+- `npm run verify:offline-runtime` starts the app locally and checks that the served prototype runtime uses only local resources.
 - `check-office-readiness.bat` checks whether a barangay office computer has the local files and tools needed before running setup.
 - `run-office-signoff.bat` runs final local verification on the office computer and saves a sign-off report.
 - `TROUBLESHOOT-WINDOWS.txt` lists common offline Windows setup/startup errors and the next action for each.
