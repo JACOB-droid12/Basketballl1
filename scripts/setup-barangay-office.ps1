@@ -164,7 +164,7 @@ if (-not (Test-CommandAvailable "npm")) {
 }
 
 if (-not (Test-CommandAvailable "mysql")) {
-  throw "mysql was not found. Install MySQL 8 and add the MySQL bin folder to PATH before running this setup."
+  throw "mysql was not found. Install local MySQL 8+ or MariaDB and add the database bin folder to PATH before running this setup."
 }
 
 if (-not (Test-Path -LiteralPath $EnvPath)) {
@@ -194,7 +194,7 @@ if (-not $Settings.ContainsKey("DB_USER") -or $Settings["DB_USER"] -eq "") {
 $Settings = Read-EnvFile $EnvPath
 
 if (-not $Settings.ContainsKey("DB_PASSWORD") -or $Settings["DB_PASSWORD"] -eq "" -or $Settings["DB_PASSWORD"] -eq "your-local-mysql-password") {
-  $SecurePassword = Read-Host "Enter the local MySQL password for user '$($Settings["DB_USER"])'" -AsSecureString
+  $SecurePassword = Read-Host "Enter the local MySQL/MariaDB password for user '$($Settings["DB_USER"])'" -AsSecureString
   $PlainPassword = Convert-SecureStringToPlainText $SecurePassword
   Set-EnvValue $EnvPath "DB_PASSWORD" $PlainPassword
   $Settings = Read-EnvFile $EnvPath

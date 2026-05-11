@@ -1,10 +1,11 @@
 # Database Setup
 
-The final system targets a local MySQL database running on the same barangay office computer or local network.
+The final system targets a local MySQL/MariaDB database running on the same barangay office computer or local network.
 
 ## Requirements
 
-- MySQL 8.0 or newer
+- MySQL 8.0 or newer (default)
+- Or a local MariaDB server that passes `npm run verify:mysql`
 - A local database account allowed to create databases, tables, triggers, and foreign keys
 
 This database setup has been live-verified against disposable local Oracle MySQL and MariaDB servers during development. Before deployment, rerun `npm run verify:mysql` on the barangay office's target local MySQL/MariaDB installation.

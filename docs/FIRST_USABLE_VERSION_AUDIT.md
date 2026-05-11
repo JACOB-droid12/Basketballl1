@@ -1,6 +1,6 @@
 # First Usable Version Completion Audit
 
-Date: 2026-05-11
+Date: 2026-05-12
 
 ## Objective Restated
 
@@ -77,6 +77,7 @@ Code, SQL, documentation, offline packaging, and prototype-backed frontend work 
 
 ## Fresh Verification Evidence
 
+- MySQL/MariaDB deployment wording refresh on 2026-05-12: `README.md`, `database/README.md`, `docs/DEPLOYMENT_GUIDE.md`, `docs/OFFLINE_INSTALL_CHECKLIST.md`, and `scripts/setup-barangay-office.ps1` now consistently describe local MySQL 8+ as the default database and verified local MariaDB as an acceptable local option. TDD coverage first failed on the stale MySQL-only wording, then `npm test -- tests\documentation.test.js tests\oneClickSetup.test.js` passed with 16/16 focused tests. Full verification also passed with `npm test` at 154/154 tests, `npm run verify:sql`, `npm run verify:ui`, `npm run verify:foundation`, `npm run bundle:offline`, `npm run verify:bundle`, `npm run verify:offline-runtime` from a temporary local prototype URL, and `git diff --check`.
 - Database setup documentation refresh on 2026-05-11: `database/README.md` no longer claims the SQL was only statically checked. It now states that database setup has been live-verified against disposable local Oracle MySQL and MariaDB servers during development, and that `npm run verify:mysql` must be rerun on the barangay office's target local MySQL/MariaDB installation before deployment. TDD coverage was added in `tests/documentation.test.js`; the test first failed on the stale wording, then passed after the update. Full verification also passed with `npm test` at 153/153 tests, `npm run verify:sql`, `npm run verify:ui`, `npm run verify:foundation`, `npm run bundle:offline`, `npm run verify:bundle`, `npm run verify:offline-runtime`, and `git diff --check`.
 - Prototype unsupported-control browser fix on 2026-05-11: TDD first caught that the unsupported-control style could be inserted into a `</head>` string inside the prototype PDF helper instead of the real page head. After the injector fix, `npm test -- tests\prototypeRoutes.test.js tests\app.test.js` passed with 9/9 focused tests, full `npm test` passed with 152/152 tests, `npm run verify:sql`, `npm run verify:ui`, `npm run verify:foundation`, `npm run bundle:offline`, `npm run verify:bundle`, `npm run verify:offline-runtime`, and `git diff --check` passed. Chrome DevTools loaded `http://127.0.0.1:3227/prototype/?check=forgot-fixed`, confirmed the login-page `Forgot/Change Password` text is no longer visible, and confirmed the element computes to `display: none` with `prototype-backend-unsupported-style` and `/js/prototype-backend.js` present.
 - Port-aware startup fallback on 2026-05-11: `scripts/print-office-url.mjs` now prints the office URL from `APP_PORT`, and `start-barangay-office.bat` shows that URL as the browser fallback instead of hardcoding port 3000. `README-FIRST-WINDOWS.txt`, `README.md`, `docs/OFFLINE_INSTALL_CHECKLIST.md`, `docs/DEPLOYMENT_GUIDE.md`, and `docs/USER_GUIDE.md` now tell staff to use the address shown in the startup window when the browser does not open automatically.

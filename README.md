@@ -38,7 +38,7 @@ The deployment goal is a high-quality, fully tested offline Windows local web ap
 
 ## Quick Start
 
-1. Install Node.js 20+ and MySQL 8+ on the barangay office computer.
+1. Install Node.js 20+ and local MySQL 8+ (or verified MariaDB) on the barangay office computer.
 2. Create the local `.env` file:
 
 ```powershell
@@ -143,13 +143,13 @@ npm run verify:bundle
 
 This creates `dist/barangay-court-scheduler-offline/`. Copy that folder to the barangay office computer.
 
-On the barangay office computer, after Node.js 20+ and MySQL 8+ are installed from local installers if needed:
+On the barangay office computer, after Node.js 20+ and local MySQL 8+ (or verified MariaDB) are installed from local installers if needed:
 
 1. Double-click `START-HERE.bat`.
 2. Choose `Check this computer before setup`.
 3. Fix any failed readiness checks, such as missing Node.js, MySQL tools, or `node_modules/`.
 4. Choose `First-time setup on this computer`.
-5. Enter the local MySQL password when asked.
+5. Enter the local MySQL/MariaDB password when asked.
 6. Choose `Create desktop shortcut`. This creates `Barangay Court Scheduler` for daily staff use and `Barangay Court Scheduler - Maintenance` for setup, backup, checks, and support.
 7. For daily use, double-click `Barangay Court Scheduler`. If needed, the installer/admin can still choose `Start the system for daily use` from `START-HERE.bat`.
 8. Use the address shown in the startup window if the browser does not open automatically.

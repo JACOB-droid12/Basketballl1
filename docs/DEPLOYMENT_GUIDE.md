@@ -2,13 +2,13 @@
 
 Offline local deployment guide for the Barangay Sto. Niño Basketball Court Scheduling System.
 
-The final target is a barangay office computer running the app and local MySQL with no internet connection required during normal use. If installers or npm packages are not already available, use a separate setup computer to download them first, then bring the prepared offline folder and local installers to the barangay office.
+The final target is a barangay office computer running the app and a local MySQL/MariaDB database with no internet connection required during normal use. If installers or npm packages are not already available, use a separate setup computer to download them first, then bring the prepared offline folder and local installers to the barangay office.
 
 ## Required Software
 
 - Windows 10 or Windows 11
 - Node.js 20 or newer
-- MySQL 8 or newer
+- MySQL 8 or newer (default), or a local MariaDB server that passes `npm run verify:mysql`
 - A browser such as Chrome, Edge, or Firefox
 
 ## Folder Location
@@ -73,7 +73,7 @@ Barangay Court Scheduler
 
 That Desktop shortcut runs `start-barangay-office.bat`, checks the local database, starts the local app, and opens the browser after the server is ready.
 
-After Node.js 20+ and MySQL 8+ are installed on the barangay office computer from local installers if needed, use:
+After Node.js 20+ and local MySQL/MariaDB are installed on the barangay office computer from local installers if needed, use:
 
 ```text
 setup-barangay-office.bat

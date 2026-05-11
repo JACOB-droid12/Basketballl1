@@ -9,7 +9,7 @@ The intended deployment separates ordinary staff use from technical maintenance:
 ## What Offline Means
 
 - The reservation system opens at `http://localhost:3000/prototype`.
-- The database is local MySQL on the same office computer or barangay-controlled local network.
+- The database is local MySQL/MariaDB on the same office computer or barangay-controlled local network.
 - Residents do not reserve online.
 - No cloud database, online booking site, email service, SMS service, or payment service is required.
 
@@ -71,21 +71,21 @@ Optional but recommended before copying the folder: run `npm run verify:offline-
 5. Bring offline installers if the barangay computer does not already have them:
 
 - Node.js 20+ Windows installer
-- MySQL 8+ Windows installer
+- MySQL 8+ or MariaDB Windows installer
 - Chrome, Edge, or Firefox installer if needed
 
 ## Barangay Office Setup
 
 On the barangay office computer:
 
-1. Install Node.js and MySQL from local/offline installers if needed.
+1. Install Node.js and local MySQL/MariaDB from local/offline installers if needed.
 2. Make sure MySQL is running.
 3. Copy the prepared project folder to the computer.
 4. Double-click `START-HERE.bat`.
 5. Choose `Check this computer before setup`.
 6. Fix any failed checks. The checker confirms Node.js, npm, MySQL tools, `node_modules/`, SQL files, and setup/start scripts are present.
 7. Reopen `START-HERE.bat` if needed and choose `First-time setup on this computer`.
-8. Enter the local MySQL password when asked.
+8. Enter the local MySQL/MariaDB password when asked.
 9. Confirm the setup finishes without errors.
 10. Choose `Create desktop shortcut`.
 11. For daily use, double-click `Barangay Court Scheduler`. If the browser does not open automatically, use the address shown in the startup window.

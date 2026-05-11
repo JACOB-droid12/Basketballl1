@@ -171,6 +171,8 @@ test("one-click PowerShell setup applies schema, seed, diagnostics, and live ver
   assert.match(script, /database\\diagnostics\.sql/);
   assert.match(script, /npm run verify:sql/);
   assert.match(script, /npm run verify:mysql/);
+  assert.match(script, /Install local MySQL 8\+ or MariaDB/);
+  assert.match(script, /Enter the local MySQL\/MariaDB password/);
   assert.match(script, /MYSQL_PWD/);
   assert.match(script, /node_modules was not found/);
   assert.match(script, /function Convert-ToEnvFileValue/);
