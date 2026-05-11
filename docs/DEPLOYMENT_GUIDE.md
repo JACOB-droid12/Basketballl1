@@ -51,17 +51,27 @@ npm run verify:bundle
 
 Copy `dist\barangay-court-scheduler-offline` to the barangay office computer.
 
-The prepared folder includes `START-HERE.bat` as the staff-friendly launcher, `README-FIRST-WINDOWS.txt` for the shortest written setup path, `backup-database.bat` for staff-friendly local backups, and `TROUBLESHOOT-WINDOWS.txt` for common Windows setup/startup errors.
+The prepared folder includes `START-HERE.bat` as the maintenance launcher, `README-FIRST-WINDOWS.txt` for the shortest written setup path, `backup-database.bat` for staff-friendly local backups, `create-desktop-shortcut.bat` for optional Desktop shortcuts, and `TROUBLESHOOT-WINDOWS.txt` for common Windows setup/startup errors.
+
+The intended office workflow separates daily use from maintenance. The daily Desktop shortcut is named `Barangay Court Scheduler` and starts the local system directly. The maintenance Desktop shortcut is named `Barangay Court Scheduler - Maintenance` and opens setup, backup, database checks, sign-off, and support tools.
 
 ## One-Click Offline Setup
 
-For barangay staff, the simplest path is:
+For the installer/admin, the simplest setup and maintenance path is:
 
 ```text
 START-HERE.bat
 ```
 
-That menu can check the computer, run first-time setup, start daily office use, create a local database backup, create the sign-off report, and open the quick instructions.
+That menu can check the computer, run first-time setup, create Desktop shortcuts, start daily office use, create a local database backup, create the sign-off report, and open the quick instructions.
+
+For ordinary barangay staff after setup, the simplest daily path is:
+
+```text
+Barangay Court Scheduler
+```
+
+That Desktop shortcut runs `start-barangay-office.bat`, checks the local database, starts the local app, and opens the browser.
 
 After Node.js 20+ and MySQL 8+ are installed on the barangay office computer from local installers if needed, use:
 
@@ -213,23 +223,13 @@ Rerunning setup or live verification after deactivating the seeded account will 
 
 1. Turn on the barangay office computer.
 2. Start MySQL if it does not start automatically.
-3. Open PowerShell in the project folder.
-4. Run `npm start`.
-5. Open `http://localhost:3000/prototype`.
-6. Log in as Admin or Staff.
+3. Double-click the Desktop shortcut named `Barangay Court Scheduler`.
+4. Open `http://localhost:3000/prototype` if the browser does not open automatically.
+5. Log in as Admin or Staff.
 
 ## Optional Windows Shortcut
 
-The project includes `start-barangay-office.bat`. If a separate desktop shortcut is preferred, create a file named `start-scheduler.bat` outside the repo:
-
-```bat
-@echo off
-cd /d C:\BarangayCourtScheduler
-npm start
-pause
-```
-
-Use the real installed folder path if it is different.
+Use `START-HERE.bat` and choose `Create desktop shortcut`, or double-click `create-desktop-shortcut.bat`. It creates two current-user Desktop shortcuts: `Barangay Court Scheduler` opens `start-barangay-office.bat` for daily staff use, and `Barangay Court Scheduler - Maintenance` opens `START-HERE.bat` for setup, backup, database checks, sign-off, and support.
 
 ## Backup Database
 
@@ -241,7 +241,7 @@ Recommended backup command:
 npm run backup:mysql
 ```
 
-For barangay staff, use `START-HERE.bat` and choose `Back up the database now`, or double-click `backup-database.bat`.
+For barangay staff or support personnel, use `Barangay Court Scheduler - Maintenance` and choose `Back up the database now`, or double-click `backup-database.bat`.
 
 The command reads `.env`, creates `backups/` if needed, and writes a timestamped `.sql` file such as `barangay_court_scheduler_2026-05-08_1430.sql`. It passes the MySQL password through the child process environment instead of putting the password in the command text.
 

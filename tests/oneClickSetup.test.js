@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
 
 test("staff launcher provides one menu for setup, startup, checks, and sign-off", () => {
@@ -9,18 +12,74 @@ test("staff launcher provides one menu for setup, startup, checks, and sign-off"
   assert.match(script, /Start the system for daily use/i);
   assert.match(script, /First-time setup on this computer/i);
   assert.match(script, /Back up the database now/i);
+  assert.match(script, /Create desktop shortcut/i);
   assert.match(script, /Check this computer before setup/i);
   assert.match(script, /Create final office sign-off report/i);
   assert.match(script, /Database-only setup\/checks for IT support/i);
   assert.match(script, /call "%~dp0start-barangay-office\.bat"/i);
   assert.match(script, /call "%~dp0setup-barangay-office\.bat"/i);
   assert.match(script, /call "%~dp0backup-database\.bat"/i);
+  assert.match(script, /call "%~dp0create-desktop-shortcut\.bat"/i);
   assert.match(script, /call "%~dp0check-office-readiness\.bat"/i);
   assert.match(script, /call "%~dp0run-office-signoff\.bat"/i);
   assert.match(script, /call "%~dp0setup-database-only\.bat"/i);
   assert.match(script, /notepad "%~dp0README-FIRST-WINDOWS\.txt"/i);
   assert.doesNotMatch(script, /npm install/i);
   assert.doesNotMatch(script, /npm ci/i);
+});
+
+test("desktop shortcut batch creates daily-use and maintenance shortcuts without downloading", () => {
+  const batchScript = readFileSync("create-desktop-shortcut.bat", "utf8");
+  const powerShellScript = readFileSync("scripts/create-desktop-shortcut.ps1", "utf8");
+
+  assert.match(batchScript, /scripts\\create-desktop-shortcut\.ps1/i);
+  assert.match(batchScript, /ExecutionPolicy Bypass/i);
+  assert.match(powerShellScript, /start-barangay-office\.bat/);
+  assert.match(powerShellScript, /START-HERE\.bat/);
+  assert.match(powerShellScript, /GetFolderPath\("Desktop"\)/);
+  assert.match(powerShellScript, /Barangay Court Scheduler\.lnk/);
+  assert.match(powerShellScript, /Barangay Court Scheduler - Maintenance\.lnk/);
+  assert.match(powerShellScript, /New-Object -ComObject WScript\.Shell/);
+  assert.match(powerShellScript, /CreateShortcut\(\$ShortcutPath\)/);
+  assert.match(powerShellScript, /\$Shortcut\.TargetPath = \$TargetPath/);
+  assert.match(powerShellScript, /\[switch\] \$WhatIf/);
+  assert.doesNotMatch(batchScript, /npm install/i);
+  assert.doesNotMatch(batchScript, /npm ci/i);
+  assert.doesNotMatch(powerShellScript, /npm install/i);
+  assert.doesNotMatch(powerShellScript, /npm ci/i);
+});
+
+test("desktop shortcut WhatIf reports both targets without creating shortcuts", () => {
+  const desktopDir = mkdtempSync(join(tmpdir(), "barangay-shortcut-"));
+
+  try {
+    const result = spawnSync(
+      "powershell",
+      [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "scripts/create-desktop-shortcut.ps1",
+        "-WhatIf",
+        "-DesktopPath",
+        desktopDir
+      ],
+      { encoding: "utf8" }
+    );
+
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+    assert.match(result.stdout, /Would create daily-use shortcut/i);
+    assert.match(result.stdout, /Barangay Court Scheduler\.lnk/i);
+    assert.match(result.stdout, /start-barangay-office\.bat/i);
+    assert.match(result.stdout, /Would create maintenance shortcut/i);
+    assert.match(result.stdout, /Barangay Court Scheduler - Maintenance\.lnk/i);
+    assert.match(result.stdout, /START-HERE\.bat/i);
+    assert.equal(existsSync(join(desktopDir, "Barangay Court Scheduler.lnk")), false);
+    assert.equal(existsSync(join(desktopDir, "Barangay Court Scheduler - Maintenance.lnk")), false);
+  } finally {
+    rmSync(desktopDir, { recursive: true, force: true });
+  }
 });
 
 test("backup batch file runs the local backup command with Windows preflight checks", () => {
@@ -80,6 +139,7 @@ test("office readiness checker batch file invokes prerequisite checks without do
   assert.match(powerShellScript, /database\\seed\.sql/);
   assert.match(powerShellScript, /START-HERE\.bat/);
   assert.match(powerShellScript, /backup-database\.bat/);
+  assert.match(powerShellScript, /create-desktop-shortcut\.bat/);
   assert.match(powerShellScript, /setup-barangay-office\.bat/);
   assert.match(powerShellScript, /start-barangay-office\.bat/);
   assert.match(powerShellScript, /run-office-signoff\.bat/);

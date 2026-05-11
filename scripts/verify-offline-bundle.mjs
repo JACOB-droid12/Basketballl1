@@ -15,6 +15,7 @@ const REQUIRED_BUNDLE_ITEMS = [
   { path: "README-FIRST-WINDOWS.txt", type: "file" },
   { path: "TROUBLESHOOT-WINDOWS.txt", type: "file" },
   { path: "backup-database.bat", type: "file" },
+  { path: "create-desktop-shortcut.bat", type: "file" },
   { path: "setup-database-only.bat", type: "file" },
   { path: "check-office-readiness.bat", type: "file" },
   { path: "run-office-signoff.bat", type: "file" },
@@ -41,6 +42,7 @@ const REQUIRED_BUNDLE_ITEMS = [
   { path: "docs/OFFLINE_INSTALL_CHECKLIST.md", type: "file" },
   { path: "scripts/check-runtime-database.mjs", type: "file" },
   { path: "scripts/check-office-readiness.ps1", type: "file" },
+  { path: "scripts/create-desktop-shortcut.ps1", type: "file" },
   { path: "scripts/run-office-signoff.ps1", type: "file" },
   { path: "scripts/setup-barangay-office.ps1", type: "file" },
   { path: "scripts/verify-mysql.mjs", type: "file" }

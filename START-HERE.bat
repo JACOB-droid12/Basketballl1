@@ -12,26 +12,28 @@ echo.
 echo   1. Start the system for daily use
 echo   2. First-time setup on this computer
 echo   3. Back up the database now
-echo   4. Check this computer before setup
-echo   5. Create final office sign-off report
-echo   6. Database-only setup/checks for IT support
-echo   7. Open quick instructions
-echo   8. Exit
+echo   4. Create desktop shortcuts
+echo   5. Check this computer before setup
+echo   6. Create final office sign-off report
+echo   7. Database-only setup/checks for IT support
+echo   8. Open quick instructions
+echo   9. Exit
 echo.
 set "CHOICE="
-set /p CHOICE=Enter 1, 2, 3, 4, 5, 6, 7, or 8:
+set /p CHOICE=Enter 1, 2, 3, 4, 5, 6, 7, 8, or 9:
 
 if "%CHOICE%"=="1" goto start_system
 if "%CHOICE%"=="2" goto first_setup
 if "%CHOICE%"=="3" goto backup_database
-if "%CHOICE%"=="4" goto check_computer
-if "%CHOICE%"=="5" goto signoff
-if "%CHOICE%"=="6" goto database_only
-if "%CHOICE%"=="7" goto open_instructions
-if "%CHOICE%"=="8" goto end
+if "%CHOICE%"=="4" goto desktop_shortcut
+if "%CHOICE%"=="5" goto check_computer
+if "%CHOICE%"=="6" goto signoff
+if "%CHOICE%"=="7" goto database_only
+if "%CHOICE%"=="8" goto open_instructions
+if "%CHOICE%"=="9" goto end
 
 echo.
-echo Please enter a number from 1 to 8.
+echo Please enter a number from 1 to 9.
 pause
 goto menu
 
@@ -56,6 +58,13 @@ cls
 echo Creating a local database backup...
 echo.
 call "%~dp0backup-database.bat"
+goto after_action
+
+:desktop_shortcut
+cls
+echo Creating desktop shortcuts...
+echo.
+call "%~dp0create-desktop-shortcut.bat"
 goto after_action
 
 :check_computer

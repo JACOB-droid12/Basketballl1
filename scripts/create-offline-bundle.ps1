@@ -50,6 +50,7 @@ $ItemsToCopy = @(
   "README-FIRST-WINDOWS.txt",
   "TROUBLESHOOT-WINDOWS.txt",
   "backup-database.bat",
+  "create-desktop-shortcut.bat",
   "setup-database-only.bat",
   "check-office-readiness.bat",
   "run-office-signoff.bat",

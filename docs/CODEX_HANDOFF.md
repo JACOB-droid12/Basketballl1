@@ -2,7 +2,7 @@
 
 ## Current Goal
 
-Build the Basketball Court Scheduling System for Barangay Sto. Niño, Parañaque City as a reliable offline barangay-office reservation management system.
+Build and harden the Basketball Court Scheduling System for Barangay Sto. Niño, Parañaque City as a fully offline Windows local web application for barangay-office use. The supplied HTML prototype remains the visible frontend as closely as possible; the local Node/Express backend and local MySQL/MariaDB database handle reservations, schedules, accounts, and activity logs. Ordinary barangay staff should use a simple Desktop shortcut named `Barangay Court Scheduler` for daily use, while setup, backup, database checks, office sign-off, and support tools stay in a separate maintenance launcher. Meaningful iterations should be verified with backend tests, SQL/database checks, frontend/UI checks, browser verification when UI/backend behavior changes, offline bundle verification, documentation updates, and Git commits pushed to GitHub.
 
 ## Current Milestone
 
@@ -78,6 +78,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Updated `README-FIRST-WINDOWS.txt` so the first-run guide tells staff that the sign-off report captures the actual MySQL/MariaDB version, browser, printer, readable print output, and barangay personnel sign-off.
 - Added `START-HERE.bat` as a staff-friendly root launcher for daily startup, first-time setup, readiness checks, office sign-off reports, database-only support, and quick instructions.
 - Added `backup-database.bat` as a staff-friendly local backup wrapper and exposed it through `START-HERE.bat`.
+- Added `create-desktop-shortcut.bat` and `scripts/create-desktop-shortcut.ps1` so staff can create two Desktop shortcuts: `Barangay Court Scheduler` for daily use through `start-barangay-office.bat`, and `Barangay Court Scheduler - Maintenance` for setup, backup, database checks, sign-off, and support through `START-HERE.bat`.
 - Added `TROUBLESHOOT-WINDOWS.txt` as a plain Windows error-recovery guide for common setup, startup, database, login, and sign-off failures.
 - Hardened `start-barangay-office.bat` so it checks Node.js, npm, `node_modules\`, and `.env` before opening the browser and tells staff to run setup when `.env` is missing.
 - Added `npm run check:database` through `scripts/check-runtime-database.mjs`, and wired `start-barangay-office.bat` to run it before opening the browser. It confirms the configured local MySQL/MariaDB database is reachable and has seeded statuses, time slots, and at least one active Admin account without writing data.
@@ -100,6 +101,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Final local refresh on 2026-05-10 passed `npm test` with 126/126 tests, `npm run verify:sql`, `npm run verify:foundation`, `npm run verify:ui` for 15 screens, `npm run bundle:offline`, `npm run verify:bundle`, `npm run verify:mysql` against disposable local Oracle MySQL on `127.0.0.1:3391`, and `git diff --check`.
 - Staff-friendly launcher refresh on 2026-05-11 passed `npm test -- tests\offlineBundle.test.js tests\oneClickSetup.test.js` with 12/12 focused setup/bundle tests, `npm run verify:foundation`, `npm run bundle:offline`, `npm run verify:bundle`, full `npm test` with 127/127 tests, and `cmd /c "echo 7|START-HERE.bat"`; the offline bundle scripts/verifier now require `START-HERE.bat`.
 - Backup launcher refresh on 2026-05-11 passed `npm test -- tests\offlineBundle.test.js tests\oneClickSetup.test.js tests\mysqlBackup.test.js` with 19/19 focused tests, `npm run verify:foundation`, `cmd /c "echo 8|START-HERE.bat"`, `cmd /c "(echo.|backup-database.bat) & exit /b 0"`, `npm run bundle:offline`, `npm run verify:bundle`, and full `npm test` with 128/128 tests; the offline bundle scripts/verifier now require `backup-database.bat`.
+- Staff shortcut split on 2026-05-11 updated the deployment goal and docs so ordinary staff use `Barangay Court Scheduler` for direct daily startup while installer/admin support uses `Barangay Court Scheduler - Maintenance`; `npm test -- tests\oneClickSetup.test.js` passed with 10/10 tests including a safe `-WhatIf` run against a temporary Desktop folder, `npm test -- tests\offlineBundle.test.js tests\oneClickSetup.test.js` passed with 15/15 focused tests, `cmd /c "echo 9|START-HERE.bat"` confirmed the updated launcher menu opens/exits, `npm run verify:foundation` passed, `npm run bundle:offline` refreshed the prepared folder, `npm run verify:bundle` passed, `npm run verify:sql` passed, `npm run verify:ui` passed for 15 screens, and full `npm test` passed with 130/130 tests.
 - Current completion-audit pass on 2026-05-11: `npm run verify:sql`, `npm run verify:ui`, `npm run verify:foundation`, `npm run verify:bundle`, and full `npm test` passed with 128/128 tests. `npm run verify:prereqs` failed only for missing `mysql` and `mysqldump` client tools, `npm run check:database` failed only because no service is listening at `127.0.0.1:3306/barangay_court_scheduler`, and `npm run verify:mysql` failed only with `ECONNREFUSED 127.0.0.1:3306`.
 
 ## Files Created or Changed
@@ -113,6 +115,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - `README-FIRST-WINDOWS.txt`
 - `TROUBLESHOOT-WINDOWS.txt`
 - `backup-database.bat`
+- `create-desktop-shortcut.bat`
 - `create-offline-bundle.bat`
 - `check-office-readiness.bat`
 - `run-office-signoff.bat`
@@ -204,6 +207,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - `scripts/verify-foundation.mjs`
 - `scripts/backup-mysql.mjs`
 - `scripts/check-office-readiness.ps1`
+- `scripts/create-desktop-shortcut.ps1`
 - `scripts/run-office-signoff.ps1`
 - `scripts/create-offline-bundle.ps1`
 - `scripts/restore-mysql.mjs`
@@ -232,6 +236,15 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 
 ## Tests Run
 
+- `npm test -- tests\oneClickSetup.test.js` - passed with 10/10 tests after splitting Desktop shortcuts into direct daily use and maintenance paths; includes a real PowerShell `-WhatIf` run against a temporary Desktop folder and confirms no `.lnk` files are created.
+- `npm test -- tests\offlineBundle.test.js tests\oneClickSetup.test.js` - passed with 15/15 focused setup/bundle tests after the two-shortcut update.
+- `cmd /c "echo 9|START-HERE.bat"` - passed and confirmed the staff launcher opens, shows `Create desktop shortcuts`, and exits cleanly.
+- `npm run verify:foundation` - passed after adding the two-shortcut helper and docs.
+- `npm run bundle:offline` - passed and refreshed `dist\barangay-court-scheduler-offline` with the revised shortcut scripts and docs.
+- `npm run verify:bundle` - passed and confirmed the refreshed offline bundle includes `create-desktop-shortcut.bat` and `scripts/create-desktop-shortcut.ps1`.
+- `npm run verify:sql` - passed after the deployment-goal/shortcut update.
+- `npm run verify:ui` - passed for 15 office screens after the deployment-goal/shortcut update.
+- `npm test` - passed with 130/130 tests after the deployment-goal/shortcut update.
 - `npm test -- tests\offlineBundle.test.js tests\oneClickSetup.test.js` - passed with 12/12 focused tests after adding `START-HERE.bat` as the staff-friendly launcher and making the offline bundle require it.
 - `npm run verify:foundation` - passed after adding `START-HERE.bat` to the foundation verifier.
 - `npm run bundle:offline` - passed and refreshed `dist\barangay-court-scheduler-offline` with `START-HERE.bat`.

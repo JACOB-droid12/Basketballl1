@@ -11,8 +11,9 @@ IF UNSURE, DOUBLE-CLICK THIS FIRST
 
 START-HERE.bat
 
-That file shows a simple menu for checking the computer, first-time setup,
-daily startup, database backup, sign-off reporting, and database-only support.
+That file shows a simple maintenance menu for checking the computer,
+first-time setup, daily startup, database backup, desktop shortcut creation,
+sign-off reporting, and database-only support.
 
 BEFORE SETUP
 
@@ -38,6 +39,17 @@ Manual steps:
    The report asks staff to record the actual MySQL/MariaDB version, browser,
    printer, readable print output, and barangay personnel sign-off.
 
+OPTIONAL DESKTOP SHORTCUT
+
+In START-HERE.bat, choose "Create desktop shortcut". This creates two Desktop
+shortcuts:
+
+Barangay Court Scheduler
+  Daily staff shortcut. Opens the local system directly.
+
+Barangay Court Scheduler - Maintenance
+  Setup, backup, database checks, sign-off, and support menu.
+
 STARTER LOGIN
 
 Username: admin
@@ -48,9 +60,11 @@ After first login, change the starter password from Account > Change Password.
 DAILY STARTUP
 
 1. Start MySQL if it is not already running.
-2. Double-click START-HERE.bat.
-3. Choose "Start the system for daily use".
-4. Open http://localhost:3000/prototype.
+2. Double-click the Desktop shortcut named Barangay Court Scheduler.
+3. Open http://localhost:3000/prototype if the browser does not open automatically.
+
+If the Desktop shortcut has not been created yet, double-click START-HERE.bat
+and choose "Start the system for daily use".
 
 If start-barangay-office.bat says Node.js, npm, node_modules, or .env is missing,
 fix that item first. If .env is missing, run setup-barangay-office.bat before

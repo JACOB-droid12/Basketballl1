@@ -34,6 +34,8 @@ The app does not use cloud services for core functionality.
 
 Deployment focus is Windows only for this project. Use the included `.bat` and PowerShell scripts for barangay-office setup and startup.
 
+The deployment goal is a high-quality, fully tested offline Windows local web application: staff use the supplied prototype UI in a browser, the backend and MySQL/MariaDB database run on the barangay office computer, daily use is started from a simple Desktop shortcut, and setup/backup/checks are kept in a separate maintenance launcher.
+
 ## Quick Start
 
 1. Install Node.js 20+ and MySQL 8+ on the barangay office computer.
@@ -121,7 +123,7 @@ npm test
 
 For the barangay office, prepare a complete offline project folder before bringing it to the office computer. The folder must include `node_modules/`; the one-click setup does not download npm packages.
 
-This setup path is Windows-only. The simplest staff workflow is `START-HERE.bat`, which opens a menu for readiness checks, first-time setup, daily startup, local backup, office sign-off, database-only support, and quick instructions.
+This setup path is Windows-only. The installer/admin workflow uses `START-HERE.bat`, which opens a menu for readiness checks, first-time setup, daily startup, local backup, desktop shortcut creation, office sign-off, database-only support, and quick instructions. The ordinary staff workflow uses a Desktop shortcut named `Barangay Court Scheduler` that starts daily use directly.
 
 To create the prepared folder on a setup computer:
 
@@ -140,9 +142,10 @@ On the barangay office computer, after Node.js 20+ and MySQL 8+ are installed fr
 3. Fix any failed readiness checks, such as missing Node.js, MySQL tools, or `node_modules/`.
 4. Choose `First-time setup on this computer`.
 5. Enter the local MySQL password when asked.
-6. Choose `Start the system for daily use`.
-7. Open `http://localhost:3000/prototype`.
-8. For deployment sign-off, choose `Create final office sign-off report` and keep the generated report under `reports\office-signoff`.
+6. Choose `Create desktop shortcut`. This creates `Barangay Court Scheduler` for daily staff use and `Barangay Court Scheduler - Maintenance` for setup, backup, checks, and support.
+7. For daily use, double-click `Barangay Court Scheduler`. If needed, the installer/admin can still choose `Start the system for daily use` from `START-HERE.bat`.
+8. Open `http://localhost:3000/prototype` if the browser does not open automatically.
+9. For deployment sign-off, choose `Create final office sign-off report` from the maintenance launcher and keep the generated report under `reports\office-signoff`.
 
 If a Windows setup or startup message is unclear, open `TROUBLESHOOT-WINDOWS.txt` in the prepared offline folder.
 
