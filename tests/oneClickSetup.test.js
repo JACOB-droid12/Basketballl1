@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -224,4 +224,61 @@ test("office sign-off batch file runs only local verification commands", () => {
   assert.doesNotMatch(powerShellScript, /npm install/i);
   assert.doesNotMatch(powerShellScript, /npm ci/i);
   assert.doesNotMatch(powerShellScript, /npm audit/i);
+});
+
+test("office sign-off script can write a report to a supplied reports folder", () => {
+  const tempRoot = mkdtempSync(join(tmpdir(), "barangay-signoff-"));
+  const binDir = join(tempRoot, "bin");
+  const reportsDir = join(tempRoot, "reports");
+  const commandLog = join(tempRoot, "npm-commands.txt");
+
+  try {
+    mkdirSync(binDir);
+    writeFileSync(
+      join(binDir, "npm.cmd"),
+      [
+        "@echo off",
+        `echo %*>>"${commandLog}"`,
+        "echo fake npm %*",
+        "exit /b 0"
+      ].join("\r\n")
+    );
+
+    const env = {
+      ...process.env,
+      PATH: `${binDir};${process.env.PATH || ""}`
+    };
+
+    const result = spawnSync(
+      "powershell",
+      [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "scripts/run-office-signoff.ps1",
+        "-ReportsRoot",
+        reportsDir
+      ],
+      { encoding: "utf8", env }
+    );
+
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+    const commandOutput = readFileSync(commandLog, "utf8");
+    assert.match(commandOutput, /run verify:prereqs/);
+    assert.match(commandOutput, /run check:database/);
+    assert.match(commandOutput, /run verify:mysql/);
+    assert.match(commandOutput, /run verify:ui/);
+    assert.match(commandOutput, /run verify:offline-runtime/);
+    assert.match(commandOutput, /run backup:mysql/);
+
+    const reportFiles = readdirSync(reportsDir).filter((file) => file.startsWith("office-signoff-"));
+    assert.equal(reportFiles.length, 1);
+    const report = readFileSync(join(reportsDir, reportFiles[0]), "utf8");
+    assert.match(report, /Verify offline prototype runtime/);
+    assert.match(report, /Command: npm run verify:offline-runtime/);
+    assert.match(report, /Automated sign-off checks passed/);
+  } finally {
+    rmSync(tempRoot, { recursive: true, force: true });
+  }
 });

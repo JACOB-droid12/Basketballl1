@@ -91,6 +91,7 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 - Updated the runtime database guard, MySQL verifier, deployment docs, and office sign-off checklist so the documented flow of creating a real Admin account and deactivating the seeded `admin` account remains supported.
 - Added `run-office-signoff.bat` and `scripts/run-office-signoff.ps1` to run final Windows-only office sign-off checks and save a timestamped local report under `reports\office-signoff`.
 - Hardened the office sign-off checklist so the generated report includes explicit fill-in fields for the actual MySQL/MariaDB service version, MySQL client tools, office browser, printer name, readable printed output, and barangay personnel sign-off.
+- Added an executable office sign-off test path with fake local `npm` commands and optional `-ReportsRoot` support so the report-writing flow can be verified without touching real office reports or requiring MySQL.
 - Added `reports/` to `.gitignore` and to the offline-bundle forbidden-item verifier so generated office sign-off reports stay local.
 - Added `docs/OFFLINE_INSTALL_CHECKLIST.md` documenting how to prepare a complete offline project folder with `node_modules/` before bringing it to the barangay office.
 - Added `tests/oneClickSetup.test.js` to check the one-click setup applies schema/seed/diagnostics, runs verification, and does not call `npm install` or `npm ci`.
@@ -253,6 +254,8 @@ Milestone 5 usability/reporting/documentation is now partly in progress. Milesto
 
 - TDD red check: `npm test -- tests\oneClickSetup.test.js` failed as expected before implementation because `scripts\run-office-signoff.ps1` did not include `npm run verify:offline-runtime`.
 - `npm test -- tests\oneClickSetup.test.js` - passed with 11/11 tests after adding `npm run verify:offline-runtime` to the office sign-off report sequence.
+- TDD red check: `npm test -- tests\oneClickSetup.test.js` failed as expected before adding `-ReportsRoot` support because the office sign-off script ignored the supplied report folder and wrote only to the default local `reports\office-signoff` path.
+- `npm test -- tests\oneClickSetup.test.js` - passed with 12/12 tests after adding optional `-ReportsRoot` support and an executable fake-`npm` sign-off report test.
 - PowerShell parser check for `scripts\run-office-signoff.ps1` - passed after the sign-off report update.
 - `npm test` - passed with 146/146 tests after the sign-off report update.
 - `npm run verify:offline-runtime` - passed at `http://127.0.0.1:63542/prototype` after the sign-off report update.

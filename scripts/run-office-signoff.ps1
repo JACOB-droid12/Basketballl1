@@ -1,8 +1,16 @@
+param(
+  [string] $ReportsRoot = ""
+)
+
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
-$ReportsRoot = Join-Path $ProjectRoot "reports\office-signoff"
+if ([string]::IsNullOrWhiteSpace($ReportsRoot)) {
+  $ReportsRoot = Join-Path $ProjectRoot "reports\office-signoff"
+} elseif (-not [System.IO.Path]::IsPathRooted($ReportsRoot)) {
+  $ReportsRoot = Join-Path $ProjectRoot $ReportsRoot
+}
 $Timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $ReportPath = Join-Path $ReportsRoot "office-signoff-$Timestamp.txt"
 $Failures = 0
