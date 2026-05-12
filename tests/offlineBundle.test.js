@@ -38,11 +38,13 @@ test("offline bundle script copies runtime files and node_modules", () => {
   assert.doesNotMatch(script, /\.env"/);
 });
 
-test("offline bundle script guards recursive deletion inside dist", () => {
+test("offline bundle script clears existing bundle contents without deleting the bundle root", () => {
   const script = readFileSync("scripts/create-offline-bundle.ps1", "utf8");
 
   assert.match(script, /Assert-ChildPath/);
-  assert.match(script, /Remove-Item -LiteralPath \$BundleRoot -Recurse -Force/);
+  assert.match(script, /Get-ChildItem -LiteralPath \$BundleRoot/);
+  assert.match(script, /Remove-Item -LiteralPath \$ExistingItem\.FullName -Recurse -Force/);
+  assert.doesNotMatch(script, /Remove-Item -LiteralPath \$BundleRoot -Recurse -Force/);
 });
 
 test("offline bundle verifier accepts a complete prepared bundle", () => {

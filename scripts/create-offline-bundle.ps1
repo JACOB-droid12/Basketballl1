@@ -36,10 +36,12 @@ if (-not (Test-Path -LiteralPath $DistRoot)) {
 
 if (Test-Path -LiteralPath $BundleRoot) {
   Assert-ChildPath $DistRoot $BundleRoot
-  Remove-Item -LiteralPath $BundleRoot -Recurse -Force
+  foreach ($ExistingItem in Get-ChildItem -LiteralPath $BundleRoot -Force) {
+    Remove-Item -LiteralPath $ExistingItem.FullName -Recurse -Force
+  }
 }
 
-New-Item -ItemType Directory -Path $BundleRoot | Out-Null
+New-Item -ItemType Directory -Path $BundleRoot -Force | Out-Null
 
 $ItemsToCopy = @(
   ".env.example",

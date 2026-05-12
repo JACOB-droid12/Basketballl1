@@ -74,6 +74,14 @@ function Assert-LocalDatabaseTarget {
   }
 }
 
+function Remove-MariaDbPlaceholderFile {
+  $PlaceholderPath = Join-Path $DataDir ".gitkeep"
+
+  if (Test-Path -LiteralPath $PlaceholderPath) {
+    Remove-Item -LiteralPath $PlaceholderPath -Force
+  }
+}
+
 function Initialize-MariaDbDataDirectory {
   param([string] $Password)
 
@@ -90,6 +98,7 @@ function Initialize-MariaDbDataDirectory {
   }
 
   New-Item -ItemType Directory -Path $DataDir -Force | Out-Null
+  Remove-MariaDbPlaceholderFile
   Write-Step "Initializing bundled MariaDB data folder..."
   & $InstallDbExe "--datadir=$DataDir" "--password=$Password" | Out-Host
 
