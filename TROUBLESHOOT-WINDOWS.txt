@@ -6,14 +6,16 @@ sign-off check prints an error.
 
 1. "Node.js was not found" or "npm was not found"
 
-Install Node.js 20 or newer using the offline Windows installer. Close and
-reopen the Command Prompt or PowerShell window after installation.
+The launcher first looks for bundled Node at runtime\node. If that folder is
+missing, use an offline Node.js 20+ installer. Installing it may require
+administrator permission. Close and reopen START-HERE.bat after installation.
 
 2. "mysql was not found" or "mysqldump was not found"
 
-Install local MySQL or MariaDB using the offline Windows installer. Add the
-MySQL or MariaDB bin folder to PATH, then reopen the terminal or double-click
-check-office-readiness.bat again.
+The launcher first looks for bundled MariaDB tools at runtime\mariadb\bin. If
+that folder is missing, use an offline MySQL/MariaDB installer. Installing it
+may require administrator permission. You should not need to manually edit PATH
+when the bundled runtime is present.
 
 3. "node_modules was not found"
 
@@ -26,16 +28,21 @@ npm run verify:bundle
 Then copy the refreshed dist\barangay-court-scheduler-offline folder to the
 barangay office computer.
 
+If runtime\node or runtime\mariadb is also expected but missing, the deployment
+package was prepared without the bundled runtime. Rebuild the package with the
+runtime folders included, or install Node.js/MySQL/MariaDB with administrator
+permission.
+
 4. ".env was not found"
 
-Run setup-barangay-office.bat first. It creates the local .env file and asks
-for the local MySQL password.
+Open START-HERE.bat and choose "First-time setup on this computer". It creates
+the local .env file and asks for the local MySQL/MariaDB password.
 
 5. "Local database check failed"
 
-Start MySQL or MariaDB, then try start-barangay-office.bat again. If the same
-message appears, run setup-barangay-office.bat again so schema.sql and seed.sql
-are applied to the local database.
+Start MySQL or MariaDB, then double-click Barangay Court Scheduler again. If the
+same message appears, open START-HERE.bat and choose "First-time setup on this
+computer" so schema.sql and seed.sql are applied to the local database.
 
 6. Login does not work after setup
 
@@ -54,8 +61,8 @@ Confirm MySQL or MariaDB is running. Then run:
 
 npm run check:database
 
-If it fails, run setup-barangay-office.bat or ask the local technical staff to
-check the .env database settings.
+If it fails, open START-HERE.bat and choose "First-time setup on this computer",
+or ask the local technical staff to check the .env database settings.
 
 8. Port 3000 is already in use
 
@@ -72,7 +79,17 @@ ask technical support to change APP_PORT in .env.
 Open the report under reports\office-signoff and fix the first failed step.
 Most failures are missing MySQL tools, MySQL not running, or setup not finished.
 
-10. Keep records private
+The sign-off report is under START-HERE.bat > Maintenance/admin tools >
+"Create final office sign-off report".
+
+10. Maintenance/admin tools
+
+Ordinary daily users should click the Desktop shortcut named Barangay Court
+Scheduler. Use START-HERE.bat for setup and support. Files inside
+maintenance-tools are support wrappers used by START-HERE.bat; staff should not
+open them directly unless the installer, admin, or IT support asks them to.
+
+11. Keep records private
 
 Do not share .env, backups, or reports publicly. These files may contain local
 deployment details or resident-related records.

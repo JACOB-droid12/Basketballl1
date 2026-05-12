@@ -114,7 +114,7 @@ function runMysqldump({ args, env, spawnCommand }) {
     });
     child.on("error", (error) => {
       reject(new Error(
-        `Unable to run mysqldump. Install MySQL client tools and ensure mysqldump is on PATH. ${error.message}`
+        `Unable to run mysqldump. Use START-HERE.bat so bundled runtime\\mariadb\\bin is loaded, or have the installer/admin provide local MySQL/MariaDB client tools. ${error.message}`
       ));
     });
     child.on("close", (code) => {

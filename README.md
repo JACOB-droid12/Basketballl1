@@ -34,11 +34,13 @@ The app does not use cloud services for core functionality.
 
 Deployment focus is Windows only for this project. Use the included `.bat` and PowerShell scripts for barangay-office setup and startup.
 
-The deployment goal is a high-quality, fully tested offline Windows local web application: staff use the supplied prototype UI in a browser, the backend and MySQL/MariaDB database run on the barangay office computer, daily use is started from a simple Desktop shortcut, and setup/backup/checks are kept in a separate maintenance launcher.
+The deployment goal is a high-quality, fully tested offline Windows local web application: staff use the supplied prototype UI in a browser, the backend and MySQL/MariaDB database run on the barangay office computer, daily use is started from a simple Desktop shortcut, and setup/backup/checks are kept in a separate maintenance launcher. The safest automation path is portable/bundled runtime support: launchers prefer `runtime\node` and `runtime\mariadb` when those folders are supplied, then fall back to installed local tools for development machines.
 
 ## Quick Start
 
-1. Install Node.js 20+ and local MySQL 8+ (or verified MariaDB) on the barangay office computer.
+For a barangay-office Windows setup, use `START-HERE.bat` first. It prefers bundled `runtime\node` and `runtime\mariadb` folders when they are included, checks the deployment folder, starts bundled MariaDB when practical, and shows a plain error if the package is incomplete. The manual commands below are for developers or IT support.
+
+1. Confirm Node.js 20+ and local MySQL/MariaDB client tools are available through the bundled runtime folders or installed local tools.
 2. Create the local `.env` file:
 
 ```powershell
@@ -63,10 +65,14 @@ This checks Node.js, npm, MySQL client tools, `.env`, and required local configu
 
 5. Create the database:
 
-Double-click the SQL-only local setup runner:
+For the beginner Windows path, use `START-HERE.bat` and choose
+`First-time setup on this computer`.
+
+For developer or IT support SQL-only fallback, run the SQL-only local setup
+runner from `maintenance-tools`:
 
 ```text
-setup-database-only.bat
+maintenance-tools\setup-database-only.bat
 ```
 
 Or run this from PowerShell:
@@ -131,7 +137,24 @@ npm test
 
 For the barangay office, prepare a complete offline project folder before bringing it to the office computer. The folder must include `node_modules/`; the one-click setup does not download npm packages.
 
-This setup path is Windows-only. The installer/admin workflow uses `START-HERE.bat`, which opens a menu for readiness checks, first-time setup, daily startup, local backup, desktop shortcut creation, office sign-off, database-only support, and quick instructions. The ordinary staff workflow uses a Desktop shortcut named `Barangay Court Scheduler` that starts daily use directly. The root `STAFF-DAILY-USE.txt` file is the plain daily-use sheet for non-technical staff.
+This setup path is Windows-only. The installer/admin workflow uses `START-HERE.bat`, which opens one clear menu. Its first choices cover daily startup, first-time setup, and quick instructions. Backup, restore, database checks, readiness checks, troubleshooting, and sign-off are grouped as Maintenance/admin tools and implemented by wrappers inside `maintenance-tools`. The ordinary staff workflow uses a Desktop shortcut named `Barangay Court Scheduler` that starts daily use directly. The root `STAFF-DAILY-USE.txt` file is the plain daily-use sheet for non-technical staff.
+
+Preferred portable/bundled runtime layout:
+
+```text
+runtime/
+  node/
+    node.exe
+    npm.cmd
+  mariadb/
+    bin/
+      mariadbd.exe
+      mariadb-install-db.exe
+      mysql.exe
+      mysqldump.exe
+```
+
+When those folders exist, the Windows launchers use them automatically instead of requiring the MySQL/MariaDB bin folder to be added to the global PATH. If they are missing, the scripts fall back to installed local tools and show a clear error if the deployment package is incomplete.
 
 To create the prepared folder on a setup computer:
 
@@ -143,11 +166,11 @@ npm run verify:bundle
 
 This creates `dist/barangay-court-scheduler-offline/`. Copy that folder to the barangay office computer.
 
-On the barangay office computer, after Node.js 20+ and local MySQL 8+ (or verified MariaDB) are installed from local installers if needed:
+On the barangay office computer:
 
 1. Double-click `START-HERE.bat`.
 2. Choose `Check this computer before setup`.
-3. Fix any failed readiness checks, such as missing Node.js, MySQL tools, or `node_modules/`.
+3. Fix any failed readiness checks, such as missing bundled runtime folders, installed fallback tools, or `node_modules/`.
 4. Choose `First-time setup on this computer`.
 5. Enter the local MySQL/MariaDB password when asked.
 6. Choose `Create desktop shortcut`. This creates `Barangay Court Scheduler` for daily staff use and `Barangay Court Scheduler - Maintenance` for setup, backup, checks, and support.
@@ -157,7 +180,7 @@ On the barangay office computer, after Node.js 20+ and local MySQL 8+ (or verifi
 
 If a Windows setup or startup message is unclear, open `TROUBLESHOOT-WINDOWS.txt` in the prepared offline folder.
 
-`start-barangay-office.bat` checks for Node.js, npm, `node_modules/`, `.env`, and the local MySQL/MariaDB database before starting the app. It opens the browser only after the local server is listening and prints the correct local address from `APP_PORT`. Keep the startup window open while the system is being used. If a check fails, follow the message, start MySQL/MariaDB, and rerun setup if needed.
+`start-barangay-office.bat` checks for bundled or installed Node.js, npm, `node_modules/`, `.env`, and the local MySQL/MariaDB database before starting the app. If `runtime\mariadb` is bundled, it attempts to start the local database first. It opens the browser only after the local server is listening and prints the correct local address from `APP_PORT`. Keep the startup window open while the system is being used. If a check fails, follow the message and rerun setup if needed.
 
 For a database-only daily startup check without opening the app, run:
 
@@ -165,11 +188,11 @@ For a database-only daily startup check without opening the app, run:
 npm run check:database
 ```
 
-`run-office-signoff.bat` runs the office-focused local verification sequence, including the offline prototype runtime check, and writes a timestamped report for presentation/deployment records. It does not download packages or use online services. Generated reports stay local under `reports\office-signoff` and are ignored by git.
+`maintenance-tools\run-office-signoff.bat` runs the office-focused local verification sequence, including the offline prototype runtime check, and writes a timestamped report for presentation/deployment records. It does not download packages or use online services. Generated reports stay local under `reports\office-signoff` and are ignored by git.
 
 See `docs/OFFLINE_INSTALL_CHECKLIST.md` for the full pure-offline checklist.
 
-For a database-only local setup fallback, double-click `setup-database-only.bat` or see `database/SQL_ONLY_SETUP.md`.
+For a database-only local setup fallback, use `START-HERE.bat` > `Database-only setup/checks for IT support`, or see `database/SQL_ONLY_SETUP.md`.
 
 11. Start the local app:
 
@@ -204,7 +227,7 @@ After MySQL is installed and `.env` is configured, create a timestamped local ba
 npm run backup:mysql
 ```
 
-For barangay staff, the easier path is `START-HERE.bat` -> `Back up the database now`, or double-click `backup-database.bat`.
+For barangay staff, the easier path is `START-HERE.bat` -> `Back up the database now`.
 
 Backups are written to `backups/` by default. Set `BACKUP_DIR` in `.env` if the barangay office wants to store them on another local folder or protected external drive.
 
@@ -220,8 +243,9 @@ npm run restore:mysql -- backups\backup-file.sql
 - `STAFF-DAILY-USE.txt` is the shortest daily-use sheet for ordinary barangay staff.
 - `docs/DEPLOYMENT_GUIDE.md` explains offline Windows + local MySQL installation, startup, backup, restore, and update steps.
 - `npm run verify:offline-runtime` starts the app locally and checks that the served prototype runtime uses only local resources.
-- `check-office-readiness.bat` checks whether a barangay office computer has the local files and tools needed before running setup.
-- `run-office-signoff.bat` runs final local verification on the office computer and saves a sign-off report.
+- `START-HERE.bat` groups readiness checks, backup, restore, sign-off, and database support under Maintenance/admin tools.
+- `maintenance-tools\check-office-readiness.bat` checks whether a barangay office computer has the local files and tools needed before running setup.
+- `maintenance-tools\run-office-signoff.bat` runs final local verification on the office computer and saves a sign-off report.
 - `TROUBLESHOOT-WINDOWS.txt` lists common offline Windows setup/startup errors and the next action for each.
 - `docs/ISO_25010_EVALUATION.md` maps the system to ISO 25010 quality characteristics for project evaluation.
 - `docs/ARCHITECTURE.md` explains the chosen stack and module boundaries.

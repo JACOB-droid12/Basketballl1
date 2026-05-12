@@ -50,12 +50,7 @@ $ItemsToCopy = @(
   "README.md",
   "README-FIRST-WINDOWS.txt",
   "TROUBLESHOOT-WINDOWS.txt",
-  "backup-database.bat",
-  "create-desktop-shortcut.bat",
-  "setup-database-only.bat",
-  "check-office-readiness.bat",
-  "run-office-signoff.bat",
-  "setup-barangay-office.bat",
+  "maintenance-tools",
   "start-barangay-office.bat",
   "src",
   "views",
@@ -75,6 +70,21 @@ foreach ($Item in $ItemsToCopy) {
   }
 
   Copy-Item -LiteralPath $Source -Destination $BundleRoot -Recurse -Force
+}
+
+$OptionalItemsToCopy = @(
+  "runtime",
+  "installers"
+)
+
+foreach ($Item in $OptionalItemsToCopy) {
+  $Source = Join-Path $ProjectRoot $Item
+
+  if (Test-Path -LiteralPath $Source) {
+    Copy-Item -LiteralPath $Source -Destination $BundleRoot -Recurse -Force
+  } else {
+    Write-Host "Optional deployment folder not found: $Item"
+  }
 }
 
 Write-Host ""

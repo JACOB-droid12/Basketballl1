@@ -25,12 +25,9 @@ test("offline bundle script copies runtime files and node_modules", () => {
   assert.match(script, /STAFF-DAILY-USE\.txt/);
   assert.match(script, /README-FIRST-WINDOWS\.txt/);
   assert.match(script, /TROUBLESHOOT-WINDOWS\.txt/);
-  assert.match(script, /backup-database\.bat/);
-  assert.match(script, /create-desktop-shortcut\.bat/);
-  assert.match(script, /setup-database-only\.bat/);
-  assert.match(script, /check-office-readiness\.bat/);
-  assert.match(script, /run-office-signoff\.bat/);
-  assert.match(script, /setup-barangay-office\.bat/);
+  assert.match(script, /"maintenance-tools"/);
+  assert.match(script, /"runtime"/);
+  assert.match(script, /"installers"/);
   assert.match(script, /start-barangay-office\.bat/);
   assert.match(script, /"node_modules"/);
   assert.match(script, /"database"/);
@@ -61,7 +58,7 @@ test("offline bundle verifier accepts a complete prepared bundle", () => {
 
 test("offline bundle verifier rejects missing dependencies and copied local secrets", () => {
   const bundleRoot = createTemporaryBundle({
-    omit: ["node_modules", "check-office-readiness.bat"],
+    omit: ["node_modules", "maintenance-tools/check-office-readiness.bat"],
     includeForbidden: [".env", "reports"]
   });
 
@@ -71,7 +68,7 @@ test("offline bundle verifier rejects missing dependencies and copied local secr
 
     assert.equal(report.ok, false);
     assert.match(formatted, /\[FAIL\] required directory: node_modules/);
-    assert.match(formatted, /\[FAIL\] required file: check-office-readiness\.bat/);
+    assert.match(formatted, /\[FAIL\] required file: maintenance-tools[\\/]check-office-readiness\.bat/);
     assert.match(formatted, /\[FAIL\] excluded local-only item: \.env/);
     assert.match(formatted, /\[FAIL\] excluded local-only item: reports/);
   } finally {
@@ -92,12 +89,14 @@ function createTemporaryBundle(options = {}) {
     "README.md",
     "README-FIRST-WINDOWS.txt",
     "TROUBLESHOOT-WINDOWS.txt",
-    "backup-database.bat",
-    "create-desktop-shortcut.bat",
-    "setup-database-only.bat",
-    "check-office-readiness.bat",
-    "run-office-signoff.bat",
-    "setup-barangay-office.bat",
+    "maintenance-tools/backup-database.bat",
+    "maintenance-tools/restore-database.bat",
+    "maintenance-tools/create-desktop-shortcut.bat",
+    "maintenance-tools/setup-database-only.bat",
+    "maintenance-tools/check-office-readiness.bat",
+    "maintenance-tools/run-office-signoff.bat",
+    "maintenance-tools/setup-barangay-office.bat",
+    "maintenance-tools/load-runtime-env.bat",
     "start-barangay-office.bat",
     "src/server.js",
     "src/serverStartup.js",
@@ -120,6 +119,7 @@ function createTemporaryBundle(options = {}) {
     "docs/DEPLOYMENT_GUIDE.md",
     "docs/OFFLINE_INSTALL_CHECKLIST.md",
     "scripts/check-runtime-database.mjs",
+    "scripts/ensure-local-database.ps1",
     "scripts/print-office-url.mjs",
     "scripts/verify-offline-runtime.mjs",
     "scripts/check-office-readiness.ps1",

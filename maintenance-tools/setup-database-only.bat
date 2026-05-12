@@ -1,7 +1,8 @@
 @echo off
 setlocal
 
-cd /d "%~dp0"
+cd /d "%~dp0.."
+call "%~dp0load-runtime-env.bat"
 
 echo Barangay Basketball Court Scheduling System
 echo SQL-only local MySQL setup
@@ -9,8 +10,9 @@ echo.
 
 where mysql >nul 2>nul
 if errorlevel 1 (
-  echo mysql was not found. Install MySQL 8 and add the MySQL bin folder to PATH.
-  echo This setup only works with a local MySQL installation.
+  echo mysql was not found.
+  echo The launcher checked bundled runtime\mariadb\bin and installed MySQL/MariaDB tools.
+  echo The deployment package is missing database client tools, or they must be installed by the installer/admin.
   pause
   exit /b 1
 )
@@ -80,7 +82,7 @@ set "MYSQL_PWD="
 
 echo.
 echo SQL setup completed.
-echo Start the system with start-barangay-office.bat after the app is configured.
+echo Start the system with the Barangay Court Scheduler Desktop shortcut after the app is configured.
 pause
 exit /b 0
 

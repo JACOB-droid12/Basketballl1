@@ -104,7 +104,7 @@ function runMysql({ args, backupFile, createReadStream, env, spawnCommand }) {
     });
     child.on("error", (error) => {
       reject(new Error(
-        `Unable to run mysql. Install MySQL client tools and ensure mysql is on PATH. ${error.message}`
+        `Unable to run mysql. Use START-HERE.bat so bundled runtime\\mariadb\\bin is loaded, or have the installer/admin provide local MySQL/MariaDB client tools. ${error.message}`
       ));
     });
     child.on("close", (code) => {

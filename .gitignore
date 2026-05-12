@@ -6,5 +6,7 @@ coverage/
 dist/
 backups/
 reports/
+runtime/
+installers/
 .DS_Store
 Thumbs.db

@@ -188,7 +188,8 @@ export async function verifySqlStatic(options = {}) {
   const seedPath = options.seedPath || path.join(PROJECT_ROOT, "database", "seed.sql");
   const diagnosticsPath = options.diagnosticsPath || path.join(PROJECT_ROOT, "database", "diagnostics.sql");
   const setupPath = options.setupPath || path.join(PROJECT_ROOT, "database", "setup.sql");
-  const databaseOnlySetupPath = options.databaseOnlySetupPath || path.join(PROJECT_ROOT, "setup-database-only.bat");
+  const databaseOnlySetupPath = options.databaseOnlySetupPath ||
+    path.join(PROJECT_ROOT, "maintenance-tools", "setup-database-only.bat");
   const schemaSql = await readFile(schemaPath, "utf8");
   const seedSql = await readFile(seedPath, "utf8");
   const diagnosticsSql = await readFile(diagnosticsPath, "utf8");

@@ -2,13 +2,13 @@
 
 Offline local deployment guide for the Barangay Sto. Niño Basketball Court Scheduling System.
 
-The final target is a barangay office computer running the app and a local MySQL/MariaDB database with no internet connection required during normal use. If installers or npm packages are not already available, use a separate setup computer to download them first, then bring the prepared offline folder and local installers to the barangay office.
+The final target is a barangay office computer running the app and a local MySQL/MariaDB database with no internet connection required during normal use. The preferred deployment package includes the app, `node_modules`, and portable runtime folders so staff do not edit PATH or understand Node/MySQL details. If those runtime folders are not supplied, a separate setup computer or installer/admin must provide the offline installers first.
 
-## Required Software
+## Required Runtime
 
 - Windows 10 or Windows 11
-- Node.js 20 or newer
-- MySQL 8 or newer (default), or a local MariaDB server that passes `npm run verify:mysql`
+- Bundled `runtime\node` with Node.js 20+ preferred, or installed local Node.js 20+
+- Bundled `runtime\mariadb` preferred, or installed local MySQL 8+/MariaDB that passes `npm run verify:mysql`
 - A browser such as Chrome, Edge, or Firefox
 
 ## Folder Location
@@ -51,7 +51,7 @@ npm run verify:bundle
 
 Copy `dist\barangay-court-scheduler-offline` to the barangay office computer.
 
-The prepared folder includes `START-HERE.bat` as the maintenance launcher, `STAFF-DAILY-USE.txt` as the shortest ordinary staff guide, `README-FIRST-WINDOWS.txt` for the installer/admin first-run setup path, `backup-database.bat` for staff-friendly local backups, `create-desktop-shortcut.bat` for optional Desktop shortcuts, and `TROUBLESHOOT-WINDOWS.txt` for common Windows setup/startup errors.
+The prepared folder includes `START-HERE.bat` as the installer/admin launcher, `STAFF-DAILY-USE.txt` as the shortest ordinary staff guide, `README-FIRST-WINDOWS.txt` for the first-run setup path, `maintenance-tools\` for backup/restore/check/sign-off wrappers, and `TROUBLESHOOT-WINDOWS.txt` for common Windows setup/startup errors. If `runtime\node` and `runtime\mariadb` are supplied, the launchers prefer those bundled tools and do not require staff to manually edit PATH.
 
 The intended office workflow separates daily use from maintenance. The daily Desktop shortcut is named `Barangay Court Scheduler` and starts the local system directly. The maintenance Desktop shortcut is named `Barangay Court Scheduler - Maintenance` and opens setup, backup, database checks, sign-off, and support tools.
 
@@ -73,15 +73,15 @@ Barangay Court Scheduler
 
 That Desktop shortcut runs `start-barangay-office.bat`, checks the local database, starts the local app, and opens the browser after the server is ready.
 
-After Node.js 20+ and local MySQL/MariaDB are installed on the barangay office computer from local installers if needed, use:
+If the deployment package includes bundled runtime folders, use `START-HERE.bat` and choose `First-time setup on this computer`; the launcher will use `runtime\node` and `runtime\mariadb` automatically. If the runtime folders are missing, setup will stop with a clear message so the installer/admin can provide bundled runtime folders or run offline installers that may require administrator permission. The underlying wrapper is:
 
 ```text
-setup-barangay-office.bat
+maintenance-tools\setup-barangay-office.bat
 ```
 
 This setup uses local files only. It creates `.env` if needed, asks for the local MySQL password, applies `database/schema.sql`, applies `database/seed.sql`, runs `database/diagnostics.sql`, and runs the live MySQL verifier.
 
-Before running setup on the office computer, double-click `check-office-readiness.bat`. It checks the local Node.js, npm, MySQL client tools, `node_modules/`, SQL files, and setup/start scripts without downloading anything.
+Before running setup on the office computer, use `START-HERE.bat` and choose `Check this computer before setup`. It checks bundled or installed Node.js, npm, MySQL/MariaDB client tools, `node_modules/`, SQL files, and setup/start scripts without downloading anything.
 
 If `node_modules/` is missing, setup stops. Prepare the project folder with dependencies on another computer, then copy the complete folder to the barangay office computer.
 
@@ -95,10 +95,10 @@ Keep the startup window open while the system is being used. It opens the browse
 
 If staff click the daily shortcut while the app is already running, the startup helper checks the local `/health` endpoint. When it confirms the Barangay Court Scheduler is already running, it opens the existing local app instead of showing a Node.js port error.
 
-For final deployment sign-off on the office computer:
+For final deployment sign-off on the office computer, use `START-HERE.bat` and choose `Create final office sign-off report`. The underlying wrapper is:
 
 ```text
-run-office-signoff.bat
+maintenance-tools\run-office-signoff.bat
 ```
 
 This creates a timestamped text report under `reports\office-signoff`. It runs only local commands: prerequisite verification, runtime database readiness, live MySQL/app smoke verification, UI smoke verification, offline prototype runtime verification, and a local MySQL backup. It also writes the manual office workflow checklist into the report. Generated sign-off reports are local deployment records and are ignored by git.
@@ -157,7 +157,7 @@ cmd /c "mysql -h127.0.0.1 -P3306 -u root barangay_court_scheduler < database\dia
 Remove-Item Env:\MYSQL_PWD -ErrorAction SilentlyContinue
 ```
 
-On Windows, `setup-database-only.bat` runs the same local setup without needing to type the redirection commands. It applies `database/schema.sql`, `database/seed.sql`, and `database/diagnostics.sql` as separate MySQL commands for Oracle MySQL 9 and MariaDB compatibility. `database/setup.sql` remains only as a convenience for clients that support `SOURCE` from redirected input.
+On Windows, `START-HERE.bat` > `Database-only setup/checks for IT support` runs the same local setup without needing to type the redirection commands. The underlying wrapper is `maintenance-tools\setup-database-only.bat`. It applies `database/schema.sql`, `database/seed.sql`, and `database/diagnostics.sql` as separate MySQL commands for Oracle MySQL 9 and MariaDB compatibility. `database/setup.sql` remains only as a convenience for clients that support `SOURCE` from redirected input.
 
 The schema creates:
 
@@ -189,7 +189,7 @@ npm run verify:offline-runtime
 npm test
 ```
 
-On the actual office computer, `run-office-signoff.bat` runs the office-focused subset and saves a report for project presentation and deployment records.
+On the actual office computer, `START-HERE.bat` > `Create final office sign-off report` runs the office-focused subset and saves a report for project presentation and deployment records.
 
 Expected result:
 
@@ -237,7 +237,7 @@ Rerunning setup or live verification after deactivating the seeded account will 
 
 ## Optional Windows Shortcut
 
-Use `START-HERE.bat` and choose `Create desktop shortcut`, or double-click `create-desktop-shortcut.bat`. It creates two current-user Desktop shortcuts: `Barangay Court Scheduler` opens `start-barangay-office.bat` for daily staff use, and `Barangay Court Scheduler - Maintenance` opens `START-HERE.bat` for setup, backup, database checks, sign-off, and support.
+Use `START-HERE.bat` and choose `Create desktop shortcut`. It creates two current-user Desktop shortcuts: `Barangay Court Scheduler` opens `start-barangay-office.bat` for daily staff use, and `Barangay Court Scheduler - Maintenance` opens `START-HERE.bat` for setup, backup, database checks, sign-off, and support.
 
 ## Backup Database
 
@@ -249,7 +249,7 @@ Recommended backup command:
 npm run backup:mysql
 ```
 
-For barangay staff or support personnel, use `Barangay Court Scheduler - Maintenance` and choose `Back up the database now`, or double-click `backup-database.bat`.
+For barangay staff or support personnel, use `Barangay Court Scheduler - Maintenance` and choose `Back up the database now`.
 
 The command reads `.env`, creates `backups/` if needed, and writes a timestamped `.sql` file such as `barangay_court_scheduler_2026-05-08_1430.sql`. It passes the MySQL password through the child process environment instead of putting the password in the command text.
 

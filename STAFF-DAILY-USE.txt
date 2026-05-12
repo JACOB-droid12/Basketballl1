@@ -51,6 +51,8 @@ Account
 BACKUPS, SETUP, OR SUPPORT
 
 Do not use the daily shortcut for setup or maintenance.
+Do not open maintenance-tools unless the installer, admin, or IT support asks
+you to.
 
 For setup, backups, database checks, sign-off, or support, double-click:
 

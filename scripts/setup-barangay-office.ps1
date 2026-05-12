@@ -1,6 +1,14 @@
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
+trap {
+  Write-Host ""
+  Write-Host "Setup could not continue."
+  Write-Host $_.Exception.Message
+  Write-Host "Open TROUBLESHOOT-WINDOWS.txt for common Windows setup fixes, then run START-HERE.bat again."
+  exit 1
+}
+
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $EnvPath = Join-Path $ProjectRoot ".env"
 $SchemaPath = Join-Path $ProjectRoot "database\schema.sql"
@@ -156,15 +164,15 @@ Write-Host ""
 Set-Location -LiteralPath $ProjectRoot
 
 if (-not (Test-CommandAvailable "node")) {
-  throw "Node.js was not found. Install Node.js 20 or newer before running this setup."
+  throw "Node.js was not found. START-HERE.bat checked bundled runtime\node and installed Node.js. The deployment package is missing bundled Node, or Node.js must be installed by the installer/admin."
 }
 
 if (-not (Test-CommandAvailable "npm")) {
-  throw "npm was not found. Install Node.js 20 or newer before running this setup."
+  throw "npm was not found. START-HERE.bat checked bundled runtime\node and installed Node.js. The deployment package is missing npm, or Node.js must be installed by the installer/admin."
 }
 
 if (-not (Test-CommandAvailable "mysql")) {
-  throw "mysql was not found. Install local MySQL 8+ or MariaDB and add the database bin folder to PATH before running this setup."
+  throw "mysql was not found. START-HERE.bat checked bundled runtime\mariadb\bin and installed MySQL/MariaDB tools. The deployment package is missing database client tools, or MySQL/MariaDB must be installed by the installer/admin."
 }
 
 if (-not (Test-Path -LiteralPath $EnvPath)) {
@@ -214,6 +222,10 @@ Invoke-CheckedCommand "Check SQL files" {
   npm run verify:sql
 }
 
+Invoke-CheckedCommand "Start bundled local database if available" {
+  powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\ensure-local-database.ps1"
+}
+
 $PreviousMysqlPassword = $env:MYSQL_PWD
 $env:MYSQL_PWD = $Settings["DB_PASSWORD"]
 
@@ -231,5 +243,5 @@ Invoke-CheckedCommand "Verify live MySQL setup" {
 
 Write-Host ""
 Write-Host "Setup completed."
-Write-Host "Start the system with start-barangay-office.bat."
+Write-Host "Start the system with the Barangay Court Scheduler Desktop shortcut, or choose daily startup from START-HERE.bat."
 Write-Host "Default login after setup: admin / admin123"

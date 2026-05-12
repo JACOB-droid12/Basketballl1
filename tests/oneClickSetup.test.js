@@ -12,18 +12,22 @@ test("staff launcher provides one menu for setup, startup, checks, and sign-off"
   assert.match(script, /Start the system for daily use/i);
   assert.match(script, /First-time setup on this computer/i);
   assert.match(script, /Back up the database now/i);
+  assert.match(script, /Restore database backup/i);
   assert.match(script, /Create desktop shortcut/i);
   assert.match(script, /Check this computer before setup/i);
   assert.match(script, /Create final office sign-off report/i);
   assert.match(script, /Database-only setup\/checks for IT support/i);
+  assert.match(script, /Maintenance\/admin tools/i);
   assert.match(script, /STAFF-DAILY-USE\.txt/i);
   assert.match(script, /call "%~dp0start-barangay-office\.bat"/i);
-  assert.match(script, /call "%~dp0setup-barangay-office\.bat"/i);
-  assert.match(script, /call "%~dp0backup-database\.bat"/i);
-  assert.match(script, /call "%~dp0create-desktop-shortcut\.bat"/i);
-  assert.match(script, /call "%~dp0check-office-readiness\.bat"/i);
-  assert.match(script, /call "%~dp0run-office-signoff\.bat"/i);
-  assert.match(script, /call "%~dp0setup-database-only\.bat"/i);
+  assert.match(script, /call "%~dp0maintenance-tools\\setup-barangay-office\.bat"/i);
+  assert.match(script, /call "%~dp0maintenance-tools\\backup-database\.bat"/i);
+  assert.match(script, /call "%~dp0maintenance-tools\\restore-database\.bat"/i);
+  assert.match(script, /call "%~dp0maintenance-tools\\create-desktop-shortcut\.bat"/i);
+  assert.match(script, /call "%~dp0maintenance-tools\\check-office-readiness\.bat"/i);
+  assert.match(script, /call "%~dp0maintenance-tools\\run-office-signoff\.bat"/i);
+  assert.match(script, /call "%~dp0maintenance-tools\\setup-database-only\.bat"/i);
+  assert.match(script, /maintenance-tools\\load-runtime-env\.bat/i);
   assert.match(script, /notepad "%~dp0STAFF-DAILY-USE\.txt"/i);
   assert.match(script, /notepad "%~dp0README-FIRST-WINDOWS\.txt"/i);
   assert.doesNotMatch(script, /npm install/i);
@@ -52,7 +56,7 @@ test("first-run guide tells staff to use the startup window address", () => {
 });
 
 test("desktop shortcut batch creates daily-use and maintenance shortcuts without downloading", () => {
-  const batchScript = readFileSync("create-desktop-shortcut.bat", "utf8");
+  const batchScript = readFileSync("maintenance-tools/create-desktop-shortcut.bat", "utf8");
   const powerShellScript = readFileSync("scripts/create-desktop-shortcut.ps1", "utf8");
 
   assert.match(batchScript, /scripts\\create-desktop-shortcut\.ps1/i);
@@ -106,11 +110,14 @@ test("desktop shortcut WhatIf reports both targets without creating shortcuts", 
 });
 
 test("backup batch file runs the local backup command with Windows preflight checks", () => {
-  const script = readFileSync("backup-database.bat", "utf8");
+  const script = readFileSync("maintenance-tools/backup-database.bat", "utf8");
 
+  assert.match(script, /load-runtime-env\.bat/i);
   assert.match(script, /where node >nul 2>nul/i);
   assert.match(script, /where npm >nul 2>nul/i);
   assert.match(script, /where mysqldump >nul 2>nul/i);
+  assert.match(script, /bundled runtime\\node/i);
+  assert.match(script, /bundled runtime\\mariadb\\bin/i);
   assert.match(script, /if not exist "node_modules"/i);
   assert.match(script, /if not exist "\.env"/i);
   assert.match(script, /npm run backup:mysql/i);
@@ -120,16 +127,38 @@ test("backup batch file runs the local backup command with Windows preflight che
   assert.doesNotMatch(script, /npm ci/i);
 });
 
-test("one-click setup batch file invokes the PowerShell setup script", () => {
-  const script = readFileSync("setup-barangay-office.bat", "utf8");
+test("restore batch file is guarded for IT support restore operations", () => {
+  const script = readFileSync("maintenance-tools/restore-database.bat", "utf8");
 
+  assert.match(script, /load-runtime-env\.bat/i);
+  assert.match(script, /Type RESTORE to continue/i);
+  assert.match(script, /where node >nul 2>nul/i);
+  assert.match(script, /where npm >nul 2>nul/i);
+  assert.match(script, /where mysql >nul 2>nul/i);
+  assert.match(script, /bundled runtime\\node/i);
+  assert.match(script, /bundled runtime\\mariadb\\bin/i);
+  assert.match(script, /if not exist "node_modules"/i);
+  assert.match(script, /if not exist "\.env"/i);
+  assert.match(script, /set \/p BACKUP_FILE=/i);
+  assert.match(script, /npm run restore:mysql -- "%BACKUP_FILE%"/i);
+  assert.match(script, /Restore completed/i);
+  assert.match(script, /IT support/i);
+  assert.doesNotMatch(script, /npm install/i);
+  assert.doesNotMatch(script, /npm ci/i);
+});
+
+test("one-click setup batch file invokes the PowerShell setup script", () => {
+  const script = readFileSync("maintenance-tools/setup-barangay-office.bat", "utf8");
+
+  assert.match(script, /load-runtime-env\.bat/i);
   assert.match(script, /scripts\\setup-barangay-office\.ps1/i);
   assert.match(script, /ExecutionPolicy Bypass/i);
 });
 
 test("database-only setup batch file applies the SQL setup runner locally", () => {
-  const script = readFileSync("setup-database-only.bat", "utf8");
+  const script = readFileSync("maintenance-tools/setup-database-only.bat", "utf8");
 
+  assert.match(script, /load-runtime-env\.bat/i);
   assert.match(script, /database\\schema\.sql/i);
   assert.match(script, /database\\seed\.sql/i);
   assert.match(script, /database\\diagnostics\.sql/i);
@@ -148,7 +177,7 @@ test("database-only setup batch file applies the SQL setup runner locally", () =
 });
 
 test("office readiness checker batch file invokes prerequisite checks without downloading", () => {
-  const batchScript = readFileSync("check-office-readiness.bat", "utf8");
+  const batchScript = readFileSync("maintenance-tools/check-office-readiness.bat", "utf8");
   const powerShellScript = readFileSync("scripts/check-office-readiness.ps1", "utf8");
 
   assert.match(batchScript, /scripts\\check-office-readiness\.ps1/i);
@@ -157,15 +186,18 @@ test("office readiness checker batch file invokes prerequisite checks without do
   assert.match(powerShellScript, /Test-RequiredCommand "npm"/);
   assert.match(powerShellScript, /Test-RequiredCommand "mysql"/);
   assert.match(powerShellScript, /Test-RequiredCommand "mysqldump"/);
+  assert.match(powerShellScript, /runtime\\node/);
+  assert.match(powerShellScript, /runtime\\mariadb\\bin/);
   assert.match(powerShellScript, /node_modules/);
   assert.match(powerShellScript, /database\\schema\.sql/);
   assert.match(powerShellScript, /database\\seed\.sql/);
   assert.match(powerShellScript, /START-HERE\.bat/);
-  assert.match(powerShellScript, /backup-database\.bat/);
-  assert.match(powerShellScript, /create-desktop-shortcut\.bat/);
-  assert.match(powerShellScript, /setup-barangay-office\.bat/);
+  assert.match(powerShellScript, /maintenance-tools\\backup-database\.bat/);
+  assert.match(powerShellScript, /maintenance-tools\\restore-database\.bat/);
+  assert.match(powerShellScript, /maintenance-tools\\create-desktop-shortcut\.bat/);
+  assert.match(powerShellScript, /maintenance-tools\\setup-barangay-office\.bat/);
   assert.match(powerShellScript, /start-barangay-office\.bat/);
-  assert.match(powerShellScript, /run-office-signoff\.bat/);
+  assert.match(powerShellScript, /maintenance-tools\\run-office-signoff\.bat/);
   assert.doesNotMatch(powerShellScript, /npm install/i);
   assert.doesNotMatch(powerShellScript, /npm ci/i);
 });
@@ -178,8 +210,13 @@ test("one-click PowerShell setup applies schema, seed, diagnostics, and live ver
   assert.match(script, /database\\diagnostics\.sql/);
   assert.match(script, /npm run verify:sql/);
   assert.match(script, /npm run verify:mysql/);
-  assert.match(script, /Install local MySQL 8\+ or MariaDB/);
+  assert.match(script, /ensure-local-database\.ps1/);
+  assert.match(script, /runtime\\node/);
+  assert.match(script, /runtime\\mariadb\\bin/);
+  assert.match(script, /installer\/admin/);
   assert.match(script, /Enter the local MySQL\/MariaDB password/);
+  assert.match(script, /Setup could not continue/);
+  assert.match(script, /TROUBLESHOOT-WINDOWS\.txt/);
   assert.match(script, /MYSQL_PWD/);
   assert.match(script, /node_modules was not found/);
   assert.match(script, /function Convert-ToEnvFileValue/);
@@ -195,12 +232,14 @@ test("one-click PowerShell setup applies schema, seed, diagnostics, and live ver
 test("one-click start batch opens the local prototype URL and starts npm", () => {
   const script = readFileSync("start-barangay-office.bat", "utf8");
 
+  assert.match(script, /load-runtime-env\.bat/i);
+  assert.match(script, /scripts\\ensure-local-database\.ps1/i);
   assert.match(script, /where node >nul 2>nul/i);
   assert.match(script, /if not exist "node_modules"/i);
   assert.match(script, /if not exist "\.env"/i);
   assert.match(script, /npm run check:database/i);
   assert.match(script, /Local database check failed/i);
-  assert.match(script, /setup-barangay-office\.bat/i);
+  assert.match(script, /START-HERE\.bat/i);
   assert.match(script, /exit \/b 1/i);
   assert.match(script, /The browser will open after the local app is ready/i);
   assert.match(script, /set "OFFICE_URL=http:\/\/localhost:3000\/prototype"/);
@@ -212,10 +251,11 @@ test("one-click start batch opens the local prototype URL and starts npm", () =>
 });
 
 test("office sign-off batch file runs only local verification commands", () => {
-  const batchScript = readFileSync("run-office-signoff.bat", "utf8");
+  const batchScript = readFileSync("maintenance-tools/run-office-signoff.bat", "utf8");
   const powerShellScript = readFileSync("scripts/run-office-signoff.ps1", "utf8");
 
   assert.match(batchScript, /scripts\\run-office-signoff\.ps1/i);
+  assert.match(batchScript, /load-runtime-env\.bat/i);
   assert.match(batchScript, /ExecutionPolicy Bypass/i);
   assert.match(powerShellScript, /reports\\office-signoff/i);
   assert.match(powerShellScript, /npm run verify:prereqs/i);
@@ -236,6 +276,33 @@ test("office sign-off batch file runs only local verification commands", () => {
   assert.doesNotMatch(powerShellScript, /npm install/i);
   assert.doesNotMatch(powerShellScript, /npm ci/i);
   assert.doesNotMatch(powerShellScript, /npm audit/i);
+});
+
+test("runtime environment loader prefers bundled Node and MariaDB tools", () => {
+  const script = readFileSync("maintenance-tools/load-runtime-env.bat", "utf8");
+
+  assert.match(script, /runtime\\node\\node\.exe/i);
+  assert.match(script, /runtime\\node/i);
+  assert.match(script, /runtime\\mariadb\\bin\\mysql\.exe/i);
+  assert.match(script, /runtime\\mysql\\bin\\mysql\.exe/i);
+  assert.match(script, /set "PATH=.*%PATH%"/i);
+  assert.match(script, /BUNDLED_MARIADB_EXE/i);
+  assert.doesNotMatch(script, /npm install/i);
+  assert.doesNotMatch(script, /npm ci/i);
+});
+
+test("local database starter supports bundled MariaDB without global PATH", () => {
+  const script = readFileSync("scripts/ensure-local-database.ps1", "utf8");
+
+  assert.match(script, /runtime\\mariadb\\bin\\mariadbd\.exe/);
+  assert.match(script, /mariadb-install-db\.exe/);
+  assert.match(script, /Start-Process/);
+  assert.match(script, /-WindowStyle Hidden/);
+  assert.match(script, /DB_HOST/);
+  assert.match(script, /DB_PORT/);
+  assert.match(script, /DB_PASSWORD/);
+  assert.match(script, /Database service is not reachable/);
+  assert.match(script, /No bundled MariaDB runtime was found/);
 });
 
 test("office sign-off batch wrapper returns the sign-off script exit code", () => {
@@ -259,7 +326,7 @@ test("office sign-off batch wrapper returns the sign-off script exit code", () =
       PATH: `${binDir};${process.env.PATH || ""}`
     };
 
-    const result = spawnSync("cmd.exe", ["/c", "run-office-signoff.bat"], {
+    const result = spawnSync("cmd.exe", ["/c", "maintenance-tools\\run-office-signoff.bat"], {
       encoding: "utf8",
       env,
       input: "\r\n"
