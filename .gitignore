@@ -8,5 +8,8 @@ backups/
 reports/
 runtime/
 installers/
+data/mariadb-data/*
+!data/mariadb-data/.gitkeep
+data/logs/
 .DS_Store
 Thumbs.db

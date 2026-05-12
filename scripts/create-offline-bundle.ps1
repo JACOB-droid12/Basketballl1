@@ -87,6 +87,10 @@ foreach ($Item in $OptionalItemsToCopy) {
   }
 }
 
+$BundleDataDir = Join-Path $BundleRoot "data\mariadb-data"
+New-Item -ItemType Directory -Path $BundleDataDir -Force | Out-Null
+Write-Host "Prepared empty portable database data folder: data\mariadb-data"
+
 Write-Host ""
 Write-Host "Offline bundle created:"
 Write-Host $BundleRoot

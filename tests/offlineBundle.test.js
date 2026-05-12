@@ -31,6 +31,7 @@ test("offline bundle script copies runtime files and node_modules", () => {
   assert.match(script, /start-barangay-office\.bat/);
   assert.match(script, /"node_modules"/);
   assert.match(script, /"database"/);
+  assert.match(script, /data\\mariadb-data/);
   assert.match(script, /"src"/);
   assert.match(script, /"views"/);
   assert.match(script, /"public"/);

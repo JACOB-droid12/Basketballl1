@@ -296,6 +296,8 @@ test("local database starter supports bundled MariaDB without global PATH", () =
 
   assert.match(script, /runtime\\mariadb\\bin\\mariadbd\.exe/);
   assert.match(script, /mariadb-install-db\.exe/);
+  assert.match(script, /data\\mariadb-data/);
+  assert.doesNotMatch(script, /runtime\\mariadb-data/);
   assert.match(script, /Start-Process/);
   assert.match(script, /-WindowStyle Hidden/);
   assert.match(script, /DB_HOST/);

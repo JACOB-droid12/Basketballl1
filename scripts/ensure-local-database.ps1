@@ -11,8 +11,8 @@ $RuntimeMariaDbRoot = Join-Path $ProjectRoot "runtime\mariadb"
 $RuntimeMariaDbBin = Join-Path $RuntimeMariaDbRoot "bin"
 $ServerExe = Join-Path $RuntimeMariaDbBin "mariadbd.exe"
 $InstallDbExe = Join-Path $RuntimeMariaDbBin "mariadb-install-db.exe"
-$DataDir = Join-Path $ProjectRoot "runtime\mariadb-data"
-$LogDir = Join-Path $ProjectRoot "runtime\logs"
+$DataDir = Join-Path $ProjectRoot "data\mariadb-data"
+$LogDir = Join-Path $ProjectRoot "data\logs"
 
 function Write-Step {
   param([string] $Message)
@@ -94,7 +94,7 @@ function Initialize-MariaDbDataDirectory {
   & $InstallDbExe "--datadir=$DataDir" "--password=$Password" | Out-Host
 
   if ($LASTEXITCODE -ne 0) {
-    throw "Bundled MariaDB initialization failed. Check runtime\logs or rerun START-HERE.bat as an administrator if Windows blocks the database runtime."
+    throw "Bundled MariaDB initialization failed. Check data\logs or rerun START-HERE.bat as an administrator if Windows blocks the database runtime."
   }
 }
 
@@ -135,7 +135,7 @@ function Start-BundledMariaDb {
     Start-Sleep -Seconds 1
   }
 
-  throw "Database service is not reachable after starting bundled MariaDB. Check runtime\logs\mariadb.err.log, then try again."
+  throw "Database service is not reachable after starting bundled MariaDB. Check data\logs\mariadb.err.log, then try again."
 }
 
 Set-Location -LiteralPath $ProjectRoot
