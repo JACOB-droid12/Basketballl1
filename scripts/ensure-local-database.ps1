@@ -109,15 +109,13 @@ function Start-BundledMariaDb {
   }
 
   New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
-  $OutLog = Join-Path $LogDir "mariadb.out.log"
   $ErrLog = Join-Path $LogDir "mariadb.err.log"
   $Arguments = @(
     "--no-defaults",
     "--datadir=`"$DataDir`"",
     "--bind-address=$HostName",
     "--port=$Port",
-    "--log-error=`"$ErrLog`"",
-    "--console"
+    "--log-error=`"$ErrLog`""
   )
 
   Write-Step "Starting bundled MariaDB from runtime\mariadb..."

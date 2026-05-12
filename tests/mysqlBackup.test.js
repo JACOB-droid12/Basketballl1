@@ -56,6 +56,8 @@ test("builds mysqldump args without exposing the password", () => {
     "--host=localhost",
     "--port=3306",
     "--user=root",
+    "--protocol=TCP",
+    "--ssl=0",
     "--single-transaction",
     "--routines",
     "--triggers",

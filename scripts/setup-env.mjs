@@ -44,9 +44,19 @@ export async function createLocalEnvFile(options = {}) {
 
   await writeFile(envFilePath, envContent, { encoding: "utf8", flag: "wx" });
   output.log(`Created local environment file: ${envFilePath}`);
-  output.log("Update DB_PASSWORD in .env, then run npm run verify:prereqs.");
+  output.log(getNextStepMessage({ env: options.env }));
 
   return { envFilePath };
+}
+
+export function getNextStepMessage(options = {}) {
+  const env = options.env || process.env;
+
+  if (env.BARANGAY_OFFICE_ONE_STOP_SETUP === "1") {
+    return "START-HERE.bat will finish the local database password automatically and continue setup.";
+  }
+
+  return "Update DB_PASSWORD in .env, then run npm run verify:prereqs.";
 }
 
 function generateSessionSecret() {

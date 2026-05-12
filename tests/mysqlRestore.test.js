@@ -70,6 +70,8 @@ test("builds mysql restore args without exposing the password", () => {
     "--host=localhost",
     "--port=3306",
     "--user=root",
+    "--protocol=TCP",
+    "--ssl=0",
     "barangay_court_scheduler"
   ]);
   assert.equal(args.some((arg) => arg.includes("secret")), false);
@@ -109,6 +111,8 @@ test("runs mysql restore using the backup file as stdin", async () => {
     "--host=localhost",
     "--port=3306",
     "--user=root",
+    "--protocol=TCP",
+    "--ssl=0",
     "barangay_court_scheduler"
   ]);
   assert.equal(spawnCommand.calls[0].options.stdio[0], "pipe");

@@ -4,7 +4,8 @@ import test from "node:test";
 
 import {
   buildEnvFile,
-  createLocalEnvFile
+  createLocalEnvFile,
+  getNextStepMessage
 } from "../scripts/setup-env.mjs";
 
 const ENV_EXAMPLE = [
@@ -66,5 +67,19 @@ test("creates .env from .env.example without overwriting an existing .env", asyn
       output: { log() {} }
     }),
     /\.env already exists/
+  );
+});
+
+test("setup-env explains automatic password handling during one-stop setup", () => {
+  assert.match(
+    getNextStepMessage({
+      env: { BARANGAY_OFFICE_ONE_STOP_SETUP: "1" }
+    }),
+    /START-HERE\.bat will finish the local database password automatically/i
+  );
+
+  assert.match(
+    getNextStepMessage({ env: {} }),
+    /Update DB_PASSWORD in \.env/
   );
 });

@@ -76,7 +76,7 @@ if not exist "%BACKUP_FILE%" (
   exit /b 1
 )
 
-npm run restore:mysql -- "%BACKUP_FILE%"
+call npm run restore:mysql -- "%BACKUP_FILE%"
 if errorlevel 1 (
   echo.
   echo Restore failed. Check the backup file, local database settings, and MySQL/MariaDB service, then try again.

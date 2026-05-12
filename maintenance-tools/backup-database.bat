@@ -51,7 +51,7 @@ if not exist ".env" (
   exit /b 1
 )
 
-npm run backup:mysql
+call npm run backup:mysql
 if errorlevel 1 (
   echo.
   echo Backup failed. Start MySQL/MariaDB, check the local database settings, then try again.

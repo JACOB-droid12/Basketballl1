@@ -6,7 +6,7 @@ The system is designed for authorized barangay personnel. Residents request rese
 
 ## Current Milestone
 
-Milestone 5 usability, reporting, and deployment documentation is partly in progress. Milestones 1 through 4 are implemented in code and tests. Live SQL verification has passed against disposable local Oracle MySQL and MariaDB servers during development; the same verification still needs to be repeated on the barangay office's target local MySQL/MariaDB installation:
+The current milestone is one-stop offline Windows setup packaging. Milestones 1 through 4 are implemented in code and tests, and the generated offline bundle has passed strict one-stop validation on this Windows PC with bundled Node.js and bundled MariaDB runtime folders present. Final barangay-office deployment sign-off is still a later activity, but this milestone focuses only on copy/extract, first-time setup through `START-HERE.bat`, daily startup through `Barangay Court Scheduler`, and local browser/backend/database verification:
 
 - Local Node.js + Express application skeleton
 - Local MySQL target schema
@@ -61,7 +61,7 @@ Use `npm run verify:runtime-package` to classify the current folder. Use `npm ru
 
 ## Quick Start
 
-For a barangay-office Windows setup, use `START-HERE.bat` first. It prefers bundled `runtime\node` and `runtime\mariadb` folders when they are included, checks the deployment folder, starts bundled MariaDB when practical, and shows a plain error if the package is incomplete. The manual commands below are for developers or IT support.
+For a barangay-office Windows setup, use `START-HERE.bat` first. It prefers bundled `runtime\node` and `runtime\mariadb` folders when they are included, checks the deployment folder, starts bundled MariaDB when practical, creates the local `.env` file, generates a local bundled-database password when using portable MariaDB, applies schema/seed data, and shows a plain error if the package is incomplete. The manual commands below are for developers or IT support.
 
 1. Confirm Node.js 20+ and local MySQL/MariaDB client tools are available through the bundled runtime folders or installed local tools.
 2. Create the local `.env` file:
@@ -70,7 +70,7 @@ For a barangay-office Windows setup, use `START-HERE.bat` first. It prefers bund
 npm run setup:env
 ```
 
-Then open `.env` and update `DB_PASSWORD` for the local MySQL account. The setup command generates a local session secret and refuses to overwrite an existing `.env` file.
+Then open `.env` and update `DB_PASSWORD` for the local MySQL account. The setup command generates a local session secret and refuses to overwrite an existing `.env` file. This manual step is for developer/IT fallback only; the one-stop `START-HERE.bat` path generates the local database password automatically when bundled MariaDB is present.
 
 3. Install dependencies:
 
@@ -195,7 +195,7 @@ On the barangay office computer:
 2. Choose `Check this computer before setup`.
 3. Fix any failed readiness checks, such as missing bundled runtime folders, installed fallback tools, or `node_modules/`.
 4. Choose `First-time setup on this computer`.
-5. Enter the local MySQL/MariaDB password when asked.
+5. If bundled `runtime\mariadb` is included, setup generates the local database password automatically. If the package falls back to an already-installed MySQL/MariaDB service, enter that service password when asked by the installer/admin.
 6. Choose `Create desktop shortcut`. This creates `Barangay Court Scheduler` for daily staff use and `Barangay Court Scheduler - Maintenance` for setup, backup, checks, and support.
 7. For daily use, double-click `Barangay Court Scheduler`. If needed, the installer/admin can still choose `Start the system for daily use` from `START-HERE.bat`.
 8. Use the address shown in the startup window if the browser does not open automatically.

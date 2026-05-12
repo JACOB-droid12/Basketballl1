@@ -14,6 +14,7 @@ $EnvPath = Join-Path $ProjectRoot ".env"
 $SchemaPath = Join-Path $ProjectRoot "database\schema.sql"
 $SeedPath = Join-Path $ProjectRoot "database\seed.sql"
 $DiagnosticsPath = Join-Path $ProjectRoot "database\diagnostics.sql"
+$BundledMariaDbServer = Join-Path $ProjectRoot "runtime\mariadb\bin\mariadbd.exe"
 
 function Test-CommandAvailable {
   param([string] $CommandName)
@@ -130,6 +131,24 @@ function Convert-SecureStringToPlainText {
   }
 }
 
+function New-LocalDatabasePassword {
+  $Alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"
+  $Bytes = New-Object byte[] 32
+  $Generator = [Security.Cryptography.RandomNumberGenerator]::Create()
+
+  try {
+    $Generator.GetBytes($Bytes)
+  } finally {
+    $Generator.Dispose()
+  }
+
+  $Characters = foreach ($Byte in $Bytes) {
+    $Alphabet[$Byte % $Alphabet.Length]
+  }
+
+  return -join $Characters
+}
+
 function Invoke-MysqlFile {
   param(
     [string] $Label,
@@ -145,7 +164,9 @@ function Invoke-MysqlFile {
   $MysqlArgs = @(
     "-h", $Settings["DB_HOST"],
     "-P", $Settings["DB_PORT"],
-    "-u", $Settings["DB_USER"]
+    "-u", $Settings["DB_USER"],
+    "--protocol=TCP",
+    "--ssl=0"
   )
 
   if ($DatabaseName -ne "") {
@@ -177,7 +198,14 @@ if (-not (Test-CommandAvailable "mysql")) {
 
 if (-not (Test-Path -LiteralPath $EnvPath)) {
   Invoke-CheckedCommand "Create .env" {
-    npm run setup:env
+    $PreviousOneStopSetup = $env:BARANGAY_OFFICE_ONE_STOP_SETUP
+    $env:BARANGAY_OFFICE_ONE_STOP_SETUP = "1"
+
+    try {
+      npm run setup:env
+    } finally {
+      $env:BARANGAY_OFFICE_ONE_STOP_SETUP = $PreviousOneStopSetup
+    }
   }
 }
 
@@ -202,9 +230,15 @@ if (-not $Settings.ContainsKey("DB_USER") -or $Settings["DB_USER"] -eq "") {
 $Settings = Read-EnvFile $EnvPath
 
 if (-not $Settings.ContainsKey("DB_PASSWORD") -or $Settings["DB_PASSWORD"] -eq "" -or $Settings["DB_PASSWORD"] -eq "your-local-mysql-password") {
-  $SecurePassword = Read-Host "Enter the local MySQL/MariaDB password for user '$($Settings["DB_USER"])'" -AsSecureString
-  $PlainPassword = Convert-SecureStringToPlainText $SecurePassword
-  Set-EnvValue $EnvPath "DB_PASSWORD" $PlainPassword
+  if (Test-Path -LiteralPath $BundledMariaDbServer) {
+    Set-EnvValue $EnvPath "DB_PASSWORD" (New-LocalDatabasePassword)
+    Write-Host "Generated a local bundled database password for this computer."
+  } else {
+    $SecurePassword = Read-Host "Enter the local MySQL/MariaDB password for user '$($Settings["DB_USER"])'" -AsSecureString
+    $PlainPassword = Convert-SecureStringToPlainText $SecurePassword
+    Set-EnvValue $EnvPath "DB_PASSWORD" $PlainPassword
+  }
+
   $Settings = Read-EnvFile $EnvPath
 }
 

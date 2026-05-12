@@ -120,7 +120,7 @@ test("backup batch file runs the local backup command with Windows preflight che
   assert.match(script, /bundled runtime\\mariadb\\bin/i);
   assert.match(script, /if not exist "node_modules"/i);
   assert.match(script, /if not exist "\.env"/i);
-  assert.match(script, /npm run backup:mysql/i);
+  assert.match(script, /call npm run backup:mysql/i);
   assert.match(script, /Backup completed/i);
   assert.match(script, /protected local or barangay-controlled external drive/i);
   assert.doesNotMatch(script, /npm install/i);
@@ -140,7 +140,7 @@ test("restore batch file is guarded for IT support restore operations", () => {
   assert.match(script, /if not exist "node_modules"/i);
   assert.match(script, /if not exist "\.env"/i);
   assert.match(script, /set \/p BACKUP_FILE=/i);
-  assert.match(script, /npm run restore:mysql -- "%BACKUP_FILE%"/i);
+  assert.match(script, /call npm run restore:mysql -- "%BACKUP_FILE%"/i);
   assert.match(script, /Restore completed/i);
   assert.match(script, /IT support/i);
   assert.doesNotMatch(script, /npm install/i);
@@ -208,12 +208,18 @@ test("one-click PowerShell setup applies schema, seed, diagnostics, and live ver
   assert.match(script, /database\\schema\.sql/);
   assert.match(script, /database\\seed\.sql/);
   assert.match(script, /database\\diagnostics\.sql/);
+  assert.match(script, /"--protocol=TCP"/);
+  assert.match(script, /"--ssl=0"/);
   assert.match(script, /npm run verify:sql/);
   assert.match(script, /npm run verify:mysql/);
   assert.match(script, /ensure-local-database\.ps1/);
   assert.match(script, /runtime\\node/);
   assert.match(script, /runtime\\mariadb\\bin/);
   assert.match(script, /installer\/admin/);
+  assert.match(script, /BARANGAY_OFFICE_ONE_STOP_SETUP/);
+  assert.match(script, /New-LocalDatabasePassword/);
+  assert.match(script, /Generated a local bundled database password/i);
+  assert.match(script, /Test-Path -LiteralPath \$BundledMariaDbServer/);
   assert.match(script, /Enter the local MySQL\/MariaDB password/);
   assert.match(script, /Setup could not continue/);
   assert.match(script, /TROUBLESHOOT-WINDOWS\.txt/);
@@ -237,7 +243,7 @@ test("one-click start batch opens the local prototype URL and starts npm", () =>
   assert.match(script, /where node >nul 2>nul/i);
   assert.match(script, /if not exist "node_modules"/i);
   assert.match(script, /if not exist "\.env"/i);
-  assert.match(script, /npm run check:database/i);
+  assert.match(script, /call npm run check:database/i);
   assert.match(script, /Local database check failed/i);
   assert.match(script, /START-HERE\.bat/i);
   assert.match(script, /exit \/b 1/i);
@@ -246,7 +252,7 @@ test("one-click start batch opens the local prototype URL and starts npm", () =>
   assert.match(script, /node scripts\\print-office-url\.mjs/);
   assert.match(script, /echo %OFFICE_URL%/);
   assert.match(script, /set "OPEN_BROWSER=1"/i);
-  assert.match(script, /npm start/);
+  assert.match(script, /call npm start/);
   assert.doesNotMatch(script, /start "" http:\/\/localhost:3000\/prototype/i);
 });
 
@@ -300,6 +306,8 @@ test("local database starter supports bundled MariaDB without global PATH", () =
   assert.doesNotMatch(script, /runtime\\mariadb-data/);
   assert.match(script, /Start-Process/);
   assert.match(script, /-WindowStyle Hidden/);
+  assert.match(script, /--log-error/);
+  assert.doesNotMatch(script, /"--console"/);
   assert.match(script, /DB_HOST/);
   assert.match(script, /DB_PORT/);
   assert.match(script, /DB_PASSWORD/);

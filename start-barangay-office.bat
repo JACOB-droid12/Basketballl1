@@ -50,7 +50,7 @@ if errorlevel 1 (
   exit /b 1
 )
 
-npm run check:database
+call npm run check:database
 if errorlevel 1 (
   echo.
   echo Local database check failed. Start MySQL/MariaDB or open START-HERE.bat and choose first-time setup, then try again.
@@ -69,7 +69,7 @@ echo %OFFICE_URL%
 echo.
 
 set "OPEN_BROWSER=1"
-npm start
+call npm start
 
 echo.
 pause

@@ -47,6 +47,8 @@ export function buildMysqlRestoreArgs(config) {
     `--host=${config.host}`,
     `--port=${config.port}`,
     `--user=${config.user}`,
+    "--protocol=TCP",
+    "--ssl=0",
     config.database
   ];
 }

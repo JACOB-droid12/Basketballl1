@@ -6,7 +6,11 @@ Make the Basketball Court Scheduling System a true one-stop offline Windows setu
 
 ## Current Milestone
 
-The current milestone is one-stop offline Windows packaging. Runtime/package verification, deployment-candidate bundle verification, strict one-stop bundle validation, portable-runtime-first startup support, staff-friendly daily/maintenance launcher separation, and offline bundle creation are implemented in code and tests. The current workspace/package is still a deployment candidate only until `runtime\node` and `runtime\mariadb` are assembled into the package and strict verification passes. The portable MariaDB data folder is now aligned to `data\mariadb-data` and is generated empty in the offline bundle so real office data is not copied into releases.
+The current milestone is one-stop offline Windows packaging. Runtime/package verification, deployment-candidate bundle verification, strict one-stop bundle validation, portable-runtime-first startup support, staff-friendly daily/maintenance launcher separation, and offline bundle creation are implemented in code and tests. The current generated bundle at `dist\barangay-court-scheduler-offline` has been rebuilt with bundled `runtime\node`, bundled `runtime\mariadb`, `node_modules`, schema files, launchers, documentation, and an empty `data\mariadb-data` folder. Strict one-stop validation now passes on this Windows PC.
+
+## Latest Status
+
+As of 2026-05-13, the package is true one-stop ready for this milestone on this PC. `START-HERE.bat` setup was verified through its first-time setup script path from the generated bundle without internet downloads: it created `.env`, generated a local bundled MariaDB password automatically, initialized `data\mariadb-data`, started bundled MariaDB from `runtime\mariadb`, applied schema/seed/diagnostics, and passed live MySQL verification. The daily launcher was verified with the generated bundle, the app opened at `http://127.0.0.1:3000`, and Chrome DevTools verified login, account creation, dashboard access, prototype reservation creation, overlap rejection, missed status update, schedule display, and activity logging. Backup and restore were also verified from the generated bundle using bundled MariaDB tools.
 
 ## Completed Work
 
@@ -86,6 +90,11 @@ The current milestone is one-stop offline Windows packaging. Runtime/package ver
 - Added `maintenance-tools\restore-database.bat` as a guarded IT-support restore flow that requires typing `RESTORE`, checks local runtime/database tooling, asks for a `.sql` backup path, and calls `npm run restore:mysql -- <backup.sql>`.
 - Added `maintenance-tools\load-runtime-env.bat` so Windows launchers prefer bundled `runtime\node` and `runtime\mariadb\bin` tools before installed fallback tools, avoiding manual PATH editing for ordinary staff.
 - Added `scripts\ensure-local-database.ps1` so daily startup and first-time setup can detect a configured local database, start bundled `runtime\mariadb` when present, or show a simple fallback message when no bundled runtime/default local service exists.
+- Aligned bundled MariaDB data storage to `data\mariadb-data` so the required package structure, generated bundle, setup script, and runtime verifier use the same portable local database folder.
+- Updated first-time setup so true one-stop packages with bundled MariaDB generate a local database password automatically instead of asking non-technical staff to type one.
+- Updated MySQL/MariaDB setup, backup, and restore commands to force TCP with SSL disabled for local bundled MariaDB tools, avoiding local Windows client TLS/SSPI credential errors.
+- Updated Windows batch launchers to use `call npm ...` so `.bat` wrappers continue running after npm commands complete.
+- Updated the setup environment message so `START-HERE.bat` tells users it will finish the local database password automatically in one-stop setup mode instead of telling them to edit `DB_PASSWORD` manually.
 - Updated `START-HERE.bat` to group backup, restore, readiness check, database-only setup, shortcut creation, and sign-off under `Maintenance/admin tools` while keeping daily startup and first-time setup as the first choices.
 - Updated `README-FIRST-WINDOWS.txt`, `TROUBLESHOOT-WINDOWS.txt`, `README.md`, `docs\DEPLOYMENT_GUIDE.md`, and `docs\OFFLINE_INSTALL_CHECKLIST.md` to describe the portable/bundled runtime approach first, with offline installers/admin permission only as a fallback when runtime folders are missing.
 - Added `create-desktop-shortcut.bat` and `scripts/create-desktop-shortcut.ps1` so staff can create two Desktop shortcuts: `Barangay Court Scheduler` for daily use through `start-barangay-office.bat`, and `Barangay Court Scheduler - Maintenance` for setup, backup, database checks, sign-off, and support through `START-HERE.bat`.
@@ -264,6 +273,18 @@ The current milestone is one-stop offline Windows packaging. Runtime/package ver
 
 ## Tests Run
 
+- 2026-05-13 one-stop package completion pass: `npm test -- tests\oneClickSetup.test.js tests\mysqlBackup.test.js tests\mysqlRestore.test.js` passed with 30/30 focused setup/backup/restore tests after the Windows batch `call npm` fixes.
+- 2026-05-13 one-stop package completion pass: `npm test` passed with 166/166 tests.
+- 2026-05-13 one-stop package completion pass: `npm run verify:foundation` passed.
+- 2026-05-13 one-stop package completion pass: `npm run verify:sql` passed.
+- 2026-05-13 one-stop package completion pass: `npm run bundle:offline` regenerated `dist\barangay-court-scheduler-offline` with bundled runtime folders and an empty `data\mariadb-data` folder.
+- 2026-05-13 one-stop package completion pass: `npm run verify:runtime-package` passed and classified the workspace as `true one-stop offline package`.
+- 2026-05-13 one-stop package completion pass: `npm run verify:bundle`, `npm run verify:bundle:strict`, and `node dist\barangay-court-scheduler-offline\scripts\verify-runtime-package.mjs dist\barangay-court-scheduler-offline` passed.
+- 2026-05-13 setup message TDD pass: `npm test -- tests\setupEnv.test.js tests\oneClickSetup.test.js` first failed because one-stop setup still printed a manual `DB_PASSWORD` instruction, then passed after setup enabled `BARANGAY_OFFICE_ONE_STOP_SETUP` mode and `setup-env` printed the automatic-password message.
+- 2026-05-13 generated-bundle live setup pass: running `cmd.exe /d /c "call maintenance-tools\load-runtime-env.bat && powershell -NoProfile -ExecutionPolicy Bypass -File scripts\setup-barangay-office.ps1"` from `dist\barangay-court-scheduler-offline` created `.env`, generated a bundled database password, initialized `data\mariadb-data`, started bundled MariaDB, applied schema/seed/diagnostics, and passed `npm run verify:mysql`.
+- 2026-05-13 generated-bundle daily launcher pass: `start-barangay-office.bat` launched the app from the generated bundle and `http://127.0.0.1:3000/health` returned `{"status":"ok","milestone":"foundation"}`.
+- 2026-05-13 generated-bundle maintenance pass: `npm run backup:mysql` created `backups\barangay_court_scheduler_2026-05-13_0201.sql`, `npm run restore:mysql -- backups\barangay_court_scheduler_2026-05-13_0201.sql` restored it, `npm run check:database` passed, and `npm run verify:mysql` passed after restore.
+- 2026-05-13 generated-bundle offline runtime pass: `cmd.exe /d /c "call maintenance-tools\load-runtime-env.bat && call npm run verify:offline-runtime"` passed from the generated bundle.
 - One-stop runtime verifier Task 1 on 2026-05-12: TDD red check first failed because `scripts\verify-runtime-package.mjs` did not exist. Added `scripts\verify-runtime-package.mjs`, `tests\runtimePackage.test.js`, and `npm run verify:runtime-package`.
 - One-stop strict bundle validation on 2026-05-12: TDD red checks first failed because `scripts\verify-offline-bundle.mjs` had no deployment-candidate/strict mode. Added candidate/strict mode reporting, `npm run verify:bundle:strict`, strict runtime/app checks, and documentation for deployment candidate mode versus true one-stop offline package mode.
 - Portable data-folder alignment on 2026-05-13: TDD red checks first failed because bundled MariaDB startup still used `runtime\mariadb-data` and the bundle creator did not create `data\mariadb-data`. Updated `scripts\ensure-local-database.ps1` to use `data\mariadb-data` and `data\logs`, updated `scripts\create-offline-bundle.ps1` to create an empty portable data folder in generated bundles, added `data\mariadb-data\.gitkeep`, and ignored generated database/log contents.
@@ -275,16 +296,16 @@ The current milestone is one-stop offline Windows packaging. Runtime/package ver
 - `npm run verify:sql` - passed after adding the runtime package verifier.
 - `npm run bundle:offline` - passed; still reported optional `runtime` and `installers` folders missing in this workspace.
 - `npm run verify:bundle` - passed after regenerating the offline bundle.
-- `npm run verify:runtime-package` - intentionally failed in this workspace because `runtime\node` and `runtime\mariadb` are not present; this is the expected current deployment-candidate signal, not an app regression.
-- `npm run verify:bundle:strict` - intentionally failed in this workspace because the regenerated bundle does not include `runtime\node`, `runtime\mariadb`, or `data\mariadb-data`; this confirms the package is not yet a true one-stop offline package.
+- Historical 2026-05-12 check: `npm run verify:runtime-package` intentionally failed before bundled `runtime\node` and `runtime\mariadb` were added; this is no longer the current state.
+- Historical 2026-05-12 check: `npm run verify:bundle:strict` intentionally failed before bundled runtime folders and `data\mariadb-data` were included; this is no longer the current state.
 - `npm test -- tests\oneClickSetup.test.js tests\offlineBundle.test.js tests\runtimePackage.test.js` - passed with 28/28 focused tests after moving bundled MariaDB data/logs to `data\mariadb-data` / `data\logs`.
 - `npm test` - passed with 165/165 tests after the portable data-folder alignment.
 - `npm run verify:foundation` - passed after the portable data-folder alignment.
 - `npm run verify:sql` - passed after the portable data-folder alignment.
 - `npm run bundle:offline` - passed and regenerated `dist\barangay-court-scheduler-offline` with an empty `data\mariadb-data` folder.
 - `npm run verify:bundle` - passed in deployment-candidate mode after regenerating the offline bundle.
-- `npm run verify:runtime-package` - intentionally failed in this workspace because `runtime\node` and `runtime\mariadb` are not present; `data\mariadb-data`, app files, schema files, and dependencies now pass.
-- `npm run verify:bundle:strict` - intentionally failed because the regenerated bundle still does not include `runtime\node` or `runtime\mariadb`; `data\mariadb-data`, app files, schema files, and dependencies now pass.
+- Historical 2026-05-13 pre-runtime check: `npm run verify:runtime-package` intentionally failed before bundled runtime folders were assembled; `data\mariadb-data`, app files, schema files, and dependencies passed at that point.
+- Historical 2026-05-13 pre-runtime check: `npm run verify:bundle:strict` intentionally failed before bundled `runtime\node` and `runtime\mariadb` were included; this is no longer the current state.
 - Sign-off URL alignment on 2026-05-12: TDD red checks first failed while the office sign-off report and first-run guide still used a hardcoded `http://localhost:3000/prototype` browser instruction. `scripts\run-office-signoff.ps1` now uses `scripts\print-office-url.mjs` for the report checklist URL, and `README-FIRST-WINDOWS.txt`, `README.md`, `docs\DEPLOYMENT_GUIDE.md`, and `docs\OFFLINE_INSTALL_CHECKLIST.md` now describe `localhost:3000` as the default address while telling staff to use the startup-window address when `APP_PORT` changes.
 - `npm test -- tests\oneClickSetup.test.js tests\officeUrlPrinter.test.js` - passed with 18/18 focused tests after the sign-off URL alignment.
 - PowerShell parser check for `scripts\run-office-signoff.ps1` - passed after the sign-off URL alignment.
@@ -697,6 +718,11 @@ The current milestone is one-stop offline Windows packaging. Runtime/package ver
 
 ## Manual Verification Performed
 
+- 2026-05-13 one-stop generated-bundle setup was run from `dist\barangay-court-scheduler-offline` using the bundled runtime loader. The setup created `.env`, printed the corrected automatic-password message, generated a local bundled MariaDB password, initialized `data\mariadb-data`, started bundled MariaDB on `127.0.0.1:3306`, applied schema and seed files, ran diagnostics, and passed live MySQL verification.
+- 2026-05-13 daily launcher was started from the generated offline bundle. A persistent Windows process kept the app available after startup, and a separate health check returned `{"status":"ok","milestone":"foundation"}` from `http://127.0.0.1:3000/health`.
+- 2026-05-13 Chrome DevTools browser verification opened `http://127.0.0.1:3000/prototype`, logged in with `admin` / `admin123`, created a Staff account, opened the dashboard, created a reservation through the prototype UI, confirmed the schedule showed reserved slots, submitted a deliberate overlapping reservation and received HTTP 409, marked the reservation missed through the local API, confirmed `/schedule?date=2026-05-15` showed `Missed` and available slots, and confirmed `/activity-logs` showed `CREATE_RESERVATION` and `MARK_MISSED`.
+- 2026-05-13 backup and restore were manually verified from the generated bundle through `maintenance-tools\load-runtime-env.bat`, `npm run backup:mysql`, and `npm run restore:mysql -- backups\barangay_court_scheduler_2026-05-13_0201.sql`. `npm run check:database` and `npm run verify:mysql` passed after restore.
+- 2026-05-13 offline/no-internet behavior was checked by strict bundle verification, runtime package verification, generated-bundle runtime package verification, and `npm run verify:offline-runtime` from the generated bundle. No setup step downloaded packages or required manual PATH edits.
 - Confirmed the workspace is a new git repo with no existing program files.
 - Confirmed Node.js and npm are installed.
 - Confirmed the current sandbox does not expose `mysql`, PHP, Composer, Flask, or MySQL Python connector packages.
@@ -748,29 +774,26 @@ The current milestone is one-stop offline Windows packaging. Runtime/package ver
 - Confirmed the deployment focus is Windows only; do not add non-Windows setup wrappers unless the project scope changes.
 - Browser-verified the served prototype at `http://127.0.0.1:3341/prototype?completion-audit=2026-05-12` with Chrome DevTools during the 2026-05-12 completion-audit refresh. The visible login screen rendered, `/health` returned OK, `/api/prototype/session` returned unauthenticated JSON, and all observed network requests were local `127.0.0.1` or embedded `data:` resources.
 - Reconfirmed during the 2026-05-12 completion-audit refresh that this shell still cannot complete real office sign-off: `npm run verify:prereqs` is missing `mysql` and `mysqldump`, `npm run check:database` cannot reach `127.0.0.1:3306/barangay_court_scheduler`, and `npm run verify:mysql` reports `connect ECONNREFUSED 127.0.0.1:3306`.
-- Confirmed `npm run verify:runtime-package` now reports each missing bundled runtime file directly: `runtime\node\node.exe`, `runtime\node\npm.cmd`, `runtime\mariadb\bin\mariadbd.exe`, `runtime\mariadb\bin\mariadb-install-db.exe`, `runtime\mariadb\bin\mysql.exe`, and `runtime\mariadb\bin\mysqldump.exe`.
-- Confirmed `npm run verify:runtime-package` now classifies the current workspace as `deployment candidate only`, with app files, dependencies, schema files, and `data\mariadb-data` present but bundled runtime files still missing.
-- Confirmed the regenerated `dist\barangay-court-scheduler-offline` folder includes `scripts\verify-runtime-package.mjs` and an empty `data\mariadb-data` folder; `npm run verify:bundle` passes in deployment candidate mode, while `npm run verify:bundle:strict` fails until bundled Node and MariaDB runtime files are included.
+- Confirmed `npm run verify:runtime-package` reports bundled runtime files directly and now classifies the current workspace as `true one-stop offline package` when `runtime\node` and `runtime\mariadb` are present.
+- Confirmed the regenerated `dist\barangay-court-scheduler-offline` folder includes `scripts\verify-runtime-package.mjs`, bundled `runtime\node`, bundled `runtime\mariadb`, `node_modules`, schema files, launchers, docs, and an empty `data\mariadb-data` folder; `npm run verify:bundle:strict` passes.
 
 ## Known Risks
 
-- Oracle MySQL is still not installed as a normal system service in this sandbox, and no container runtime is available. Disposable Oracle MySQL 9.7.0 and MariaDB 12.2.2 servers both passed live verification locally, but setup and `npm run verify:mysql` should still be repeated on the actual barangay office database installation before presentation/deployment sign-off.
-- `START-HERE.bat` and `start-barangay-office.bat` now prefer bundled runtime folders, but the generated offline bundle in this workspace does not currently include `runtime\node` or `runtime\mariadb`; `npm run bundle:offline` reported both optional runtime folders missing. Test installation on another Windows PC should either include those runtime folders or use installer/admin support to provide Node.js and local MySQL/MariaDB.
-- The first implementation step from `docs\superpowers\plans\2026-05-12-one-stop-offline-windows-setup.md` is now in place: `scripts\verify-runtime-package.mjs`, `tests\runtimePackage.test.js`, and `npm run verify:runtime-package`. The verifier intentionally fails in the current workspace because `runtime\node` and `runtime\mariadb` are absent. Strict bundle mode and a deployment-preparation wrapper are still not implemented.
-- Current Windows-only local audit is blocked only by the live environment: this shell has no normal `mysql` / `mysqldump` on PATH and no default local MySQL/MariaDB service on `127.0.0.1:3306`. The 2026-05-12 completion-audit refresh reconfirmed this with `npm run verify:prereqs`, `npm run check:database`, and `npm run verify:mysql`.
-- Add/list/edit/schedule/status/login/account/activity-log code is implemented and covered by automated tests and disposable local MySQL verification; the remaining live-flow check is against the actual barangay office database installation.
-- Live browser/printer output still needs a final check on the barangay office computer because print margins depend on the installed browser and printer.
+- Runtime folders are ignored by git because they contain third-party binaries. The current local package can be regenerated on this PC because `runtime\node` and `runtime\mariadb` exist in the workspace, but the repository alone is not the full binary package. Keep the generated `dist\barangay-court-scheduler-offline` folder or rebuild it from a setup machine that has the same runtime folders.
+- The milestone target is local Windows setup/installability only. Actual barangay-office deployment, printer output, staff workflow sign-off, and external-PC testing remain outside this milestone even though the generated package is ready for test installation on another normal Windows PC.
+- The generated bundle now initializes its own bundled MariaDB data folder. Do not copy a generated package after using it with real resident data unless the installer/admin intentionally wants to preserve that data. For a clean install package, rebuild the bundle so `data\mariadb-data` starts empty.
+- Live browser/printer output still needs a later final check on the barangay office computer because printer margins and default-browser behavior depend on that actual PC.
 - Work is currently on `main`; earlier branch creation issues are no longer an active blocker for this workspace.
 
 ## Blockers
 
-- No implementation blocker remains for core reservation, schedule, account, SQL setup, backup/restore, or offline bundle work. Live verification passed on disposable local Oracle MySQL and MariaDB servers.
-- Remaining deployment blocker: the same verification must be rerun on the real barangay office local MySQL/MariaDB installation, because the disposable server under `tmp\` is development evidence only and is not part of the shipped offline bundle.
+- No blocker remains for the current one-stop offline Windows setup milestone on this PC.
+- Final barangay-office deployment sign-off is intentionally not part of this milestone and remains a later real-environment activity.
 
 ## Recommended Next Step
 
-Continue executing `docs\superpowers\plans\2026-05-12-one-stop-offline-windows-setup.md` with Task 2, strict bundle mode, so the project can distinguish a deployment candidate from a true one-stop offline package at bundle time. After that, use `dist\barangay-court-scheduler-offline` for the next Windows test installation. Prefer adding bundled `runtime\node` and `runtime\mariadb` folders before copying it to another PC; otherwise provide offline Node.js/MySQL/MariaDB installers through the installer/admin. On the test PC, double-click `START-HERE.bat`, choose `Check this computer before setup`, then `First-time setup on this computer`, then `Create desktop shortcuts`. Give ordinary staff the `Barangay Court Scheduler` Desktop shortcut plus `STAFF-DAILY-USE.txt` for daily startup. Keep the report from `reports\office-signoff`, and complete the manual checklist for login using `admin` / `admin123`, changing the starter password, account creation, add/edit reservation, overlap rejection, schedule links, status updates, activity-log viewing, CSV export, print controls, and reservation details.
+Use `dist\barangay-court-scheduler-offline` as the current one-stop test package. For another Windows PC, copy or extract that folder, double-click `START-HERE.bat`, choose `Check this computer before setup`, then `First-time setup on this computer`, then `Create desktop shortcuts`. Give ordinary staff the `Barangay Court Scheduler` Desktop shortcut plus `STAFF-DAILY-USE.txt` for daily startup. Later, for real barangay-office deployment, run the same package on the actual office PC and complete office sign-off, including real browser behavior, printer output if needed, backup location, staff workflow, and barangay personnel acknowledgement.
 
 ## Suggested Next Prompt
 
-Continue from `docs/CODEX_HANDOFF.md`. Execute Task 2 in `docs\superpowers\plans\2026-05-12-one-stop-offline-windows-setup.md` with TDD, then verify bundle/runtime status. If the actual Windows office MySQL/MariaDB environment is available, use `START-HERE.bat` to run setup/start/sign-off, keep the generated report under `reports\office-signoff`, then finish the manual checklist. Otherwise, perform a completion audit against the current milestone and list only the remaining live-environment gaps.
+Continue from `docs/CODEX_HANDOFF.md`. The one-stop offline Windows setup milestone has been verified locally on this PC. Next, either prepare a clean copy of `dist\barangay-court-scheduler-offline` for test installation on another Windows PC, or begin the later final barangay-office deployment/sign-off milestone.

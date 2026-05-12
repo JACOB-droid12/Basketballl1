@@ -72,6 +72,11 @@ runtime\mariadb
   present, the launchers use runtime\mariadb\bin automatically and can start
   the local database without asking staff to edit PATH.
 
+When runtime\mariadb is included, first-time setup creates the local
+data\mariadb-data database folder and generates a local database password for
+this computer automatically. Staff do not need to type a database password in
+that true one-stop package mode.
+
 If the bundled runtime is missing, START-HERE.bat falls back to Node.js and
 MySQL/MariaDB already installed on the computer. Installing those programs may
 require administrator permission. If node_modules is missing, the deployment
@@ -82,7 +87,10 @@ FIRST RUN
 1. Double-click START-HERE.bat.
 2. Optional but recommended: choose "Check this computer before setup".
 3. Choose "First-time setup on this computer".
-4. Enter the local MySQL/MariaDB password when asked.
+4. If the package includes runtime\mariadb, setup generates the local database
+   password automatically. If runtime\mariadb is missing and the PC uses an
+   already-installed MySQL/MariaDB service, enter that local database password
+   when asked by the installer/admin.
 5. Choose "Create desktop shortcuts".
 6. For daily use, double-click Barangay Court Scheduler on the Desktop.
 7. If the browser does not open automatically, use the address shown in the startup window.

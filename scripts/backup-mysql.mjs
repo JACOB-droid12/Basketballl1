@@ -35,6 +35,8 @@ export function buildMysqldumpArgs(config, backupFilePath) {
     `--host=${config.host}`,
     `--port=${config.port}`,
     `--user=${config.user}`,
+    "--protocol=TCP",
+    "--ssl=0",
     "--single-transaction",
     "--routines",
     "--triggers",
