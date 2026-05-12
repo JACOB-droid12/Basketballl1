@@ -6,6 +6,36 @@ Deployment is Windows-only for this project. Use the included `.bat` files and P
 
 The intended deployment separates ordinary staff use from technical maintenance: `Barangay Court Scheduler` starts the local system for daily work, while `Barangay Court Scheduler - Maintenance` opens setup, backup, database checks, sign-off, and support tools.
 
+## Package Modes
+
+Deployment candidate mode:
+
+- The package can run offline if the Windows PC already has Node.js and MySQL/MariaDB installed, or if bundled runtimes are included.
+- Check with `npm run verify:bundle`.
+
+True one-stop offline package mode:
+
+- The package itself includes every required runtime and app file.
+- It should not need internet, global Node.js, global MySQL/MariaDB, manual PATH editing, manual `npm install`, or manual SQL import.
+- Check with `npm run verify:runtime-package` and `npm run verify:bundle:strict`.
+
+Strict one-stop mode requires:
+
+- `runtime\node\node.exe`
+- `runtime\node\npm.cmd`
+- `runtime\mariadb\bin\mariadbd.exe`
+- `runtime\mariadb\bin\mariadb-install-db.exe`
+- `runtime\mariadb\bin\mariadb.exe or runtime\mariadb\bin\mysql.exe`
+- `runtime\mariadb\bin\mysqldump.exe`
+- `data\mariadb-data`
+- `node_modules` or a built backend output
+- database schema files
+- `START-HERE.bat`
+- Barangay Court Scheduler daily launcher
+- Maintenance Tools launcher
+- `README-FIRST-WINDOWS.txt`
+- `TROUBLESHOOT-WINDOWS.txt`
+
 ## What Offline Means
 
 - The reservation system opens at `http://localhost:3000/prototype` by default. If `APP_PORT` is changed in `.env`, use the address shown in the startup window.

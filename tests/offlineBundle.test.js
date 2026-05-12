@@ -51,6 +51,39 @@ test("offline bundle verifier accepts a complete prepared bundle", () => {
     const report = analyzeOfflineBundle(bundleRoot);
 
     assert.equal(report.ok, true);
+    assert.equal(report.mode, "candidate");
+  } finally {
+    rmSync(bundleRoot, { recursive: true, force: true });
+  }
+});
+
+test("offline bundle verifier rejects strict one-stop mode when bundled runtime is missing", () => {
+  const bundleRoot = createTemporaryBundle();
+
+  try {
+    const report = analyzeOfflineBundle(bundleRoot, { mode: "strict" });
+    const formatted = formatOfflineBundleReport(report);
+
+    assert.equal(report.ok, false);
+    assert.equal(report.mode, "strict");
+    assert.match(formatted, /bundle verification mode - strict one-stop offline package/);
+    assert.match(formatted, /strict one-stop runtime: runtime\/node\/node\.exe/);
+    assert.match(formatted, /strict one-stop runtime: runtime\/mariadb\/bin\/mariadbd\.exe/);
+  } finally {
+    rmSync(bundleRoot, { recursive: true, force: true });
+  }
+});
+
+test("offline bundle verifier accepts strict one-stop mode with bundled runtime", () => {
+  const bundleRoot = createTemporaryBundle({
+    includeRuntime: true
+  });
+
+  try {
+    const report = analyzeOfflineBundle(bundleRoot, { mode: "strict" });
+
+    assert.equal(report.ok, true);
+    assert.equal(report.mode, "strict");
   } finally {
     rmSync(bundleRoot, { recursive: true, force: true });
   }
@@ -126,8 +159,21 @@ function createTemporaryBundle(options = {}) {
     "scripts/create-desktop-shortcut.ps1",
     "scripts/run-office-signoff.ps1",
     "scripts/setup-barangay-office.ps1",
+    "scripts/verify-runtime-package.mjs",
     "scripts/verify-mysql.mjs"
   ];
+
+  if (options.includeRuntime) {
+    requiredItems.push(
+      "runtime/node/node.exe",
+      "runtime/node/npm.cmd",
+      "runtime/mariadb/bin/mariadbd.exe",
+      "runtime/mariadb/bin/mariadb-install-db.exe",
+      "runtime/mariadb/bin/mysql.exe",
+      "runtime/mariadb/bin/mysqldump.exe",
+      "data/mariadb-data/"
+    );
+  }
 
   for (const itemPath of requiredItems) {
     if (omit.has(itemPath)) {
@@ -135,7 +181,7 @@ function createTemporaryBundle(options = {}) {
     }
 
     const fullPath = path.join(bundleRoot, itemPath);
-    if (itemPath === "node_modules") {
+    if (itemPath === "node_modules" || itemPath.endsWith("/")) {
       mkdirSync(fullPath, { recursive: true });
     } else {
       mkdirSync(path.dirname(fullPath), { recursive: true });

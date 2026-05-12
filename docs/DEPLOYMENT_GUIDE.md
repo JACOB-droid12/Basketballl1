@@ -4,6 +4,37 @@ Offline local deployment guide for the Barangay Sto. Niño Basketball Court Sche
 
 The final target is a barangay office computer running the app and a local MySQL/MariaDB database with no internet connection required during normal use. The preferred deployment package includes the app, `node_modules`, and portable runtime folders so staff do not edit PATH or understand Node/MySQL details. If those runtime folders are not supplied, a separate setup computer or installer/admin must provide the offline installers first.
 
+## Package Modes
+
+Deployment candidate mode means the folder can run offline if the PC already has local Node.js and MySQL/MariaDB tools, or if the optional bundled runtime folders are present.
+
+True one-stop offline package mode means the folder itself must include every runtime file needed for setup with no internet, no global Node.js, no global MySQL/MariaDB, no manual PATH editing, no manual `npm install`, and no manual SQL import. Required one-stop files include:
+
+- `runtime\node\node.exe`
+- `runtime\node\npm.cmd`
+- `runtime\mariadb\bin\mariadbd.exe`
+- `runtime\mariadb\bin\mariadb-install-db.exe`
+- `runtime\mariadb\bin\mariadb.exe or runtime\mariadb\bin\mysql.exe`
+- `runtime\mariadb\bin\mysqldump.exe`
+- `data\mariadb-data`
+- `node_modules` or a built backend output
+- database schema files under `database\`
+- `START-HERE.bat`
+- `start-barangay-office.bat` as the Barangay Court Scheduler daily launcher target
+- `START-HERE.bat` as the Maintenance Tools launcher target
+- `README-FIRST-WINDOWS.txt`
+- `TROUBLESHOOT-WINDOWS.txt`
+
+Run these checks on the setup computer:
+
+```powershell
+npm run verify:runtime-package
+npm run verify:bundle
+npm run verify:bundle:strict
+```
+
+`npm run verify:bundle` validates deployment candidate mode. `npm run verify:bundle:strict` validates strict one-stop mode.
+
 ## Required Runtime
 
 - Windows 10 or Windows 11

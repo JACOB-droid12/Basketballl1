@@ -47,7 +47,7 @@
 - Create: `tests/runtimePackage.test.js`
 - Modify: `package.json`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `tests/runtimePackage.test.js`:
 
@@ -113,7 +113,7 @@ function createRuntimeRoot(files) {
 }
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run:
 
@@ -123,7 +123,7 @@ npm test -- tests\runtimePackage.test.js
 
 Expected: FAIL because `scripts/verify-runtime-package.mjs` does not exist yet.
 
-- [ ] **Step 3: Implement the minimal verifier**
+- [x] **Step 3: Implement the minimal verifier**
 
 Create `scripts/verify-runtime-package.mjs`:
 
@@ -196,7 +196,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
 }
 ```
 
-- [ ] **Step 4: Add package script**
+- [x] **Step 4: Add package script**
 
 Modify `package.json` scripts:
 
@@ -204,7 +204,7 @@ Modify `package.json` scripts:
 "verify:runtime-package": "node scripts/verify-runtime-package.mjs"
 ```
 
-- [ ] **Step 5: Verify green**
+- [x] **Step 5: Verify green**
 
 Run:
 
@@ -214,7 +214,7 @@ npm test -- tests\runtimePackage.test.js
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add package.json scripts/verify-runtime-package.mjs tests/runtimePackage.test.js
@@ -226,6 +226,12 @@ git commit -m "test: add offline runtime package verifier"
 **Files:**
 - Modify: `scripts/create-offline-bundle.ps1`
 - Modify: `tests/offlineBundle.test.js`
+
+**Status note:** The later user request narrowed this checkpoint to strict
+validation in `scripts/verify-offline-bundle.mjs`, not strict creation in
+`scripts/create-offline-bundle.ps1`. Candidate and strict verification modes
+are now implemented; a creation-time `-RequireBundledRuntime` switch remains
+optional future hardening.
 
 - [ ] **Step 1: Write the failing test**
 

@@ -7,6 +7,36 @@ This system is Windows-only for deployment in this project.
 It runs offline on the office computer and uses local MySQL or MariaDB.
 Residents do not reserve online.
 
+PACKAGE MODES
+
+Deployment candidate mode:
+  The folder can run offline when Node.js and MySQL/MariaDB are either already
+  installed on the PC or supplied through bundled runtime folders.
+
+True one-stop offline package mode:
+  No internet is required if the package is complete. The folder must include
+  these files before it can be treated as a one-stop package:
+
+  runtime\node\node.exe
+  runtime\node\npm.cmd
+  runtime\mariadb\bin\mariadbd.exe
+  runtime\mariadb\bin\mariadb-install-db.exe
+  runtime\mariadb\bin\mariadb.exe or runtime\mariadb\bin\mysql.exe
+  runtime\mariadb\bin\mysqldump.exe
+  data\mariadb-data
+  node_modules or a built backend output
+  database\schema.sql, database\seed.sql, and database\diagnostics.sql
+  START-HERE.bat
+  start-barangay-office.bat
+  maintenance-tools
+
+If runtime\node or runtime\mariadb is missing, the verifier reports
+"Runtime package verification failed" and the folder is still deployment
+candidate mode only.
+
+After setup, staff should only use the daily launcher after setup:
+Barangay Court Scheduler.
+
 IF UNSURE, DOUBLE-CLICK THIS FIRST
 
 START-HERE.bat

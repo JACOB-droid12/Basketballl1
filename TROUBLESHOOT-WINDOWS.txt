@@ -4,6 +4,31 @@ WINDOWS OFFLINE TROUBLESHOOTING
 Use this file on the barangay office computer when a setup, startup, or
 sign-off check prints an error.
 
+PACKAGE MODES
+
+Deployment candidate mode means the folder may work if Node.js and
+MySQL/MariaDB are already installed locally, or if bundled runtime folders are
+present.
+
+True one-stop offline package mode means the folder must include:
+
+runtime\node\node.exe
+runtime\node\npm.cmd
+runtime\mariadb\bin\mariadbd.exe
+runtime\mariadb\bin\mariadb-install-db.exe
+runtime\mariadb\bin\mariadb.exe or runtime\mariadb\bin\mysql.exe
+runtime\mariadb\bin\mysqldump.exe
+data\mariadb-data
+node_modules or a built backend output
+database schema files
+START-HERE.bat
+Barangay Court Scheduler daily launcher
+Maintenance Tools launcher
+
+If the runtime verifier says "Runtime package verification failed", the package
+is incomplete for true one-stop offline package mode. Add the missing
+runtime\node or runtime\mariadb files, then rebuild or recopy the folder.
+
 1. "Node.js was not found" or "npm was not found"
 
 The launcher first looks for bundled Node at runtime\node. If that folder is
@@ -73,6 +98,22 @@ If the message says the health check did not respond, another program may be
 using the same port. Close the other program, restart the computer if needed,
 then double-click Barangay Court Scheduler again. If the same message appears,
 ask technical support to change APP_PORT in .env.
+
+This is a port conflict. It does not mean the system needs internet.
+
+8A. Windows blocks executables
+
+If Windows blocks executables from runtime\node or runtime\mariadb, right-click
+the copied folder or blocked file, open Properties, choose Unblock if available,
+then run START-HERE.bat again. If the PC is managed by an administrator, ask the
+administrator to allow the local offline runtime folder.
+
+8B. Database fails to start
+
+If the database fails to start, check that runtime\mariadb\bin\mariadbd.exe and
+runtime\mariadb\bin\mariadb-install-db.exe exist. Also check that the copied
+folder is in a writable location because the local data folder must be created
+under data\mariadb-data or the configured runtime data folder.
 
 9. Sign-off report fails
 

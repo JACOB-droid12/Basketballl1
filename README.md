@@ -36,6 +36,29 @@ Deployment focus is Windows only for this project. Use the included `.bat` and P
 
 The deployment goal is a high-quality, fully tested offline Windows local web application: staff use the supplied prototype UI in a browser, the backend and MySQL/MariaDB database run on the barangay office computer, daily use is started from a simple Desktop shortcut, and setup/backup/checks are kept in a separate maintenance launcher. The safest automation path is portable/bundled runtime support: launchers prefer `runtime\node` and `runtime\mariadb` when those folders are supplied, then fall back to installed local tools for development machines.
 
+## Offline Package Modes
+
+Deployment candidate mode means the folder can run offline when Node.js and MySQL/MariaDB are supplied either by bundled runtime folders or by already-installed local tools on the PC.
+
+True one-stop offline package mode means setup should not need internet, global Node.js, global MySQL/MariaDB, manual PATH edits, manual `npm install`, or manual SQL import. The package must include:
+
+- `runtime\node\node.exe`
+- `runtime\node\npm.cmd`
+- `runtime\mariadb\bin\mariadbd.exe`
+- `runtime\mariadb\bin\mariadb-install-db.exe`
+- `runtime\mariadb\bin\mariadb.exe or runtime\mariadb\bin\mysql.exe`
+- `runtime\mariadb\bin\mysqldump.exe`
+- `data\mariadb-data`
+- `node_modules` or a built backend output
+- database schema files
+- `START-HERE.bat`
+- Barangay Court Scheduler daily launcher
+- Maintenance Tools launcher
+- `README-FIRST-WINDOWS.txt`
+- `TROUBLESHOOT-WINDOWS.txt`
+
+Use `npm run verify:runtime-package` to classify the current folder. Use `npm run verify:bundle` for deployment candidate mode and `npm run verify:bundle:strict` for true one-stop offline package mode.
+
 ## Quick Start
 
 For a barangay-office Windows setup, use `START-HERE.bat` first. It prefers bundled `runtime\node` and `runtime\mariadb` folders when they are included, checks the deployment folder, starts bundled MariaDB when practical, and shows a plain error if the package is incomplete. The manual commands below are for developers or IT support.

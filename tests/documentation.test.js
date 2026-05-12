@@ -56,3 +56,32 @@ test("Windows beginner docs separate daily use from maintenance tools", () => {
   assert.match(mainReadme, /maintenance-tools/i);
   assert.match(mainReadme, /portable\/bundled runtime/i);
 });
+
+test("Windows docs explain deployment candidate and true one-stop package modes", () => {
+  const firstRunGuide = readFileSync("README-FIRST-WINDOWS.txt", "utf8");
+  const troubleshooting = readFileSync("TROUBLESHOOT-WINDOWS.txt", "utf8");
+  const mainReadme = readFileSync("README.md", "utf8");
+  const deploymentGuide = readFileSync("docs/DEPLOYMENT_GUIDE.md", "utf8");
+  const offlineChecklist = readFileSync("docs/OFFLINE_INSTALL_CHECKLIST.md", "utf8");
+
+  for (const content of [firstRunGuide, troubleshooting, mainReadme, deploymentGuide, offlineChecklist]) {
+    assert.match(content, /deployment candidate mode/i);
+    assert.match(content, /true one-stop offline package mode/i);
+    assert.match(content, /runtime\\node\\node\.exe/i);
+    assert.match(content, /runtime\\node\\npm\.cmd/i);
+    assert.match(content, /runtime\\mariadb\\bin\\mariadbd\.exe/i);
+    assert.match(content, /runtime\\mariadb\\bin\\mariadb-install-db\.exe/i);
+    assert.match(content, /runtime\\mariadb\\bin\\mariadb\.exe or runtime\\mariadb\\bin\\mysql\.exe/i);
+    assert.match(content, /runtime\\mariadb\\bin\\mysqldump\.exe/i);
+  }
+
+  assert.match(firstRunGuide, /No internet is required if the package is complete/i);
+  assert.match(firstRunGuide, /staff should only use the daily launcher after setup/i);
+  assert.match(troubleshooting, /Runtime package verification failed/i);
+  assert.match(troubleshooting, /Windows blocks executables/i);
+  assert.match(troubleshooting, /port conflict/i);
+  assert.match(troubleshooting, /database fails to start/i);
+  assert.match(deploymentGuide, /npm run verify:runtime-package/i);
+  assert.match(deploymentGuide, /npm run verify:bundle:strict/i);
+  assert.match(offlineChecklist, /strict one-stop mode/i);
+});
