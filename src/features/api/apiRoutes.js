@@ -187,6 +187,18 @@ export function createApiRoutes({ db, repositories = {}, todayProvider = getToda
     }
   });
 
+  router.delete("/api/reservations/:reservationId", async (request, response) => {
+    try {
+      const updated = await repo.updateReservationStatus(db, request.params.reservationId, "CANCELLED", {
+        userId: request.session.user.userId
+      });
+      const reservation = updated || await repo.getReservationById(db, request.params.reservationId);
+      response.json({ reservation: toApiReservation(reservation) });
+    } catch (error) {
+      sendReservationMutationError(response, error);
+    }
+  });
+
   router.get("/api/dashboard", async (_request, response) => {
     const today = todayProvider();
 

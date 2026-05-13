@@ -331,6 +331,61 @@ test("POST /api/reservations/:reservationId/status returns 404 when the reservat
   }
 });
 
+test("DELETE /api/reservations/:reservationId cancels with the signed-in user and maps the cancelled row", async () => {
+  let statusCall = null;
+  const app = buildApiTestApp({
+    session: buildSession({ userId: 91 }),
+    repositories: {
+      updateReservationStatus: async (_db, reservationId, statusCode, options) => {
+        statusCall = { reservationId, statusCode, options };
+      },
+      getReservationById: async (_db, reservationId) => buildReservation({
+        reservationId: Number(reservationId),
+        statusCode: "CANCELLED",
+        statusName: "Cancelled"
+      })
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await deleteJson(server, "/api/reservations/7");
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(statusCall, {
+      reservationId: "7",
+      statusCode: "CANCELLED",
+      options: { userId: 91 }
+    });
+    assert.equal(response.body.reservation.reservationId, 7);
+    assert.equal(response.body.reservation.statusCode, "CANCELLED");
+    assert.equal(response.body.reservation.statusName, "Cancelled");
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("DELETE /api/reservations/:reservationId returns 404 when the reservation is missing", async () => {
+  const app = buildApiTestApp({
+    session: buildSession({ userId: 91 }),
+    repositories: {
+      updateReservationStatus: async () => {
+        throw new ReservationNotFoundError();
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await deleteJson(server, "/api/reservations/404");
+
+    assert.equal(response.status, 404);
+    assert.deepEqual(response.body, { error: "Reservation record was not found." });
+  } finally {
+    await closeServer(server);
+  }
+});
+
 test("GET /api/dashboard returns today schedule and nearest available slot", async () => {
   const app = buildApiTestApp({
     session: buildSession(),
@@ -672,6 +727,17 @@ async function putJson(server, pathName, payload) {
     method: "PUT",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(payload)
+  });
+
+  return {
+    status: response.status,
+    body: await response.json()
+  };
+}
+
+async function deleteJson(server, pathName) {
+  const response = await fetch(`http://127.0.0.1:${server.address().port}${pathName}`, {
+    method: "DELETE"
   });
 
   return {
