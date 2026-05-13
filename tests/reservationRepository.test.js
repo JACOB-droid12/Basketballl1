@@ -8,6 +8,7 @@ import {
   buildReservationUpdateQuery,
   mapReservationRow,
   ReservationNotFoundError,
+  updateReservation,
   updateReservationStatus
 } from "../src/features/reservations/reservationRepository.js";
 
@@ -164,6 +165,124 @@ test("updateReservationStatus throws not found before writing activity log when 
   assert.deepEqual(calls, ["begin", "select-status", "select-reservation", "rollback", "release"]);
 });
 
+test("updateReservation throws not found before creating resident or writing activity log when reservation row is missing", async () => {
+  const calls = [];
+  const connection = {
+    beginTransaction: async () => calls.push("begin"),
+    commit: async () => calls.push("commit"),
+    rollback: async () => calls.push("rollback"),
+    release: () => calls.push("release"),
+    execute: async (sql) => {
+      if (sql.includes("SELECT reservation_id") && sql.includes("FROM reservations")) {
+        calls.push("select-reservation");
+        return [[]];
+      }
+
+      if (sql.includes("SELECT") && sql.includes("existing.reservation_id")) {
+        calls.push("select-overlap");
+        return [[]];
+      }
+
+      if (sql.includes("SELECT resident_id")) {
+        calls.push("select-resident");
+        return [[]];
+      }
+
+      if (sql.includes("INSERT INTO residents")) {
+        calls.push("insert-resident");
+        return [{ insertId: 9 }];
+      }
+
+      if (sql.includes("SELECT status_id")) {
+        calls.push("select-status");
+        return [[{ status_id: 2 }]];
+      }
+
+      if (sql.includes("UPDATE reservations")) {
+        calls.push("update-reservation");
+        return [{ affectedRows: 0 }];
+      }
+
+      if (sql.includes("INSERT INTO activity_logs")) {
+        calls.push("insert-log");
+        return [{ affectedRows: 1 }];
+      }
+
+      throw new Error(`Unexpected SQL: ${sql}`);
+    }
+  };
+  const db = {
+    getConnection: async () => connection
+  };
+
+  await assert.rejects(
+    () => updateReservation(db, 404, buildReservationInput(), { userId: 1 }),
+    ReservationNotFoundError
+  );
+
+  assert.deepEqual(calls, ["begin", "select-reservation", "rollback", "release"]);
+});
+
+test("updateReservation writes activity log when existing reservation update is a no-op", async () => {
+  const calls = [];
+  const connection = {
+    beginTransaction: async () => calls.push("begin"),
+    commit: async () => calls.push("commit"),
+    rollback: async () => calls.push("rollback"),
+    release: () => calls.push("release"),
+    execute: async (sql) => {
+      if (sql.includes("SELECT reservation_id") && sql.includes("FROM reservations")) {
+        calls.push("select-reservation");
+        return [[{ reservation_id: 7 }]];
+      }
+
+      if (sql.includes("SELECT") && sql.includes("existing.reservation_id")) {
+        calls.push("select-overlap");
+        return [[]];
+      }
+
+      if (sql.includes("SELECT resident_id")) {
+        calls.push("select-resident");
+        return [[{ resident_id: 5 }]];
+      }
+
+      if (sql.includes("SELECT status_id")) {
+        calls.push("select-status");
+        return [[{ status_id: 2 }]];
+      }
+
+      if (sql.includes("UPDATE reservations")) {
+        calls.push("update-reservation");
+        return [{ affectedRows: 0 }];
+      }
+
+      if (sql.includes("INSERT INTO activity_logs")) {
+        calls.push("insert-log");
+        return [{ affectedRows: 1 }];
+      }
+
+      throw new Error(`Unexpected SQL: ${sql}`);
+    }
+  };
+  const db = {
+    getConnection: async () => connection
+  };
+
+  await updateReservation(db, 7, buildReservationInput(), { userId: 1 });
+
+  assert.deepEqual(calls, [
+    "begin",
+    "select-reservation",
+    "select-overlap",
+    "select-resident",
+    "select-status",
+    "update-reservation",
+    "insert-log",
+    "commit",
+    "release"
+  ]);
+});
+
 test("updateReservationStatus writes activity log when existing reservation update is a no-op", async () => {
   const calls = [];
   const connection = {
@@ -211,3 +330,18 @@ test("updateReservationStatus writes activity log when existing reservation upda
     "release"
   ]);
 });
+
+function buildReservationInput(overrides = {}) {
+  return {
+    reservationDate: "2026-05-14",
+    startTime: "08:00",
+    endTime: "09:00",
+    representativeName: "Team Alpha",
+    contactNo: "09171234567",
+    address: "Purok 3",
+    purpose: "Practice",
+    remarks: "",
+    statusCode: "RESERVED",
+    ...overrides
+  };
+}

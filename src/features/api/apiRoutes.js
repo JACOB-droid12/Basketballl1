@@ -302,15 +302,20 @@ export function createApiRoutes({ db, repositories = {}, todayProvider = getToda
     }
 
     try {
-      const [timeSlots, reservations] = await Promise.all([
-        repo.getTimeSlots(db),
-        collectReservationsByDate({
-          db,
-          repo,
-          startDate: date,
-          days: AVAILABILITY_SUGGESTION_SEARCH_DAYS + 1
-        })
-      ]);
+      const timeSlots = await repo.getTimeSlots(db);
+      const scheduleCoverageError = validateAvailabilitySlotCoverage({ startTime, endTime, timeSlots });
+
+      if (scheduleCoverageError) {
+        sendValidationError(response, { timeRange: scheduleCoverageError });
+        return;
+      }
+
+      const reservations = await collectReservationsByDate({
+        db,
+        repo,
+        startDate: date,
+        days: AVAILABILITY_SUGGESTION_SEARCH_DAYS + 1
+      });
       const activeReservations = reservations.filter((reservation) => String(reservation.statusCode).toUpperCase() === "RESERVED");
       const conflict = findBlockingOverlap(
         { reservationDate: date, startTime, endTime, statusCode: "RESERVED" },
@@ -447,7 +452,7 @@ function cleanReservationFilters(query) {
 
 function cleanActivityLogFilters(query) {
   return {
-    action: clean(query.action),
+    action: clean(query.action).toUpperCase(),
     date: clean(query.date),
     search: clean(query.search)
   };
@@ -597,6 +602,40 @@ function buildAvailabilityValidationErrors({ date, rawStartTime, rawEndTime, sta
   }
 
   return errors;
+}
+
+function validateAvailabilitySlotCoverage({ startTime, endTime, timeSlots }) {
+  const requestedEndMinutes = timeToMinutes(endTime);
+  let nextStartTime = startTime;
+  let matchedSlot = false;
+  const slots = [...timeSlots]
+    .map((slot) => ({
+      ...slot,
+      startTime: normalizeScheduleTime(slot.startTime),
+      endTime: normalizeScheduleTime(slot.endTime)
+    }))
+    .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
+
+  for (const slot of slots) {
+    if (slot.startTime !== nextStartTime) {
+      continue;
+    }
+
+    matchedSlot = true;
+    nextStartTime = slot.endTime;
+
+    if (nextStartTime === endTime) {
+      return "";
+    }
+
+    if (timeToMinutes(nextStartTime) > requestedEndMinutes) {
+      break;
+    }
+  }
+
+  return matchedSlot ?
+    "Requested time must be covered by contiguous active court schedule slots." :
+    "Requested time must be covered by active court schedule slots.";
 }
 
 function isValidDateString(value) {

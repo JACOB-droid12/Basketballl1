@@ -544,6 +544,77 @@ test("GET /api/availability validates date, time, and requested range", async ()
   }
 });
 
+test("GET /api/availability rejects ranges outside active court hours", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      getTimeSlots: async () => buildTimeSlots(),
+      listReservations: async () => []
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/availability?date=2026-05-14&startTime=02:00&endTime=03:00");
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(response.body, {
+      errors: {
+        timeRange: "Requested time must be covered by active court schedule slots."
+      }
+    });
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/availability rejects partial-slot ranges not covered by active slots", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      getTimeSlots: async () => buildTimeSlots(),
+      listReservations: async () => []
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/availability?date=2026-05-14&startTime=08:30&endTime=09:30");
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(response.body.errors, {
+      timeRange: "Requested time must be covered by active court schedule slots."
+    });
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/availability rejects ranges with broken active-slot contiguity", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      getTimeSlots: async () => buildTimeSlots([
+        { slotId: 1, name: "8:00 AM - 9:00 AM", startTime: "08:00", endTime: "09:00" },
+        { slotId: 2, name: "10:00 AM - 11:00 AM", startTime: "10:00", endTime: "11:00" }
+      ]),
+      listReservations: async () => []
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/availability?date=2026-05-14&startTime=08:00&endTime=10:00");
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(response.body.errors, {
+      timeRange: "Requested time must be covered by contiguous active court schedule slots."
+    });
+  } finally {
+    await closeServer(server);
+  }
+});
+
 test("GET /api/availability avoids earlier same-day suggestions and searches future days", async () => {
   const app = buildApiTestApp({
     session: buildSession(),
@@ -655,7 +726,7 @@ test("accounts APIs require admin, map duplicate username, and block self status
   }
 });
 
-test("GET /api/activity-logs passes filters and returns log rows", async () => {
+test("GET /api/activity-logs passes normalized filters and returns log rows", async () => {
   let receivedFilters = null;
   const app = buildApiTestApp({
     session: buildSession(),
@@ -677,11 +748,11 @@ test("GET /api/activity-logs passes filters and returns log rows", async () => {
   const server = app.listen(0);
 
   try {
-    const response = await getJson(server, "/api/activity-logs?action=CREATE_RESERVATION&date=2026-05-13&search=%20Team%20");
+    const response = await getJson(server, "/api/activity-logs?action=mark_missed&date=2026-05-13&search=%20Team%20");
 
     assert.equal(response.status, 200);
     assert.deepEqual(receivedFilters, {
-      action: "CREATE_RESERVATION",
+      action: "MARK_MISSED",
       date: "2026-05-13",
       search: "Team"
     });

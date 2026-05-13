@@ -285,10 +285,16 @@ export async function createReservation(db, reservation, options = {}) {
 export async function updateReservation(db, reservationId, reservation, options = {}) {
   const userId = Number(options.userId || process.env.DEFAULT_CREATED_BY_USER_ID || 1);
   const connection = await db.getConnection();
-  const candidate = { ...reservation, reservationId: Number(reservationId) };
+  const numericReservationId = Number(reservationId);
+  const candidate = { ...reservation, reservationId: numericReservationId };
 
   try {
     await connection.beginTransaction();
+    const reservationExists = await reservationRowExists(connection, numericReservationId);
+
+    if (!reservationExists) {
+      throw new ReservationNotFoundError();
+    }
 
     const overlap = await findOverlap(connection, candidate);
     if (overlap) {
@@ -299,18 +305,14 @@ export async function updateReservation(db, reservationId, reservation, options 
     const statusId = await findStatusIdByCode(connection, reservation.statusCode);
     const query = buildReservationUpdateQuery({
       ...reservation,
-      reservationId,
+      reservationId: numericReservationId,
       residentId,
       statusId
     });
-    const [result] = await connection.execute(query.sql, query.params);
-
-    if (result.affectedRows === 0) {
-      throw new ReservationNotFoundError();
-    }
+    await connection.execute(query.sql, query.params);
 
     await writeActivityLog(connection, {
-      reservationId: Number(reservationId),
+      reservationId: numericReservationId,
       userId,
       action: "UPDATE_RESERVATION",
       details: `Updated reservation for ${reservation.representativeName} on ${reservation.reservationDate} ${reservation.startTime}-${reservation.endTime}.`
