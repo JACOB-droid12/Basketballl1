@@ -78,3 +78,73 @@ test("createApp serves React staff shell for authenticated main staff routes", a
     await app.locals.db?.end?.();
   }
 });
+
+test("createApp redirects signed-out main staff routes to login", async () => {
+  const db = { end: async () => {} };
+  const app = createApp({
+    db,
+    sessionMiddleware: (request, _response, next) => {
+      request.session = {};
+      next();
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    for (const route of ["/dashboard", "/account"]) {
+      const response = await fetch(`http://127.0.0.1:${server.address().port}${route}`, {
+        redirect: "manual"
+      });
+
+      assert.equal(response.status, 302, route);
+      assert.equal(response.headers.get("location"), "/login", route);
+    }
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await app.locals.db?.end?.();
+  }
+});
+
+test("createApp keeps legacy account POST handlers before React routes", async () => {
+  const db = { end: async () => {} };
+  const app = createApp({
+    db,
+    sessionMiddleware: (request, _response, next) => {
+      request.session = {
+        user: {
+          userId: 1,
+          fullName: "System Administrator",
+          username: "admin",
+          role: "ADMIN"
+        }
+      };
+      next();
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const passwordResponse = await fetch(`http://127.0.0.1:${server.address().port}/account/password`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({})
+    });
+    const passwordBody = await passwordResponse.text();
+
+    assert.equal(passwordResponse.status, 400);
+    assert.match(passwordBody, /Current password is required\./);
+
+    const statusResponse = await fetch(`http://127.0.0.1:${server.address().port}/account/2/status`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ accountStatus: "SUSPENDED" })
+    });
+    const statusBody = await statusResponse.text();
+
+    assert.equal(statusResponse.status, 400);
+    assert.match(statusBody, /Account status is invalid\./);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await app.locals.db?.end?.();
+  }
+});

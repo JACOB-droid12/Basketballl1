@@ -22,9 +22,11 @@ const MAIN_ROUTES = [
 export function createReactAppRoutes(options = {}) {
   const router = Router();
   const manifestPath = options.manifestPath || MANIFEST_PATH;
+  let cachedAssets = null;
 
   router.get(MAIN_ROUTES, (_request, response) => {
-    const assets = readReactAssets(manifestPath);
+    cachedAssets ||= readReactAssets(manifestPath);
+    const assets = cachedAssets;
     response.render("app", assets);
   });
 
