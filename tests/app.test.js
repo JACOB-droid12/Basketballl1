@@ -79,6 +79,64 @@ test("createApp serves React staff shell for authenticated main staff routes", a
   }
 });
 
+test("createApp keeps reservation CSV export on the legacy handler", async () => {
+  let executeCall = null;
+  const db = {
+    execute: async (sql, params) => {
+      executeCall = { sql, params };
+      return [[
+        {
+          reservation_id: 7,
+          reservation_date: "2026-05-08",
+          start_time: "07:00:00",
+          end_time: "08:00:00",
+          purpose: "Practice",
+          remarks: "",
+          status_code: "RESERVED",
+          status_name: "Reserved",
+          resident_name: "Sto. Niño Youth Team",
+          contact_no: "09171234567",
+          address: "Purok 3",
+          created_by_name: "Admin User"
+        }
+      ]];
+    },
+    end: async () => {}
+  };
+  const app = createApp({
+    db,
+    sessionMiddleware: (request, _response, next) => {
+      request.session = {
+        user: {
+          userId: 1,
+          fullName: "System Administrator",
+          username: "admin",
+          role: "ADMIN"
+        }
+      };
+      next();
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/reservations/export.csv`);
+    const body = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get("content-type"), /text\/csv/);
+    assert.match(response.headers.get("content-disposition"), /reservations\.csv/);
+    assert.match(body, /Reservation Date,Start Time,End Time,Representative/);
+    assert.match(body, /2026-05-08,07:00,08:00,Sto\. Niño Youth Team/);
+    assert.doesNotMatch(body, /id="root"/);
+    assert.match(executeCall.sql, /FROM reservations r/);
+    assert.deepEqual(executeCall.params, {});
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await app.locals.db?.end?.();
+  }
+});
+
 test("createApp redirects signed-out main staff routes to login", async () => {
   const db = { end: async () => {} };
   const app = createApp({
