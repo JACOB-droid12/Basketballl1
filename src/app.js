@@ -52,7 +52,7 @@ export function createApp(options = {}) {
     response.json({ status: "ok", milestone: "foundation" });
   });
 
-  app.use(createAuthRoutes({ db }));
+  app.use(createAuthRoutes({ db, enableLegacyAccountUi: false }));
   app.use(createPrototypeApiRoutes({ db }));
   app.use(requireSignedIn);
   app.use(createReactAppRoutes());

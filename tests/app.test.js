@@ -32,7 +32,7 @@ test("createApp serves the backend-injected prototype at the office URL", async 
   }
 });
 
-test("createApp serves React staff shell for an authenticated dashboard route", async () => {
+test("createApp serves React staff shell for authenticated main staff routes", async () => {
   const db = { end: async () => {} };
   const app = createApp({
     db,
@@ -51,12 +51,28 @@ test("createApp serves React staff shell for an authenticated dashboard route", 
   const server = app.listen(0);
 
   try {
-    const response = await fetch(`http://127.0.0.1:${server.address().port}/dashboard`);
-    const body = await response.text();
+    const routes = [
+      "/dashboard",
+      "/schedule",
+      "/reservations",
+      "/reservations/new",
+      "/reservations/1",
+      "/reservations/1/edit",
+      "/account",
+      "/account/password",
+      "/activity-logs",
+      "/reports"
+    ];
 
-    assert.equal(response.status, 200);
-    assert.match(body, /id="root"/);
-    assert.match(body, /\/app\/assets\//);
+    for (const route of routes) {
+      const response = await fetch(`http://127.0.0.1:${server.address().port}${route}`);
+      const body = await response.text();
+
+      assert.equal(response.status, 200, route);
+      assert.match(body, /id="root"/, route);
+      assert.match(body, /\/app\/assets\//, route);
+      assert.doesNotMatch(body, /unpkg\.com|cdnjs\.cloudflare\.com|fonts\.googleapis\.com/, route);
+    }
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await app.locals.db?.end?.();

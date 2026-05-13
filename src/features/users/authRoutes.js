@@ -20,7 +20,7 @@ const defaultRepositories = {
   updateUserPassword
 };
 
-export function createAuthRoutes({ db, repositories = {} } = {}) {
+export function createAuthRoutes({ db, repositories = {}, enableLegacyAccountUi = true } = {}) {
   const repo = { ...defaultRepositories, ...repositories };
   const router = Router();
 
@@ -74,12 +74,14 @@ export function createAuthRoutes({ db, repositories = {} } = {}) {
     response.redirect("/login");
   });
 
-  router.get("/account/password", requireSignedIn, (request, response) => {
-    renderChangePassword(response, {
-      currentUser: request.session.user,
-      successMessage: request.query.updated === "1" ? "Password updated successfully." : ""
+  if (enableLegacyAccountUi) {
+    router.get("/account/password", requireSignedIn, (request, response) => {
+      renderChangePassword(response, {
+        currentUser: request.session.user,
+        successMessage: request.query.updated === "1" ? "Password updated successfully." : ""
+      });
     });
-  });
+  }
 
   router.post("/account/password", requireSignedIn, async (request, response) => {
     const result = validateChangePasswordInput(request.body);
@@ -116,25 +118,27 @@ export function createAuthRoutes({ db, repositories = {} } = {}) {
     }
   });
 
-  router.get("/account", requireAdmin, async (request, response) => {
-    try {
-      const users = await repo.listUsers(db);
+  if (enableLegacyAccountUi) {
+    router.get("/account", requireAdmin, async (request, response) => {
+      try {
+        const users = await repo.listUsers(db);
 
-      response.render("account/index", {
-        active: "account",
-        currentUserId: request.session.user.userId,
-        users,
-        errorMessage: ""
-      });
-    } catch (error) {
-      response.status(503).render("account/index", {
-        active: "account",
-        currentUserId: request.session.user.userId,
-        users: [],
-        errorMessage: databaseErrorMessage(error)
-      });
-    }
-  });
+        response.render("account/index", {
+          active: "account",
+          currentUserId: request.session.user.userId,
+          users,
+          errorMessage: ""
+        });
+      } catch (error) {
+        response.status(503).render("account/index", {
+          active: "account",
+          currentUserId: request.session.user.userId,
+          users: [],
+          errorMessage: databaseErrorMessage(error)
+        });
+      }
+    });
+  }
 
   router.get("/account/create", requireAdmin, (_request, response) => {
     renderCreateAccount(response);

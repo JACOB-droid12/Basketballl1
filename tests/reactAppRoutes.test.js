@@ -19,7 +19,20 @@ test("main staff routes render the React app shell", async () => {
 
   const server = app.listen(0);
   try {
-    for (const route of ["/dashboard", "/schedule", "/reservations", "/reservations/new", "/account", "/activity-logs", "/reports"]) {
+    const routes = [
+      "/dashboard",
+      "/schedule",
+      "/reservations",
+      "/reservations/new",
+      "/reservations/1",
+      "/reservations/1/edit",
+      "/account",
+      "/account/password",
+      "/activity-logs",
+      "/reports"
+    ];
+
+    for (const route of routes) {
       const response = await fetch(`http://127.0.0.1:${server.address().port}${route}`);
       const body = await response.text();
 
