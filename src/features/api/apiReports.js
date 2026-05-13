@@ -11,10 +11,14 @@ export function buildReportsPayload(reservations = []) {
     const statusCode = String(reservation.statusCode || "").toUpperCase();
     const hours = getReservationHours(reservation);
     const requesterName = String(reservation.representativeName || "Unknown requester").trim() || "Unknown requester";
+    const contributesBookedHours = statusCode !== "CANCELLED";
 
     statusCounts[statusCode] = (statusCounts[statusCode] || 0) + 1;
-    courtHoursBooked += hours;
-    requesterHours.set(requesterName, (requesterHours.get(requesterName) || 0) + hours);
+
+    if (contributesBookedHours) {
+      courtHoursBooked += hours;
+      requesterHours.set(requesterName, (requesterHours.get(requesterName) || 0) + hours);
+    }
   }
 
   return {
@@ -38,9 +42,7 @@ function buildStatusCounts(statusCounts) {
   const result = {};
 
   for (const statusCode of TRACKED_STATUS_CODES) {
-    if (statusCounts[statusCode]) {
-      result[statusCode] = statusCounts[statusCode];
-    }
+    result[statusCode] = statusCounts[statusCode] || 0;
   }
 
   for (const [statusCode, count] of Object.entries(statusCounts)) {

@@ -14,7 +14,7 @@ import {
   updateReservationStatus
 } from "../reservations/reservationRepository.js";
 import { findBlockingOverlap, timeRangesOverlap } from "../reservations/reservationOverlap.js";
-import { timeToMinutes, validateReservationInput } from "../reservations/reservationValidation.js";
+import { normalizeTime, timeToMinutes, validateReservationInput } from "../reservations/reservationValidation.js";
 import {
   buildDailySchedule,
   buildDashboardSummary,
@@ -48,6 +48,8 @@ const defaultRepositories = {
   updateReservationStatus,
   updateUserAccountStatus
 };
+const AVAILABILITY_SUGGESTION_SEARCH_DAYS = 14;
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 export function createApiRoutes({ db, repositories = {}, todayProvider = getTodayDate } = {}) {
   const repo = { ...defaultRepositories, ...repositories };
@@ -238,18 +240,30 @@ export function createApiRoutes({ db, repositories = {}, todayProvider = getToda
 
   router.get("/api/availability", async (request, response) => {
     const date = clean(request.query.date);
-    const startTime = normalizeScheduleTime(request.query.startTime);
-    const endTime = normalizeScheduleTime(request.query.endTime);
+    const startTime = normalizeTime(request.query.startTime);
+    const endTime = normalizeTime(request.query.endTime);
+    const validationErrors = buildAvailabilityValidationErrors({
+      date,
+      rawStartTime: request.query.startTime,
+      rawEndTime: request.query.endTime,
+      startTime,
+      endTime
+    });
 
-    if (!date || !startTime || !endTime) {
-      sendValidationError(response, buildAvailabilityValidationErrors({ date, startTime, endTime }));
+    if (Object.keys(validationErrors).length > 0) {
+      sendValidationError(response, validationErrors);
       return;
     }
 
     try {
       const [timeSlots, reservations] = await Promise.all([
         repo.getTimeSlots(db),
-        repo.listReservations(db, { reservationDate: date })
+        collectReservationsByDate({
+          db,
+          repo,
+          startDate: date,
+          days: AVAILABILITY_SUGGESTION_SEARCH_DAYS + 1
+        })
       ]);
       const activeReservations = reservations.filter((reservation) => String(reservation.statusCode).toUpperCase() === "RESERVED");
       const conflict = findBlockingOverlap(
@@ -408,13 +422,13 @@ function sendReservationMutationError(response, error) {
 }
 
 async function collectReservationsByDate({ db, repo, startDate, days }) {
-  const results = [];
-
-  for (let offset = 0; offset < days; offset += 1) {
-    const reservationDate = addDays(startDate, offset);
-    const reservations = await repo.listReservations(db, { reservationDate });
-    results.push(...reservations);
-  }
+  const reservationsByDate = await Promise.all(
+    Array.from({ length: days }, (_item, offset) => {
+      const reservationDate = addDays(startDate, offset);
+      return repo.listReservations(db, { reservationDate });
+    })
+  );
+  const results = reservationsByDate.flat();
 
   return results.sort((a, b) => `${a.reservationDate} ${a.startTime}`.localeCompare(`${b.reservationDate} ${b.startTime}`));
 }
@@ -430,14 +444,41 @@ function mapDashboardSummary(summary) {
 
 function findAvailabilitySuggestions({ date, startTime, endTime, timeSlots, reservations }) {
   const requestedDuration = timeToMinutes(endTime) - timeToMinutes(startTime);
+  const sameDaySuggestions = findAvailableSlotsForDate({
+    date,
+    minimumStartMinutes: timeToMinutes(startTime),
+    requestedDuration,
+    timeSlots,
+    reservations
+  });
 
+  if (sameDaySuggestions.length > 0) {
+    return sameDaySuggestions.slice(0, 4);
+  }
+
+  const futureSuggestions = [];
+
+  for (let offset = 1; offset <= AVAILABILITY_SUGGESTION_SEARCH_DAYS && futureSuggestions.length < 4; offset += 1) {
+    futureSuggestions.push(...findAvailableSlotsForDate({
+      date: addDays(date, offset),
+      minimumStartMinutes: 0,
+      requestedDuration,
+      timeSlots,
+      reservations
+    }));
+  }
+
+  return futureSuggestions.slice(0, 4);
+}
+
+function findAvailableSlotsForDate({ date, minimumStartMinutes, requestedDuration, timeSlots, reservations }) {
   return timeSlots
     .filter((slot) => timeToMinutes(slot.endTime) - timeToMinutes(slot.startTime) === requestedDuration)
+    .filter((slot) => timeToMinutes(slot.startTime) >= minimumStartMinutes)
     .filter((slot) => !reservations.some((reservation) => (
       reservation.reservationDate === date &&
       timeRangesOverlap(slot.startTime, slot.endTime, reservation.startTime, reservation.endTime)
     )))
-    .slice(0, 4)
     .map((slot) => ({
       date,
       slotId: slot.slotId,
@@ -447,22 +488,41 @@ function findAvailabilitySuggestions({ date, startTime, endTime, timeSlots, rese
     }));
 }
 
-function buildAvailabilityValidationErrors({ date, startTime, endTime }) {
+function buildAvailabilityValidationErrors({ date, rawStartTime, rawEndTime, startTime, endTime }) {
   const errors = {};
 
   if (!date) {
     errors.date = "Date is required.";
+  } else if (!DATE_PATTERN.test(date) || !isRealDate(date)) {
+    errors.date = "Date must use YYYY-MM-DD format.";
   }
 
-  if (!startTime) {
+  if (!clean(rawStartTime)) {
     errors.startTime = "Start time is required.";
+  } else if (!startTime) {
+    errors.startTime = "Start time must use HH:MM format.";
   }
 
-  if (!endTime) {
+  if (!clean(rawEndTime)) {
     errors.endTime = "End time is required.";
+  } else if (!endTime) {
+    errors.endTime = "End time must use HH:MM format.";
+  } else if (startTime && timeToMinutes(endTime) <= timeToMinutes(startTime)) {
+    errors.endTime = "End time must be after start time.";
   }
 
   return errors;
+}
+
+function isRealDate(value) {
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
 }
 
 function addDays(dateString, days) {

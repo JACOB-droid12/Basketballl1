@@ -424,6 +424,59 @@ test("GET /api/availability reports conflicts and same-day suggestions", async (
   }
 });
 
+test("GET /api/availability validates date, time, and requested range", async () => {
+  const app = buildApiTestApp({ session: buildSession() });
+  const server = app.listen(0);
+
+  try {
+    const invalidDate = await getJson(server, "/api/availability?date=2026-02-30&startTime=08:00&endTime=09:00");
+    const invalidTime = await getJson(server, "/api/availability?date=2026-05-14&startTime=99:99&endTime=09:00");
+    const reversedRange = await getJson(server, "/api/availability?date=2026-05-14&startTime=10:00&endTime=09:00");
+
+    assert.equal(invalidDate.status, 400);
+    assert.deepEqual(invalidDate.body, { errors: { date: "Date must use YYYY-MM-DD format." } });
+    assert.equal(invalidTime.status, 400);
+    assert.deepEqual(invalidTime.body, { errors: { startTime: "Start time must use HH:MM format." } });
+    assert.equal(reversedRange.status, 400);
+    assert.deepEqual(reversedRange.body, { errors: { endTime: "End time must be after start time." } });
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/availability avoids earlier same-day suggestions and searches future days", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      getTimeSlots: async () => buildTimeSlots([
+        { slotId: 1, name: "8:00 AM - 9:00 AM", startTime: "08:00", endTime: "09:00" },
+        { slotId: 2, name: "3:00 PM - 4:00 PM", startTime: "15:00", endTime: "16:00" }
+      ]),
+      listReservations: async (_db, filters) => filters.reservationDate === "2026-05-14" ?
+        [buildReservation({ reservationDate: "2026-05-14", startTime: "15:00", endTime: "16:00" })] :
+        []
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/availability?date=2026-05-14&startTime=15:00&endTime=16:00");
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.available, false);
+    assert.deepEqual(response.body.suggestions[0], {
+      date: "2026-05-15",
+      slotId: 1,
+      name: "8:00 AM - 9:00 AM",
+      startTime: "08:00",
+      endTime: "09:00"
+    });
+    assert.equal(response.body.suggestions.some((slot) => slot.date === "2026-05-14" && slot.startTime === "08:00"), false);
+  } finally {
+    await closeServer(server);
+  }
+});
+
 test("accounts APIs require admin, map duplicate username, and block self status changes", async () => {
   const staffApp = buildApiTestApp({ session: buildSession({ role: "STAFF" }) });
   const staffServer = staffApp.listen(0);
@@ -521,7 +574,7 @@ test("GET /api/reports computes summary from reservation objects", async () => {
     assert.equal(response.status, 200);
     assert.deepEqual(response.body.summary, {
       totalReservations: 4,
-      courtHoursBooked: 5.5,
+      courtHoursBooked: 4.5,
       missedCount: 1,
       completedCount: 1,
       reservedCount: 1,
@@ -534,6 +587,41 @@ test("GET /api/reports computes summary from reservation objects", async () => {
       CANCELLED: 1
     });
     assert.deepEqual(response.body.topRequesters[0], { name: "Team Alpha", hours: 3.5 });
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/reports excludes cancelled hours and returns stable zero status keys", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      listReservations: async () => [
+        buildReservation({ representativeName: "Team Alpha", statusCode: "CANCELLED", startTime: "08:00", endTime: "10:00" })
+      ]
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/reports");
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(response.body.summary, {
+      totalReservations: 1,
+      courtHoursBooked: 0,
+      missedCount: 0,
+      completedCount: 0,
+      reservedCount: 0,
+      cancelledCount: 1
+    });
+    assert.deepEqual(response.body.statusCounts, {
+      RESERVED: 0,
+      MISSED: 0,
+      COMPLETED: 0,
+      CANCELLED: 1
+    });
+    assert.deepEqual(response.body.topRequesters, []);
   } finally {
     await closeServer(server);
   }
