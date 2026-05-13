@@ -121,7 +121,7 @@ test("maps reservation rows to view models", () => {
   });
 });
 
-test("updateReservationStatus throws not found before writing activity log when no reservation row is updated", async () => {
+test("updateReservationStatus throws not found before writing activity log when reservation row is missing", async () => {
   const calls = [];
   const connection = {
     beginTransaction: async () => calls.push("begin"),
@@ -134,9 +134,14 @@ test("updateReservationStatus throws not found before writing activity log when 
         return [[{ status_id: 3 }]];
       }
 
+      if (sql.includes("SELECT reservation_id")) {
+        calls.push("select-reservation");
+        return [[]];
+      }
+
       if (sql.includes("UPDATE reservations")) {
         calls.push("update-reservation");
-        return [{ affectedRows: 0 }];
+        return [{ affectedRows: 1 }];
       }
 
       if (sql.includes("INSERT INTO activity_logs")) {
@@ -156,5 +161,53 @@ test("updateReservationStatus throws not found before writing activity log when 
     ReservationNotFoundError
   );
 
-  assert.deepEqual(calls, ["begin", "select-status", "update-reservation", "rollback", "release"]);
+  assert.deepEqual(calls, ["begin", "select-status", "select-reservation", "rollback", "release"]);
+});
+
+test("updateReservationStatus writes activity log when existing reservation update is a no-op", async () => {
+  const calls = [];
+  const connection = {
+    beginTransaction: async () => calls.push("begin"),
+    commit: async () => calls.push("commit"),
+    rollback: async () => calls.push("rollback"),
+    release: () => calls.push("release"),
+    execute: async (sql) => {
+      if (sql.includes("SELECT status_id")) {
+        calls.push("select-status");
+        return [[{ status_id: 3 }]];
+      }
+
+      if (sql.includes("SELECT reservation_id")) {
+        calls.push("select-reservation");
+        return [[{ reservation_id: 7 }]];
+      }
+
+      if (sql.includes("UPDATE reservations")) {
+        calls.push("update-reservation");
+        return [{ affectedRows: 0 }];
+      }
+
+      if (sql.includes("INSERT INTO activity_logs")) {
+        calls.push("insert-log");
+        return [{ affectedRows: 1 }];
+      }
+
+      throw new Error(`Unexpected SQL: ${sql}`);
+    }
+  };
+  const db = {
+    getConnection: async () => connection
+  };
+
+  await updateReservationStatus(db, 7, "CANCELLED", { userId: 1 });
+
+  assert.deepEqual(calls, [
+    "begin",
+    "select-status",
+    "select-reservation",
+    "update-reservation",
+    "insert-log",
+    "commit",
+    "release"
+  ]);
 });

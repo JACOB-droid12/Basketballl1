@@ -328,26 +328,28 @@ export async function updateReservation(db, reservationId, reservation, options 
 export async function updateReservationStatus(db, reservationId, statusCode, options = {}) {
   const userId = Number(options.userId || process.env.DEFAULT_CREATED_BY_USER_ID || 1);
   const connection = await db.getConnection();
+  const numericReservationId = Number(reservationId);
 
   try {
     await connection.beginTransaction();
     const statusId = await findStatusIdByCode(connection, statusCode);
+    const reservationExists = await reservationRowExists(connection, numericReservationId);
 
-    const [result] = await connection.execute(
+    if (!reservationExists) {
+      throw new ReservationNotFoundError();
+    }
+
+    await connection.execute(
       `
         UPDATE reservations
         SET status_id = :statusId
         WHERE reservation_id = :reservationId
       `,
-      { statusId, reservationId: Number(reservationId) }
+      { statusId, reservationId: numericReservationId }
     );
 
-    if (result.affectedRows === 0) {
-      throw new ReservationNotFoundError();
-    }
-
     await writeActivityLog(connection, {
-      reservationId: Number(reservationId),
+      reservationId: numericReservationId,
       userId,
       action: `MARK_${String(statusCode).toUpperCase()}`,
       details: `Reservation status changed to ${String(statusCode).toUpperCase()}.`
@@ -421,6 +423,20 @@ async function findStatusIdByCode(connection, statusCode) {
   }
 
   return Number(rows[0].status_id);
+}
+
+async function reservationRowExists(connection, reservationId) {
+  const [rows] = await connection.execute(
+    `
+      SELECT reservation_id
+      FROM reservations
+      WHERE reservation_id = :reservationId
+      LIMIT 1
+    `,
+    { reservationId }
+  );
+
+  return Boolean(rows[0]);
 }
 
 async function writeActivityLog(connection, { reservationId, userId, action, details }) {

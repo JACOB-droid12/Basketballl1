@@ -254,7 +254,7 @@ test("PUT /api/reservations/:reservationId updates with the signed-in user and m
 
     assert.equal(response.status, 200);
     assert.deepEqual(updateCall, {
-      reservationId: "7",
+      reservationId: 7,
       reservation: {
         reservationDate: "2026-05-14",
         startTime: "08:00",
@@ -299,7 +299,7 @@ test("POST /api/reservations/:reservationId/status rejects invalid and PENDING s
     assert.equal(missed.status, 200);
     assert.deepEqual(statusCalls, [
       {
-        reservationId: "7",
+        reservationId: 7,
         statusCode: "MISSED",
         options: { userId: 84 }
       }
@@ -353,7 +353,7 @@ test("DELETE /api/reservations/:reservationId cancels with the signed-in user an
 
     assert.equal(response.status, 200);
     assert.deepEqual(statusCall, {
-      reservationId: "7",
+      reservationId: 7,
       statusCode: "CANCELLED",
       options: { userId: 91 }
     });
@@ -381,6 +381,27 @@ test("DELETE /api/reservations/:reservationId returns 404 when the reservation i
 
     assert.equal(response.status, 404);
     assert.deepEqual(response.body, { error: "Reservation record was not found." });
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("reservation mutation APIs reject invalid numeric path parameters", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      updateReservationStatus: async () => {
+        throw new Error("invalid id should stop before repository call");
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await deleteJson(server, "/api/reservations/not-a-number");
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(response.body, { error: "Reservation ID must be a positive integer." });
   } finally {
     await closeServer(server);
   }
@@ -438,6 +459,30 @@ test("GET /api/schedule returns week rows with mapped cells", async () => {
     assert.equal(response.body.rows.length, 2);
     assert.equal(response.body.rows[0].cells[3].statusCode, "RESERVED");
     assert.equal(response.body.rows[0].cells[3].reservation.reservationId, 1);
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/schedule validates invalid and non-real dates", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      getTimeSlots: async () => {
+        throw new Error("invalid date should stop before repository call");
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const invalidFormat = await getJson(server, "/api/schedule?date=not-a-date");
+    const nonRealDate = await getJson(server, "/api/schedule?date=2026-02-30");
+
+    assert.equal(invalidFormat.status, 400);
+    assert.deepEqual(invalidFormat.body, { errors: { date: "Date must use YYYY-MM-DD format." } });
+    assert.equal(nonRealDate.status, 400);
+    assert.deepEqual(nonRealDate.body, { errors: { date: "Date must use YYYY-MM-DD format." } });
   } finally {
     await closeServer(server);
   }
@@ -532,6 +577,40 @@ test("GET /api/availability avoids earlier same-day suggestions and searches fut
   }
 });
 
+test("GET /api/availability suggests contiguous free slots for multi-hour requests", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      getTimeSlots: async () => buildTimeSlots([
+        { slotId: 1, name: "8:00 AM - 9:00 AM", startTime: "08:00", endTime: "09:00" },
+        { slotId: 2, name: "9:00 AM - 10:00 AM", startTime: "09:00", endTime: "10:00" },
+        { slotId: 3, name: "10:00 AM - 11:00 AM", startTime: "10:00", endTime: "11:00" },
+        { slotId: 4, name: "11:00 AM - 12:00 PM", startTime: "11:00", endTime: "12:00" }
+      ]),
+      listReservations: async (_db, filters) => filters.reservationDate === "2026-05-14" ? [
+        buildReservation({ reservationDate: "2026-05-14", startTime: "08:00", endTime: "10:00" })
+      ] : []
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/availability?date=2026-05-14&startTime=08:00&endTime=10:00");
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.available, false);
+    assert.deepEqual(response.body.suggestions[0], {
+      date: "2026-05-14",
+      slotId: 3,
+      name: "10:00 AM - 12:00 PM",
+      startTime: "10:00",
+      endTime: "12:00"
+    });
+  } finally {
+    await closeServer(server);
+  }
+});
+
 test("accounts APIs require admin, map duplicate username, and block self status changes", async () => {
   const staffApp = buildApiTestApp({ session: buildSession({ role: "STAFF" }) });
   const staffServer = staffApp.listen(0);
@@ -563,11 +642,14 @@ test("accounts APIs require admin, map duplicate username, and block self status
       role: "STAFF"
     });
     const selfChange = await postJson(adminServer, "/api/accounts/1/status", { accountStatus: "INACTIVE" });
+    const badId = await postJson(adminServer, "/api/accounts/not-a-number/status", { accountStatus: "INACTIVE" });
 
     assert.equal(duplicate.status, 409);
     assert.deepEqual(duplicate.body, { errors: { username: "Username already exists." } });
     assert.equal(selfChange.status, 400);
     assert.deepEqual(selfChange.body, { error: "You cannot change your own account status." });
+    assert.equal(badId.status, 400);
+    assert.deepEqual(badId.body, { error: "User ID must be a positive integer." });
   } finally {
     await closeServer(adminServer);
   }

@@ -109,8 +109,15 @@ export function createApiRoutes({ db, repositories = {}, todayProvider = getToda
   });
 
   router.get("/api/reservations/:reservationId", async (request, response) => {
+    const reservationId = parsePositiveIntegerParam(request.params.reservationId);
+
+    if (!reservationId) {
+      response.status(400).json({ error: "Reservation ID must be a positive integer." });
+      return;
+    }
+
     try {
-      const reservation = await repo.getReservationById(db, request.params.reservationId);
+      const reservation = await repo.getReservationById(db, reservationId);
 
       if (!reservation) {
         response.status(404).json({ error: "Reservation record was not found." });
@@ -146,6 +153,13 @@ export function createApiRoutes({ db, repositories = {}, todayProvider = getToda
   });
 
   router.put("/api/reservations/:reservationId", async (request, response) => {
+    const reservationId = parsePositiveIntegerParam(request.params.reservationId);
+
+    if (!reservationId) {
+      response.status(400).json({ error: "Reservation ID must be a positive integer." });
+      return;
+    }
+
     const result = validateReservationInput(request.body, {
       today: todayProvider(),
       requireTodayOrFuture: true
@@ -157,10 +171,10 @@ export function createApiRoutes({ db, repositories = {}, todayProvider = getToda
     }
 
     try {
-      const updated = await repo.updateReservation(db, request.params.reservationId, result.value, {
+      const updated = await repo.updateReservation(db, reservationId, result.value, {
         userId: request.session.user.userId
       });
-      const reservation = updated || await repo.getReservationById(db, request.params.reservationId);
+      const reservation = updated || await repo.getReservationById(db, reservationId);
       response.json({ reservation: toApiReservation(reservation) });
     } catch (error) {
       sendReservationMutationError(response, error);
@@ -168,6 +182,13 @@ export function createApiRoutes({ db, repositories = {}, todayProvider = getToda
   });
 
   router.post("/api/reservations/:reservationId/status", async (request, response) => {
+    const reservationId = parsePositiveIntegerParam(request.params.reservationId);
+
+    if (!reservationId) {
+      response.status(400).json({ error: "Reservation ID must be a positive integer." });
+      return;
+    }
+
     const statusCode = String(request.body.statusCode || "").trim().toUpperCase();
     const allowed = new Set(["MISSED", "CANCELLED", "COMPLETED"]);
 
@@ -177,10 +198,10 @@ export function createApiRoutes({ db, repositories = {}, todayProvider = getToda
     }
 
     try {
-      const updated = await repo.updateReservationStatus(db, request.params.reservationId, statusCode, {
+      const updated = await repo.updateReservationStatus(db, reservationId, statusCode, {
         userId: request.session.user.userId
       });
-      const reservation = updated || await repo.getReservationById(db, request.params.reservationId);
+      const reservation = updated || await repo.getReservationById(db, reservationId);
       response.json({ reservation: toApiReservation(reservation) });
     } catch (error) {
       sendReservationMutationError(response, error);
@@ -188,11 +209,18 @@ export function createApiRoutes({ db, repositories = {}, todayProvider = getToda
   });
 
   router.delete("/api/reservations/:reservationId", async (request, response) => {
+    const reservationId = parsePositiveIntegerParam(request.params.reservationId);
+
+    if (!reservationId) {
+      response.status(400).json({ error: "Reservation ID must be a positive integer." });
+      return;
+    }
+
     try {
-      const updated = await repo.updateReservationStatus(db, request.params.reservationId, "CANCELLED", {
+      const updated = await repo.updateReservationStatus(db, reservationId, "CANCELLED", {
         userId: request.session.user.userId
       });
-      const reservation = updated || await repo.getReservationById(db, request.params.reservationId);
+      const reservation = updated || await repo.getReservationById(db, reservationId);
       response.json({ reservation: toApiReservation(reservation) });
     } catch (error) {
       sendReservationMutationError(response, error);
@@ -228,6 +256,12 @@ export function createApiRoutes({ db, repositories = {}, todayProvider = getToda
 
   router.get("/api/schedule", async (request, response) => {
     const date = clean(request.query.date) || todayProvider();
+
+    if (!isValidDateString(date)) {
+      sendValidationError(response, { date: "Date must use YYYY-MM-DD format." });
+      return;
+    }
+
     const weekStartDate = getWeekStartDate(date);
 
     try {
@@ -326,6 +360,13 @@ export function createApiRoutes({ db, repositories = {}, todayProvider = getToda
   });
 
   router.post("/api/accounts/:userId/status", requireApiAdmin, async (request, response) => {
+    const userId = parsePositiveIntegerParam(request.params.userId);
+
+    if (!userId) {
+      response.status(400).json({ error: "User ID must be a positive integer." });
+      return;
+    }
+
     const accountStatus = String(request.body.accountStatus || "").trim().toUpperCase();
 
     if (!["ACTIVE", "INACTIVE"].includes(accountStatus)) {
@@ -333,13 +374,13 @@ export function createApiRoutes({ db, repositories = {}, todayProvider = getToda
       return;
     }
 
-    if (Number(request.params.userId) === Number(request.session.user.userId)) {
+    if (userId === Number(request.session.user.userId)) {
       response.status(400).json({ error: "You cannot change your own account status." });
       return;
     }
 
     try {
-      await repo.updateUserAccountStatus(db, request.params.userId, accountStatus);
+      await repo.updateUserAccountStatus(db, userId, accountStatus);
       response.json({ ok: true });
     } catch (error) {
       if (error instanceof UserNotFoundError) {
@@ -484,20 +525,52 @@ function findAvailabilitySuggestions({ date, startTime, endTime, timeSlots, rese
 }
 
 function findAvailableSlotsForDate({ date, minimumStartMinutes, requestedDuration, timeSlots, reservations }) {
-  return timeSlots
-    .filter((slot) => timeToMinutes(slot.endTime) - timeToMinutes(slot.startTime) === requestedDuration)
-    .filter((slot) => timeToMinutes(slot.startTime) >= minimumStartMinutes)
-    .filter((slot) => !reservations.some((reservation) => (
+  const slots = [...timeSlots].sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
+  const suggestions = [];
+
+  for (let startIndex = 0; startIndex < slots.length; startIndex += 1) {
+    const firstSlot = slots[startIndex];
+    const startMinutes = timeToMinutes(firstSlot.startTime);
+
+    if (startMinutes < minimumStartMinutes) {
+      continue;
+    }
+
+    let endTime = firstSlot.endTime;
+    let endMinutes = timeToMinutes(endTime);
+
+    for (let index = startIndex; index < slots.length && endMinutes - startMinutes < requestedDuration; index += 1) {
+      const slot = slots[index];
+
+      if (index > startIndex && normalizeScheduleTime(slot.startTime) !== normalizeScheduleTime(endTime)) {
+        break;
+      }
+
+      endTime = slot.endTime;
+      endMinutes = timeToMinutes(endTime);
+    }
+
+    if (endMinutes - startMinutes !== requestedDuration) {
+      continue;
+    }
+
+    if (reservations.some((reservation) => (
       reservation.reservationDate === date &&
-      timeRangesOverlap(slot.startTime, slot.endTime, reservation.startTime, reservation.endTime)
-    )))
-    .map((slot) => ({
+      timeRangesOverlap(firstSlot.startTime, endTime, reservation.startTime, reservation.endTime)
+    ))) {
+      continue;
+    }
+
+    suggestions.push({
       date,
-      slotId: slot.slotId,
-      name: slot.name,
-      startTime: normalizeScheduleTime(slot.startTime),
-      endTime: normalizeScheduleTime(slot.endTime)
-    }));
+      slotId: firstSlot.slotId,
+      name: `${formatDisplayTime(firstSlot.startTime)} - ${formatDisplayTime(endTime)}`,
+      startTime: normalizeScheduleTime(firstSlot.startTime),
+      endTime: normalizeScheduleTime(endTime)
+    });
+  }
+
+  return suggestions;
 }
 
 function buildAvailabilityValidationErrors({ date, rawStartTime, rawEndTime, startTime, endTime }) {
@@ -505,7 +578,7 @@ function buildAvailabilityValidationErrors({ date, rawStartTime, rawEndTime, sta
 
   if (!date) {
     errors.date = "Date is required.";
-  } else if (!DATE_PATTERN.test(date) || !isRealDate(date)) {
+  } else if (!isValidDateString(date)) {
     errors.date = "Date must use YYYY-MM-DD format.";
   }
 
@@ -524,6 +597,10 @@ function buildAvailabilityValidationErrors({ date, rawStartTime, rawEndTime, sta
   }
 
   return errors;
+}
+
+function isValidDateString(value) {
+  return DATE_PATTERN.test(value) && isRealDate(value);
 }
 
 function isRealDate(value) {
@@ -557,6 +634,25 @@ function getWeekStartDate(dateString) {
 function normalizeScheduleTime(value) {
   const match = String(value || "").match(/\d{2}:\d{2}/);
   return match ? match[0] : "";
+}
+
+function formatDisplayTime(value) {
+  const normalized = normalizeScheduleTime(value);
+  const [hours, minutes] = normalized.split(":").map(Number);
+  const period = hours >= 12 ? "PM" : "AM";
+  const displayHours = hours % 12 || 12;
+
+  return `${displayHours}:${String(minutes).padStart(2, "0")} ${period}`;
+}
+
+function parsePositiveIntegerParam(value) {
+  const text = String(value || "").trim();
+
+  if (!/^[1-9]\d*$/.test(text)) {
+    return null;
+  }
+
+  return Number(text);
 }
 
 export function getTodayDate() {
