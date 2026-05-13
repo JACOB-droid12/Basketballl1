@@ -84,23 +84,48 @@ export function findNearestAvailableSlot({ startDate, timeSlots = [], reservatio
 }
 
 export function buildDashboardSummary({ today, todaySchedule = [], upcomingReservations = [] }) {
-  const todayReserved = todaySchedule
-    .filter((slot) => slot.statusCode === "RESERVED" && slot.reservation)
-    .map((slot) => slot.reservation);
-  const missedReservations = todaySchedule
-    .filter((slot) => slot.statusCode === "MISSED" && slot.reservation)
-    .map((slot) => slot.reservation);
+  const todayReserved = uniqueReservationsById(
+    todaySchedule
+      .filter((slot) => slot.statusCode === "RESERVED" && slot.reservation)
+      .map((slot) => slot.reservation)
+  );
+  const missedReservations = uniqueReservationsById(
+    todaySchedule
+      .filter((slot) => slot.statusCode === "MISSED" && slot.reservation)
+      .map((slot) => slot.reservation)
+  );
   const actionableUpcoming = upcomingReservations.filter((reservation) => reservation.statusCode === "RESERVED");
 
   return {
     today,
     reservedCount: todayReserved.length,
-    availableCount: todaySchedule.filter((slot) => slot.statusCode === "AVAILABLE").length,
+    availableCount: todaySchedule.filter(isBookableSlot).length,
     missedCount: missedReservations.length,
     todayReserved,
     missedReservations,
     upcomingReservations: actionableUpcoming
   };
+}
+
+function uniqueReservationsById(reservations) {
+  const uniqueReservations = new Map();
+
+  for (const reservation of reservations) {
+    const key = reservation.reservationId ?? reservation;
+    if (!uniqueReservations.has(key)) {
+      uniqueReservations.set(key, reservation);
+    }
+  }
+
+  return [...uniqueReservations.values()];
+}
+
+function isBookableSlot(slot) {
+  if (typeof slot.isAvailableForBooking === "boolean") {
+    return slot.isAvailableForBooking;
+  }
+
+  return slot.statusCode === "AVAILABLE";
 }
 
 function compareReservationsForSlot(a, b) {

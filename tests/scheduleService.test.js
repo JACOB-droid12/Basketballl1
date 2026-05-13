@@ -216,9 +216,73 @@ test("builds dashboard summary counts and action lists", () => {
 
   assert.equal(summary.today, "2026-05-07");
   assert.equal(summary.reservedCount, 1);
-  assert.equal(summary.availableCount, 1);
+  assert.equal(summary.availableCount, 2);
   assert.equal(summary.missedCount, 1);
   assert.equal(summary.todayReserved.length, 1);
   assert.equal(summary.missedReservations.length, 1);
   assert.deepEqual(summary.upcomingReservations.map((reservation) => reservation.reservationId), [30]);
+});
+
+test("deduplicates multi-slot reserved and missed reservations in dashboard summary", () => {
+  const dashboardTimeSlots = [
+    ...timeSlots,
+    { slotId: 4, name: "10:00 AM - 11:00 AM", startTime: "10:00", endTime: "11:00" }
+  ];
+  const todaySchedule = buildDailySchedule({
+    date: "2026-05-07",
+    timeSlots: dashboardTimeSlots,
+    reservations: [
+      {
+        reservationId: 40,
+        reservationDate: "2026-05-07",
+        startTime: "07:00",
+        endTime: "09:00",
+        statusCode: "RESERVED",
+        representativeName: "Team C",
+        purpose: "Practice"
+      },
+      {
+        reservationId: 41,
+        reservationDate: "2026-05-07",
+        startTime: "09:00",
+        endTime: "11:00",
+        statusCode: "MISSED",
+        representativeName: "Team D",
+        purpose: "Game"
+      }
+    ]
+  });
+
+  const summary = buildDashboardSummary({
+    today: "2026-05-07",
+    todaySchedule
+  });
+
+  assert.equal(summary.reservedCount, 1);
+  assert.equal(summary.missedCount, 1);
+  assert.equal(summary.todayReserved.length, 1);
+  assert.equal(summary.missedReservations.length, 1);
+  assert.deepEqual(summary.todayReserved.map((reservation) => reservation.reservationId), [40]);
+  assert.deepEqual(summary.missedReservations.map((reservation) => reservation.reservationId), [41]);
+});
+
+test("counts bookable dashboard slots using availability flag", () => {
+  const todaySchedule = buildDailySchedule({
+    date: "2026-05-07",
+    timeSlots,
+    reservations: [
+      { reservationId: 50, reservationDate: "2026-05-07", startTime: "07:00", endTime: "08:00", statusCode: "CANCELLED" },
+      { reservationId: 51, reservationDate: "2026-05-07", startTime: "08:00", endTime: "09:00", statusCode: "MISSED" },
+      { reservationId: 52, reservationDate: "2026-05-07", startTime: "09:00", endTime: "10:00", statusCode: "COMPLETED" }
+    ]
+  });
+
+  const summary = buildDashboardSummary({
+    today: "2026-05-07",
+    todaySchedule
+  });
+
+  assert.equal(summary.availableCount, 3);
+  assert.equal(summary.missedCount, 1);
+  assert.deepEqual(summary.missedReservations.map((reservation) => reservation.reservationId), [51]);
 });
