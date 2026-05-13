@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 
 import { createDatabasePool } from "./config/database.js";
 import { createActivityLogRoutes } from "./features/activityLogs/activityLogRoutes.js";
+import { createReactAppRoutes } from "./features/frontend/reactAppRoutes.js";
 import { createPrototypeApiRoutes } from "./features/prototype/prototypeApiRoutes.js";
 import { createPrototypeRoutes } from "./features/prototype/prototypeRoutes.js";
 import { createReservationRoutes } from "./features/reservations/reservationRoutes.js";
@@ -17,9 +18,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, "..");
 
-export function createApp() {
+export function createApp(options = {}) {
   const app = express();
-  const db = createDatabasePool();
+  const db = options.db || createDatabasePool();
   app.locals.db = db;
 
   app.set("view engine", "ejs");
@@ -29,7 +30,7 @@ export function createApp() {
   app.use(express.json());
   app.use(express.static(path.join(projectRoot, "public")));
   app.use(
-    session({
+    options.sessionMiddleware || session({
       name: "barangay_scheduler_sid",
       secret: process.env.APP_SESSION_SECRET || "development-only-change-me",
       resave: false,
@@ -54,6 +55,7 @@ export function createApp() {
   app.use(createAuthRoutes({ db }));
   app.use(createPrototypeApiRoutes({ db }));
   app.use(requireSignedIn);
+  app.use(createReactAppRoutes());
   app.use(createDashboardRoutes({ db }));
   app.use(createReservationRoutes({ db }));
   app.use(createScheduleRoutes({ db }));

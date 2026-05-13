@@ -31,3 +31,34 @@ test("createApp serves the backend-injected prototype at the office URL", async 
     await app.locals.db?.end?.();
   }
 });
+
+test("createApp serves React staff shell for an authenticated dashboard route", async () => {
+  const db = { end: async () => {} };
+  const app = createApp({
+    db,
+    sessionMiddleware: (request, _response, next) => {
+      request.session = {
+        user: {
+          userId: 1,
+          fullName: "System Administrator",
+          username: "admin",
+          role: "ADMIN"
+        }
+      };
+      next();
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/dashboard`);
+    const body = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.match(body, /id="root"/);
+    assert.match(body, /\/app\/assets\//);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await app.locals.db?.end?.();
+  }
+});
