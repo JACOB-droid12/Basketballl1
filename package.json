@@ -22,17 +22,25 @@
     "check:database": "node scripts/check-runtime-database.mjs",
     "verify:ui": "node scripts/verify-ui-smoke.mjs",
     "backup:mysql": "node scripts/backup-mysql.mjs",
-    "restore:mysql": "node scripts/restore-mysql.mjs"
+    "restore:mysql": "node scripts/restore-mysql.mjs",
+    "frontend:dev": "vite --host 127.0.0.1 --config client/vite.config.js",
+    "frontend:build": "vite build --config client/vite.config.js",
+    "frontend:preview": "vite preview --host 127.0.0.1 --config client/vite.config.js",
+    "verify:react-build": "node scripts/verify-react-build.mjs"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
+    "@vitejs/plugin-react": "^6.0.1",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.7",
     "ejs": "^3.1.10",
     "express": "^4.21.2",
     "express-session": "^1.18.1",
-    "mysql2": "^3.11.5"
+    "mysql2": "^3.11.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "vite": "^8.0.12"
   }
 }
