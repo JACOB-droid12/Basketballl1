@@ -333,7 +333,7 @@ export async function updateReservationStatus(db, reservationId, statusCode, opt
     await connection.beginTransaction();
     const statusId = await findStatusIdByCode(connection, statusCode);
 
-    await connection.execute(
+    const [result] = await connection.execute(
       `
         UPDATE reservations
         SET status_id = :statusId
@@ -341,6 +341,10 @@ export async function updateReservationStatus(db, reservationId, statusCode, opt
       `,
       { statusId, reservationId: Number(reservationId) }
     );
+
+    if (result.affectedRows === 0) {
+      throw new ReservationNotFoundError();
+    }
 
     await writeActivityLog(connection, {
       reservationId: Number(reservationId),

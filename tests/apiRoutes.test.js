@@ -4,7 +4,7 @@ import express from "express";
 import test from "node:test";
 
 import { createApiRoutes } from "../src/features/api/apiRoutes.js";
-import { ReservationConflictError } from "../src/features/reservations/reservationRepository.js";
+import { ReservationConflictError, ReservationNotFoundError } from "../src/features/reservations/reservationRepository.js";
 import { DuplicateUsernameError } from "../src/features/users/userRepository.js";
 
 test("GET /api/session returns signed-out state", async () => {
@@ -305,6 +305,27 @@ test("POST /api/reservations/:reservationId/status rejects invalid and PENDING s
       }
     ]);
     assert.equal(missed.body.reservation.statusCode, "MISSED");
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("POST /api/reservations/:reservationId/status returns 404 when the reservation is missing", async () => {
+  const app = buildApiTestApp({
+    session: buildSession({ userId: 84 }),
+    repositories: {
+      updateReservationStatus: async () => {
+        throw new ReservationNotFoundError();
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await postJson(server, "/api/reservations/404/status", { statusCode: "MISSED" });
+
+    assert.equal(response.status, 404);
+    assert.deepEqual(response.body, { error: "Reservation record was not found." });
   } finally {
     await closeServer(server);
   }

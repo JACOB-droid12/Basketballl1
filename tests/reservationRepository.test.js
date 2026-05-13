@@ -6,7 +6,9 @@ import {
   buildReservationListQuery,
   buildReservationOverlapQuery,
   buildReservationUpdateQuery,
-  mapReservationRow
+  mapReservationRow,
+  ReservationNotFoundError,
+  updateReservationStatus
 } from "../src/features/reservations/reservationRepository.js";
 
 test("builds reservation list query with parameterized filters", () => {
@@ -117,4 +119,42 @@ test("maps reservation rows to view models", () => {
     address: "Purok 3",
     createdByName: "Admin User"
   });
+});
+
+test("updateReservationStatus throws not found before writing activity log when no reservation row is updated", async () => {
+  const calls = [];
+  const connection = {
+    beginTransaction: async () => calls.push("begin"),
+    commit: async () => calls.push("commit"),
+    rollback: async () => calls.push("rollback"),
+    release: () => calls.push("release"),
+    execute: async (sql) => {
+      if (sql.includes("SELECT status_id")) {
+        calls.push("select-status");
+        return [[{ status_id: 3 }]];
+      }
+
+      if (sql.includes("UPDATE reservations")) {
+        calls.push("update-reservation");
+        return [{ affectedRows: 0 }];
+      }
+
+      if (sql.includes("INSERT INTO activity_logs")) {
+        calls.push("insert-log");
+        return [{ affectedRows: 1 }];
+      }
+
+      throw new Error(`Unexpected SQL: ${sql}`);
+    }
+  };
+  const db = {
+    getConnection: async () => connection
+  };
+
+  await assert.rejects(
+    () => updateReservationStatus(db, 404, "MISSED", { userId: 1 }),
+    ReservationNotFoundError
+  );
+
+  assert.deepEqual(calls, ["begin", "select-status", "update-reservation", "rollback", "release"]);
 });
