@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { createDatabasePool } from "./config/database.js";
+import { createApiRoutes } from "./features/api/apiRoutes.js";
 import { createActivityLogRoutes } from "./features/activityLogs/activityLogRoutes.js";
 import { createReactAppRoutes } from "./features/frontend/reactAppRoutes.js";
 import { createPrototypeApiRoutes } from "./features/prototype/prototypeApiRoutes.js";
@@ -53,6 +54,7 @@ export function createApp(options = {}) {
   });
 
   app.use(createAuthRoutes({ db, enableLegacyAccountUi: false }));
+  app.use(createApiRoutes({ db }));
   app.use(createPrototypeApiRoutes({ db }));
   app.use(requireSignedIn);
   app.use(createReactAppRoutes());
