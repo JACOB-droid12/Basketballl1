@@ -507,6 +507,18 @@ p {
   font-weight: 700;
 }
 
+.date-field {
+  display: grid;
+  gap: 6px;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.date-field span {
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
 .date-input:focus {
   outline: 3px solid var(--primary-soft);
   border-color: var(--primary);

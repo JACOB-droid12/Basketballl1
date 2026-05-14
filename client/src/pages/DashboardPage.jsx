@@ -28,7 +28,7 @@ export function DashboardPage({ onNavigate }) {
   }, []);
 
   if (state.loading) return <LoadingState label="Loading today's schedule..." />;
-  if (state.error) return <div className="alert error">{state.error}</div>;
+  if (state.error) return <div className="alert error" role="alert">{state.error}</div>;
 
   const todaySchedule = state.data?.todaySchedule || [];
   const summary = state.data?.summary || {};

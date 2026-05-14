@@ -6,7 +6,7 @@ import { LoadingState } from "../components/LoadingState.jsx";
 import { StatusBadge } from "../components/StatusBadge.jsx";
 
 export function CalendarPage() {
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(getManilaDate);
   const [state, setState] = useState({ loading: true, data: null, error: "" });
 
   useEffect(() => {
@@ -30,8 +30,8 @@ export function CalendarPage() {
 
   if (state.loading) return <LoadingState label="Loading weekly calendar..." />;
 
-  const days = state.data?.days || [];
-  const rows = state.data?.rows || [];
+  const days = Array.isArray(state.data?.days) ? state.data.days : [];
+  const rows = Array.isArray(state.data?.rows) ? state.data.rows : [];
 
   return (
     <section className="page">
@@ -41,10 +41,13 @@ export function CalendarPage() {
           <h1>Weekly schedule</h1>
           <p className="page-subtitle">Tingnan ang available and reserved slots.</p>
         </div>
-        <input className="date-input" type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+        <label className="date-field">
+          <span>Schedule date</span>
+          <input className="date-input" type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+        </label>
       </div>
       {state.error ? (
-        <div className="alert error">{state.error}</div>
+        <div className="alert error" role="alert">{state.error}</div>
       ) : (
         <div className="calendar-table">
           <div className="calendar-header" style={{ gridTemplateColumns: `130px repeat(${days.length}, minmax(120px, 1fr))` }}>
@@ -56,23 +59,32 @@ export function CalendarPage() {
               </strong>
             ))}
           </div>
-          {rows.map((row) => (
-            <div className="calendar-row" style={{ gridTemplateColumns: `130px repeat(${row.cells.length}, minmax(120px, 1fr))` }} key={row.slotId}>
-              <strong>
-                {displayTime(row.startTime)}
-                <small>{displayTime(row.endTime)}</small>
-              </strong>
-              {row.cells.map((cell, index) => (
-                <div
-                  key={`${row.slotId}-${days[index]?.date || index}-${cell.slotId}-${cell.reservation?.reservationId || "empty"}`}
-                  className={`calendar-cell status-${String(cell.statusCode || "AVAILABLE").toLowerCase()}`}
-                >
-                  <StatusBadge statusCode={cell.statusCode} />
-                  {cell.reservation && <span>{cell.reservation.representativeName}</span>}
-                </div>
-              ))}
-            </div>
-          ))}
+          {rows.map((row, rowIndex) => {
+            const safeRow = row || {};
+            const cells = Array.isArray(safeRow.cells) ? safeRow.cells : [];
+
+            return (
+              <div className="calendar-row" style={{ gridTemplateColumns: `130px repeat(${cells.length}, minmax(120px, 1fr))` }} key={safeRow.slotId || rowIndex}>
+                <strong>
+                  {displayTime(safeRow.startTime)}
+                  <small>{displayTime(safeRow.endTime)}</small>
+                </strong>
+                {cells.map((cell, index) => {
+                  const safeCell = cell || {};
+
+                  return (
+                    <div
+                      key={`${safeRow.slotId || rowIndex}-${days[index]?.date || index}-${safeCell.slotId || index}-${safeCell.reservation?.reservationId || "empty"}`}
+                      className={`calendar-cell status-${String(safeCell.statusCode || "AVAILABLE").toLowerCase()}`}
+                    >
+                      <StatusBadge statusCode={safeCell.statusCode} />
+                      {safeCell.reservation && <span>{safeCell.reservation.representativeName}</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
       )}
     </section>
@@ -81,4 +93,16 @@ export function CalendarPage() {
 
 function displayTime(time) {
   return time ? formatTime(time) : "";
+}
+
+function getManilaDate() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+
+  return `${values.year}-${values.month}-${values.day}`;
 }
