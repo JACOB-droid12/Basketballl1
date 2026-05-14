@@ -35,6 +35,8 @@ test("offline bundle script copies runtime files and node_modules", () => {
   assert.match(script, /"src"/);
   assert.match(script, /"views"/);
   assert.match(script, /"public"/);
+  assert.match(script, /React staff console build was not found/);
+  assert.match(script, /public\\app\\\.vite\\manifest\.json/);
   assert.doesNotMatch(script, /\.env"/);
 });
 
@@ -55,6 +57,8 @@ test("offline bundle verifier accepts a complete prepared bundle", () => {
 
     assert.equal(report.ok, true);
     assert.equal(report.mode, "candidate");
+    assert.equal(report.checks.some((check) => check.name === "required directory: public/app" && check.ok), true);
+    assert.equal(report.checks.some((check) => check.name === "required file: public/app/.vite/manifest.json" && check.ok), true);
   } finally {
     rmSync(bundleRoot, { recursive: true, force: true });
   }
@@ -143,6 +147,8 @@ function createTemporaryBundle(options = {}) {
     "views/account/password.ejs",
     "public/css/styles.css",
     "public/js/prototype-backend.js",
+    "public/app/",
+    "public/app/.vite/manifest.json",
     "public/prototype/sto-nino-court-reservation-system-prototype.html",
     "public/vendor/html2canvas.min.js",
     "public/vendor/jspdf.umd.min.js",

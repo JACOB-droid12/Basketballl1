@@ -53,6 +53,8 @@ test("runtime package verifier reports missing files for a non one-stop package"
     assert.match(formatted, /Barangay Court Scheduler daily launcher/);
     assert.match(formatted, /Maintenance Tools launcher/);
     assert.match(formatted, /node_modules or built backend output/);
+    assert.match(formatted, /built React staff console assets/);
+    assert.match(formatted, /React asset manifest/);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -90,6 +92,8 @@ function completeAppFiles() {
     "database/diagnostics.sql",
     "src/server.js",
     "src/app.js",
+    "public/app/",
+    "public/app/.vite/manifest.json",
     "public/prototype/sto-nino-court-reservation-system-prototype.html",
     "data/mariadb-data/",
     "node_modules"

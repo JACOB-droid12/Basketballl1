@@ -5,6 +5,7 @@ $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $DistRoot = Join-Path $ProjectRoot "dist"
 $BundleRoot = Join-Path $DistRoot "barangay-court-scheduler-offline"
 $NodeModulesPath = Join-Path $ProjectRoot "node_modules"
+$ReactManifestPath = Join-Path $ProjectRoot "public\app\.vite\manifest.json"
 
 function Assert-ChildPath {
   param(
@@ -28,6 +29,10 @@ Set-Location -LiteralPath $ProjectRoot
 
 if (-not (Test-Path -LiteralPath $NodeModulesPath)) {
   throw "node_modules was not found. Run npm install on this setup computer before creating the offline bundle."
+}
+
+if (-not (Test-Path -LiteralPath $ReactManifestPath)) {
+  throw "React staff console build was not found. Run npm run frontend:build before npm run bundle:offline."
 }
 
 if (-not (Test-Path -LiteralPath $DistRoot)) {

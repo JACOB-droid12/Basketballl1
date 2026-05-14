@@ -24,6 +24,8 @@ const REQUIRED_APP_ITEMS = [
   { path: "database/diagnostics.sql", type: "file", detail: "database verification file" },
   { path: "src/server.js", type: "file", detail: "backend server entry point" },
   { path: "src/app.js", type: "file", detail: "backend app entry point" },
+  { path: "public/app", type: "directory", detail: "built React staff console assets" },
+  { path: "public/app/.vite/manifest.json", type: "file", detail: "React asset manifest" },
   { path: "public/prototype/sto-nino-court-reservation-system-prototype.html", type: "file", detail: "prototype frontend entry point" },
   { path: "data/mariadb-data", type: "directory", detail: "portable MariaDB data folder" }
 ];

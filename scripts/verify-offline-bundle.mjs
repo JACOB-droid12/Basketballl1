@@ -35,6 +35,8 @@ const REQUIRED_BUNDLE_ITEMS = [
   { path: "views/account/password.ejs", type: "file" },
   { path: "public/css/styles.css", type: "file" },
   { path: "public/js/prototype-backend.js", type: "file" },
+  { path: "public/app", type: "directory" },
+  { path: "public/app/.vite/manifest.json", type: "file" },
   { path: "public/prototype/sto-nino-court-reservation-system-prototype.html", type: "file" },
   { path: "public/vendor/html2canvas.min.js", type: "file" },
   { path: "public/vendor/jspdf.umd.min.js", type: "file" },
