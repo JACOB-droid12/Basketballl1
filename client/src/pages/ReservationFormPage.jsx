@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { apiRequest } from "../api/client.js";
 import { formatDate, formatTime } from "../api/mappers.js";
@@ -19,7 +19,6 @@ const EMPTY_FORM = {
 export function ReservationFormPage({ reservationId, onNavigate }) {
   const isEdit = Boolean(reservationId);
   const [form, setForm] = useState(EMPTY_FORM);
-  const [originalTime, setOriginalTime] = useState(null);
   const [state, setState] = useState({ loading: isEdit, saving: false, error: "", fieldErrors: {} });
   const [availability, setAvailability] = useState({ loading: false, data: null, error: "" });
 
@@ -45,7 +44,6 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
           statusCode: reservation.statusCode || "RESERVED"
         };
         setForm(nextForm);
-        setOriginalTime(pickTime(nextForm));
         setState({ loading: false, saving: false, error: "", fieldErrors: {} });
       })
       .catch((error) => {
@@ -58,17 +56,7 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
     };
   }, [isEdit, reservationId]);
 
-  const shouldCheckAvailability = useMemo(() => {
-    if (!form.reservationDate || !form.startTime || !form.endTime) return false;
-    if (!isEdit) return true;
-    if (!originalTime) return false;
-
-    return (
-      form.reservationDate !== originalTime.reservationDate ||
-      form.startTime !== originalTime.startTime ||
-      form.endTime !== originalTime.endTime
-    );
-  }, [form.endTime, form.reservationDate, form.startTime, isEdit, originalTime]);
+  const shouldCheckAvailability = !isEdit && Boolean(form.reservationDate && form.startTime && form.endTime);
 
   useEffect(() => {
     if (!shouldCheckAvailability) {
@@ -245,14 +233,6 @@ function buildSubmitError(error) {
   }
 
   return error.message;
-}
-
-function pickTime(form) {
-  return {
-    reservationDate: form.reservationDate,
-    startTime: form.startTime,
-    endTime: form.endTime
-  };
 }
 
 function getManilaDate() {
