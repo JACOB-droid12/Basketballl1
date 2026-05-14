@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { cloneElement, useEffect, useState } from "react";
 
 import { apiRequest } from "../api/client.js";
 import { formatDate, formatTime } from "../api/mappers.js";
@@ -138,28 +138,28 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
 
       <form className="form-card" onSubmit={handleSubmit}>
         <div className="form-grid">
-          <Field label="Representative" error={state.fieldErrors.representativeName}>
+          <Field id="representativeName" label="Representative" error={state.fieldErrors.representativeName}>
             <input value={form.representativeName} onChange={(event) => updateField("representativeName", event.target.value)} required />
           </Field>
-          <Field label="Contact number" error={state.fieldErrors.contactNo}>
+          <Field id="contactNo" label="Contact number" error={state.fieldErrors.contactNo}>
             <input value={form.contactNo} onChange={(event) => updateField("contactNo", event.target.value)} required />
           </Field>
-          <Field label="Address" error={state.fieldErrors.address} wide>
+          <Field id="address" label="Address" error={state.fieldErrors.address} wide>
             <input value={form.address} onChange={(event) => updateField("address", event.target.value)} required />
           </Field>
-          <Field label="Purpose" error={state.fieldErrors.purpose} wide>
+          <Field id="purpose" label="Purpose" error={state.fieldErrors.purpose} wide>
             <input value={form.purpose} onChange={(event) => updateField("purpose", event.target.value)} required />
           </Field>
-          <Field label="Reservation date" error={state.fieldErrors.reservationDate}>
+          <Field id="reservationDate" label="Reservation date" error={state.fieldErrors.reservationDate}>
             <input type="date" value={form.reservationDate} onChange={(event) => updateField("reservationDate", event.target.value)} required />
           </Field>
-          <Field label="Start time" error={state.fieldErrors.startTime}>
+          <Field id="startTime" label="Start time" error={state.fieldErrors.startTime}>
             <input type="time" value={form.startTime} onChange={(event) => updateField("startTime", event.target.value)} required />
           </Field>
-          <Field label="End time" error={state.fieldErrors.endTime || state.fieldErrors.timeRange}>
+          <Field id="endTime" label="End time" error={state.fieldErrors.endTime || state.fieldErrors.timeRange}>
             <input type="time" value={form.endTime} onChange={(event) => updateField("endTime", event.target.value)} required />
           </Field>
-          <Field label="Remarks" error={state.fieldErrors.remarks} wide>
+          <Field id="remarks" label="Remarks" error={state.fieldErrors.remarks} wide>
             <textarea value={form.remarks} onChange={(event) => updateField("remarks", event.target.value)} rows="4" />
           </Field>
         </div>
@@ -179,12 +179,19 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
   );
 }
 
-function Field({ label, error, children, wide }) {
+function Field({ id, label, error, children, wide }) {
+  const errorId = `${id}-error`;
+  const control = cloneElement(children, {
+    id,
+    "aria-invalid": error ? "true" : undefined,
+    "aria-describedby": error ? errorId : undefined
+  });
+
   return (
     <label className={`field ${wide ? "wide" : ""}`}>
       <span>{label}</span>
-      {children}
-      {error && <small className="field-error" role="alert">{error}</small>}
+      {control}
+      {error && <small id={errorId} className="field-error" role="alert">{error}</small>}
     </label>
   );
 }

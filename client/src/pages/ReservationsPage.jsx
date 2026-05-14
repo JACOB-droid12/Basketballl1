@@ -25,29 +25,19 @@ export function ReservationsPage({ onNavigate }) {
 
   const reservations = state.reservations;
   const filteredReservations = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-
-    return reservations.filter((reservation) => {
-      const matchesStatus = status === "all" || reservation.statusCode === status;
-      const searchable = [
-        reservation.reservationId,
-        reservation.representativeName,
-        reservation.contactNo,
-        reservation.purpose,
-        reservation.reservationDate,
-        reservation.startTime,
-        reservation.endTime,
-        STATUS_LABELS[reservation.statusCode] || reservation.statusCode
-      ].join(" ").toLowerCase();
-
-      return matchesStatus && (!needle || searchable.includes(needle));
-    });
+    return filterReservations(reservations, query, status);
   }, [query, reservations, status]);
 
   const selectedReservation = useMemo(() => {
-    if (!selectedId) return filteredReservations[0] || null;
-    return reservations.find((reservation) => reservation.reservationId === selectedId) || filteredReservations[0] || null;
-  }, [filteredReservations, reservations, selectedId]);
+    if (!selectedId) return null;
+    return filteredReservations.find((reservation) => reservation.reservationId === selectedId) || null;
+  }, [filteredReservations, selectedId]);
+
+  useEffect(() => {
+    if (selectedId && !filteredReservations.some((reservation) => reservation.reservationId === selectedId)) {
+      setSelectedId(null);
+    }
+  }, [filteredReservations, selectedId]);
 
   async function loadReservations(nextSelectedId = selectedId) {
     setState((current) => ({ ...current, loading: true, error: "" }));
@@ -55,12 +45,13 @@ export function ReservationsPage({ onNavigate }) {
     try {
       const data = await apiRequest("/api/reservations");
       const nextReservations = Array.isArray(data.reservations) ? data.reservations : [];
+      const nextFilteredReservations = filterReservations(nextReservations, query, status);
       setState({ loading: false, reservations: nextReservations, error: "" });
 
-      if (nextSelectedId && nextReservations.some((reservation) => reservation.reservationId === nextSelectedId)) {
+      if (nextSelectedId && nextFilteredReservations.some((reservation) => reservation.reservationId === nextSelectedId)) {
         setSelectedId(nextSelectedId);
       } else {
-        setSelectedId(nextReservations[0]?.reservationId || null);
+        setSelectedId(null);
       }
     } catch (error) {
       setState({ loading: false, reservations: [], error: error.message });
@@ -70,16 +61,17 @@ export function ReservationsPage({ onNavigate }) {
   async function updateStatus() {
     if (!dialog) return;
 
+    const action = dialog;
+    setDialog(null);
     setBusy(true);
     setActionError("");
 
     try {
-      const data = await apiRequest(`/api/reservations/${dialog.reservation.reservationId}/status`, {
+      const data = await apiRequest(`/api/reservations/${action.reservation.reservationId}/status`, {
         method: "POST",
-        body: JSON.stringify({ statusCode: dialog.statusCode })
+        body: JSON.stringify({ statusCode: action.statusCode })
       });
-      setDialog(null);
-      await loadReservations(data.reservation?.reservationId || dialog.reservation.reservationId);
+      await loadReservations(data.reservation?.reservationId || action.reservation.reservationId);
     } catch (error) {
       setActionError(error.message);
     } finally {
@@ -139,7 +131,7 @@ export function ReservationsPage({ onNavigate }) {
                 <EmptyState title="No matching reservations" body="Try a different search term or status filter." />
               ) : (
                 <div className="table-wrap">
-                  <table className="data-table">
+                  <table className="data-table" role="grid">
                     <thead>
                       <tr>
                         <th>ID</th>
@@ -153,26 +145,12 @@ export function ReservationsPage({ onNavigate }) {
                     </thead>
                     <tbody>
                       {filteredReservations.map((reservation) => (
-                        <tr
+                        <ReservationRow
                           key={reservation.reservationId}
-                          className={reservation.reservationId === selectedReservation?.reservationId ? "selected" : ""}
-                          tabIndex={0}
-                          onClick={() => setSelectedId(reservation.reservationId)}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter" || event.key === " ") {
-                              event.preventDefault();
-                              setSelectedId(reservation.reservationId);
-                            }
-                          }}
-                        >
-                          <td>#{reservation.reservationId}</td>
-                          <td>{reservation.representativeName}</td>
-                          <td>{reservation.contactNo}</td>
-                          <td>{reservation.purpose}</td>
-                          <td>{formatDate(reservation.reservationDate)}</td>
-                          <td>{displayRange(reservation.startTime, reservation.endTime)}</td>
-                          <td><StatusBadge statusCode={reservation.statusCode} /></td>
-                        </tr>
+                          reservation={reservation}
+                          selected={reservation.reservationId === selectedReservation?.reservationId}
+                          onSelect={() => setSelectedId(reservation.reservationId)}
+                        />
                       ))}
                     </tbody>
                   </table>
@@ -201,6 +179,31 @@ export function ReservationsPage({ onNavigate }) {
         />
       )}
     </section>
+  );
+}
+
+function ReservationRow({ reservation, selected, onSelect }) {
+  return (
+    <tr
+      className={selected ? "selected" : ""}
+      tabIndex={0}
+      aria-selected={selected}
+      onClick={onSelect}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelect();
+        }
+      }}
+    >
+      <td>#{reservation.reservationId}</td>
+      <td>{reservation.representativeName}</td>
+      <td>{reservation.contactNo}</td>
+      <td>{reservation.purpose}</td>
+      <td>{formatDate(reservation.reservationDate)}</td>
+      <td>{displayRange(reservation.startTime, reservation.endTime)}</td>
+      <td><StatusBadge statusCode={reservation.statusCode} /></td>
+    </tr>
   );
 }
 
@@ -274,4 +277,24 @@ function ReservationDetail({ reservation, onEdit, onStatusAction }) {
 function displayRange(startTime, endTime) {
   if (!startTime || !endTime) return "Time unavailable";
   return `${formatTime(startTime)} - ${formatTime(endTime)}`;
+}
+
+function filterReservations(reservations, query, status) {
+  const needle = query.trim().toLowerCase();
+
+  return reservations.filter((reservation) => {
+    const matchesStatus = status === "all" || reservation.statusCode === status;
+    const searchable = [
+      reservation.reservationId,
+      reservation.representativeName,
+      reservation.contactNo,
+      reservation.purpose,
+      reservation.reservationDate,
+      reservation.startTime,
+      reservation.endTime,
+      STATUS_LABELS[reservation.statusCode] || reservation.statusCode
+    ].join(" ").toLowerCase();
+
+    return matchesStatus && (!needle || searchable.includes(needle));
+  });
 }
