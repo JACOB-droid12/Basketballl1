@@ -7,6 +7,7 @@ const PROJECT_ROOT = path.dirname(path.dirname(path.dirname(path.dirname(fileURL
 const MANIFEST_PATH = path.join(PROJECT_ROOT, "public", "app", ".vite", "manifest.json");
 
 const MAIN_ROUTES = [
+  "/login",
   "/dashboard",
   "/schedule",
   "/reservations",
@@ -22,9 +23,10 @@ const MAIN_ROUTES = [
 export function createReactAppRoutes(options = {}) {
   const router = Router();
   const manifestPath = options.manifestPath || MANIFEST_PATH;
+  const routes = options.routes || MAIN_ROUTES;
   let cachedAssets = null;
 
-  router.get(MAIN_ROUTES, (_request, response) => {
+  router.get(routes, (_request, response) => {
     cachedAssets ||= readReactAssets(manifestPath);
     const assets = cachedAssets;
     response.render("app", assets);

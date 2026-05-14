@@ -320,7 +320,8 @@ test("live app HTTP smoke logs in and checks authenticated office pages", async 
     "/dashboard",
     "/schedule",
     "/reservations",
-    "/activity-logs"
+    "/activity-logs",
+    "/reports"
   ]);
   assert.ok(results.every((result) => result.status === 200));
 });
@@ -332,7 +333,7 @@ test("live app HTTP smoke can use configured login credentials", async () => {
     loginPassword: "changed-password"
   });
 
-  assert.equal(results.length, 4);
+  assert.equal(results.length, 5);
 });
 
 test("live app HTTP smoke reports login failure clearly", async () => {
@@ -363,10 +364,11 @@ function buildFakeLiveApp(options = {}) {
   });
 
   for (const [path, text] of [
-    ["/dashboard", "Basketball Court Schedule"],
-    ["/schedule", "Print Schedule"],
-    ["/reservations", "Reservation Records"],
-    ["/activity-logs", "Reservation Activity Monitoring"]
+    ["/dashboard", "id=\"root\""],
+    ["/schedule", "id=\"root\""],
+    ["/reservations", "id=\"root\""],
+    ["/activity-logs", "id=\"root\""],
+    ["/reports", "id=\"root\""]
   ]) {
     app.get(path, (request, response) => {
       if (!String(request.headers.cookie || "").includes("barangay_scheduler_sid=test-session")) {

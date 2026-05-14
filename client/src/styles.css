@@ -12,6 +12,7 @@
   --shadow: 0 18px 50px rgba(32, 35, 38, 0.12);
   --border: #ded8cd;
   font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 17px;
 }
 
 * {
@@ -91,10 +92,10 @@ p {
 }
 
 .btn {
-  min-height: 40px;
+  min-height: 48px;
   border: 1px solid transparent;
   border-radius: 8px;
-  padding: 0 16px;
+  padding: 0 18px;
   font-weight: 700;
   transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
 }
@@ -189,7 +190,7 @@ p {
 
 .login-side h1 {
   max-width: 680px;
-  font-size: clamp(36px, 6vw, 66px);
+  font-size: 56px;
   line-height: 1;
   margin-bottom: 20px;
 }
@@ -303,7 +304,7 @@ p {
 .app-layout {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
+  grid-template-columns: 300px minmax(0, 1fr);
   grid-template-rows: 72px minmax(0, 1fr);
 }
 
@@ -313,18 +314,50 @@ p {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  padding: 0 24px;
-  border-bottom: 1px solid var(--border);
-  background: rgba(251, 250, 247, 0.94);
+  padding: 0 28px;
+  background: var(--primary);
+  color: #f7fbfd;
+}
+
+.topbar .brand span,
+.topbar .user-chip small {
+  color: rgba(247, 251, 253, 0.78);
 }
 
 .topbar-actions {
-  gap: 12px;
+  gap: 14px;
+}
+
+.office-clock {
+  display: grid;
+  gap: 2px;
+  min-width: 148px;
+  text-align: right;
+  line-height: 1.15;
+}
+
+.office-clock strong,
+.office-clock small {
+  display: block;
+}
+
+.office-clock strong {
+  color: #f7fbfd;
+  font-size: 15px;
+}
+
+.office-clock small {
+  color: rgba(247, 251, 253, 0.76);
+  font-size: 12px;
 }
 
 .user-chip {
   gap: 10px;
   min-width: 0;
+  border: 1px solid rgba(247, 251, 253, 0.18);
+  border-radius: 999px;
+  padding: 6px 12px 6px 6px;
+  background: rgba(247, 251, 253, 0.12);
 }
 
 .avatar {
@@ -334,8 +367,8 @@ p {
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: var(--primary-soft);
-  color: var(--primary-dark);
+  background: var(--accent);
+  color: #fffaf2;
   font-size: 13px;
   font-weight: 800;
 }
@@ -343,28 +376,33 @@ p {
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 20px;
+  gap: 6px;
+  padding: 20px 16px;
   border-right: 1px solid var(--border);
   background: var(--surface);
 }
 
 .nav-item {
   width: 100%;
-  border: 1px solid transparent;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  min-height: 68px;
+  border: 2px solid transparent;
   border-radius: 8px;
-  padding: 12px;
+  padding: 12px 14px;
   background: transparent;
   color: var(--ink);
   text-align: left;
 }
 
-.nav-item span,
+.nav-copy,
 .nav-item small {
   display: block;
 }
 
-.nav-item span {
+.nav-copy > span {
   font-weight: 800;
 }
 
@@ -378,6 +416,31 @@ p {
 .nav-item.active {
   border-color: var(--primary-soft);
   background: var(--primary-soft);
+}
+
+.nav-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: #f0ebe2;
+  color: var(--primary-dark);
+}
+
+.nav-icon svg {
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nav-item.active .nav-icon {
+  background: var(--primary);
+  color: #f7fbfd;
 }
 
 .sidebar-help {
@@ -413,7 +476,7 @@ p {
 }
 
 .page-heading h1 {
-  font-size: clamp(30px, 4vw, 44px);
+  font-size: 40px;
   line-height: 1.05;
 }
 
@@ -430,7 +493,7 @@ p {
 }
 
 .page-header h1 {
-  font-size: clamp(30px, 4vw, 44px);
+  font-size: 40px;
   line-height: 1.05;
 }
 
@@ -494,7 +557,7 @@ p {
 
 .data-table th,
 .data-table td {
-  padding: 13px 14px;
+  padding: 15px 16px;
   border-bottom: 1px solid var(--border);
   text-align: left;
   vertical-align: top;
@@ -651,7 +714,7 @@ p {
 .stat-card {
   display: grid;
   gap: 12px;
-  padding: 20px;
+  padding: 22px;
 }
 
 .stat-card span {
@@ -663,7 +726,7 @@ p {
 
 .stat-card strong {
   color: var(--primary-dark);
-  font-size: clamp(30px, 4vw, 42px);
+  font-size: 40px;
   line-height: 1;
 }
 
@@ -850,12 +913,18 @@ p {
 
 .booking-row {
   display: grid;
-  grid-template-columns: 170px minmax(0, 1fr) auto;
-  gap: 16px;
+  grid-template-columns: 150px minmax(0, 1fr) auto;
+  gap: 20px;
   align-items: center;
-  min-height: 72px;
-  padding: 14px 20px;
+  min-height: 78px;
+  padding: 18px 24px;
   border-bottom: 1px solid var(--border);
+}
+
+.booking-row > strong {
+  color: var(--primary);
+  font-size: 20px;
+  line-height: 1.15;
 }
 
 .booking-row:last-child {
@@ -1126,6 +1195,10 @@ p {
     justify-content: space-between;
   }
 
+  .office-clock {
+    display: none;
+  }
+
   .sidebar {
     flex-direction: row;
     overflow-x: auto;
@@ -1152,6 +1225,11 @@ p {
 
   .login-side h1 {
     font-size: 34px;
+  }
+
+  .page-heading h1,
+  .page-header h1 {
+    font-size: 32px;
   }
 
   .login-card {

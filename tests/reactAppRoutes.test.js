@@ -20,6 +20,7 @@ test("main staff routes render the React app shell", async () => {
   const server = app.listen(0);
   try {
     const routes = [
+      "/login",
       "/dashboard",
       "/schedule",
       "/reservations",

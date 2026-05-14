@@ -79,6 +79,31 @@ test("createApp serves React staff shell for authenticated main staff routes", a
   }
 });
 
+test("createApp serves the React login route for signed-out staff", async () => {
+  const db = { end: async () => {} };
+  const app = createApp({
+    db,
+    sessionMiddleware: (request, _response, next) => {
+      request.session = {};
+      next();
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/login`);
+    const body = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.match(body, /id="root"/);
+    assert.match(body, /\/app\/assets\//);
+    assert.doesNotMatch(body, /unpkg\.com|cdnjs\.cloudflare\.com|fonts\.googleapis\.com/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await app.locals.db?.end?.();
+  }
+});
+
 test("createApp keeps reservation CSV export on the legacy handler", async () => {
   let executeCall = null;
   const db = {

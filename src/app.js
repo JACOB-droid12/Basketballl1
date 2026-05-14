@@ -53,9 +53,10 @@ export function createApp(options = {}) {
     response.json({ status: "ok", milestone: "foundation" });
   });
 
-  app.use(createAuthRoutes({ db, enableLegacyAccountUi: false }));
+  app.use(createAuthRoutes({ db, enableLegacyAccountUi: false, enableLegacyLoginUi: false }));
   app.use(createApiRoutes({ db }));
   app.use(createPrototypeApiRoutes({ db }));
+  app.use(createReactAppRoutes({ routes: ["/login"] }));
   app.use(requireSignedIn);
   app.use(createReactAppRoutes());
   app.use(createDashboardRoutes({ db }));

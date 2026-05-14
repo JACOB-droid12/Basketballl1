@@ -20,18 +20,25 @@ const defaultRepositories = {
   updateUserPassword
 };
 
-export function createAuthRoutes({ db, repositories = {}, enableLegacyAccountUi = true } = {}) {
+export function createAuthRoutes({
+  db,
+  repositories = {},
+  enableLegacyAccountUi = true,
+  enableLegacyLoginUi = true
+} = {}) {
   const repo = { ...defaultRepositories, ...repositories };
   const router = Router();
 
-  router.get("/login", (request, response) => {
-    if (request.session?.user) {
-      response.redirect("/dashboard");
-      return;
-    }
+  if (enableLegacyLoginUi) {
+    router.get("/login", (request, response) => {
+      if (request.session?.user) {
+        response.redirect("/dashboard");
+        return;
+      }
 
-    renderLogin(response);
-  });
+      renderLogin(response);
+    });
+  }
 
   router.post("/login", async (request, response) => {
     const username = String(request.body.username || "").trim().toLowerCase();
