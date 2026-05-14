@@ -20,7 +20,7 @@ export function AccountsPage({ user }) {
   const [formSuccess, setFormSuccess] = useState("");
   const [saving, setSaving] = useState(false);
   const [statusError, setStatusError] = useState("");
-  const [updatingUserId, setUpdatingUserId] = useState(null);
+  const [updatingUserIds, setUpdatingUserIds] = useState(() => new Set());
 
   useEffect(() => {
     if (!isAdmin) {
@@ -81,8 +81,10 @@ export function AccountsPage({ user }) {
   }
 
   async function handleStatusChange(account) {
+    if (updatingUserIds.has(account.userId)) return;
+
     const nextStatus = account.accountStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-    setUpdatingUserId(account.userId);
+    setUpdatingUserIds((current) => new Set(current).add(account.userId));
     setStatusError("");
 
     try {
@@ -99,7 +101,11 @@ export function AccountsPage({ user }) {
     } catch (error) {
       setStatusError(error.message);
     } finally {
-      setUpdatingUserId(null);
+      setUpdatingUserIds((current) => {
+        const next = new Set(current);
+        next.delete(account.userId);
+        return next;
+      });
     }
   }
 
@@ -216,28 +222,13 @@ export function AccountsPage({ user }) {
                   </thead>
                   <tbody>
                     {sortedAccounts.map((account) => (
-                      <tr key={account.userId}>
-                        <td>{account.fullName}</td>
-                        <td>{account.username}</td>
-                        <td>{formatRole(account.role)}</td>
-                        <td><AccountStatus status={account.accountStatus} /></td>
-                        <td>
-                          {Number(account.userId) === Number(user.userId) ? (
-                            <span className="muted">Current account</span>
-                          ) : (
-                            <button
-                              className={account.accountStatus === "ACTIVE" ? "btn btn-danger" : "btn btn-primary"}
-                              type="button"
-                              disabled={updatingUserId === account.userId}
-                              onClick={() => handleStatusChange(account)}
-                            >
-                              {updatingUserId === account.userId
-                                ? "Updating..."
-                                : account.accountStatus === "ACTIVE" ? "Deactivate" : "Activate"}
-                            </button>
-                          )}
-                        </td>
-                      </tr>
+                      <AccountRow
+                        key={account.userId}
+                        account={account}
+                        currentUserId={user.userId}
+                        isUpdating={updatingUserIds.has(account.userId)}
+                        onStatusChange={handleStatusChange}
+                      />
                     ))}
                   </tbody>
                 </table>
@@ -247,6 +238,31 @@ export function AccountsPage({ user }) {
         </div>
       </div>
     </section>
+  );
+}
+
+function AccountRow({ account, currentUserId, isUpdating, onStatusChange }) {
+  return (
+    <tr>
+      <td>{account.fullName}</td>
+      <td>{account.username}</td>
+      <td>{formatRole(account.role)}</td>
+      <td><AccountStatus status={account.accountStatus} /></td>
+      <td>
+        {Number(account.userId) === Number(currentUserId) ? (
+          <span className="muted">Current account</span>
+        ) : (
+          <button
+            className={account.accountStatus === "ACTIVE" ? "btn btn-danger" : "btn btn-primary"}
+            type="button"
+            disabled={isUpdating}
+            onClick={() => onStatusChange(account)}
+          >
+            {isUpdating ? "Updating..." : account.accountStatus === "ACTIVE" ? "Deactivate" : "Activate"}
+          </button>
+        )}
+      </td>
+    </tr>
   );
 }
 

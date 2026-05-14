@@ -10,29 +10,32 @@ export function ActivityLogsPage() {
   const [appliedFilters, setAppliedFilters] = useState(filters);
 
   useEffect(() => {
-    loadLogs(appliedFilters);
+    let active = true;
+
+    async function loadLogs() {
+      setState((current) => ({ ...current, loading: true, error: "" }));
+
+      try {
+        const data = await apiRequest(buildLogsPath(appliedFilters));
+
+        if (!active) return;
+        setState({ loading: false, logs: Array.isArray(data.logs) ? data.logs : [], error: "" });
+      } catch (error) {
+        if (!active) return;
+        setState({ loading: false, logs: [], error: error.message });
+      }
+    }
+
+    loadLogs();
+
+    return () => {
+      active = false;
+    };
   }, [appliedFilters]);
 
   const hasFilters = useMemo(() => {
     return Boolean(appliedFilters.search || appliedFilters.action || appliedFilters.date);
   }, [appliedFilters]);
-
-  async function loadLogs(nextFilters) {
-    setState((current) => ({ ...current, loading: true, error: "" }));
-
-    try {
-      const params = new URLSearchParams();
-      if (nextFilters.search.trim()) params.set("search", nextFilters.search.trim());
-      if (nextFilters.action.trim()) params.set("action", nextFilters.action.trim());
-      if (nextFilters.date) params.set("date", nextFilters.date);
-
-      const query = params.toString();
-      const data = await apiRequest(`/api/activity-logs${query ? `?${query}` : ""}`);
-      setState({ loading: false, logs: Array.isArray(data.logs) ? data.logs : [], error: "" });
-    } catch (error) {
-      setState({ loading: false, logs: [], error: error.message });
-    }
-  }
 
   function updateFilter(field, value) {
     setFilters((current) => ({ ...current, [field]: value }));
@@ -138,4 +141,14 @@ function formatDateTime(value) {
 
 function formatAction(value) {
   return String(value || "UNKNOWN").replaceAll("_", " ");
+}
+
+function buildLogsPath(filters) {
+  const params = new URLSearchParams();
+  if (filters.search.trim()) params.set("search", filters.search.trim());
+  if (filters.action.trim()) params.set("action", filters.action.trim());
+  if (filters.date) params.set("date", filters.date);
+
+  const query = params.toString();
+  return `/api/activity-logs${query ? `?${query}` : ""}`;
 }

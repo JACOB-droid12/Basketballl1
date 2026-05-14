@@ -71,7 +71,7 @@ export function ReportsPage() {
                   <span>{totalStatusCount} total status row{totalStatusCount === 1 ? "" : "s"}</span>
                 </div>
 
-                {statusRows.length === 0 ? (
+                {totalStatusCount === 0 ? (
                   <EmptyState title="No status totals" body="Reservation status totals are not available yet." />
                 ) : (
                   <div className="bar-list">
@@ -124,7 +124,7 @@ function SummaryCard({ label, value }) {
 }
 
 function BarRow({ label, value, max }) {
-  const width = `${Math.round((value / max) * 100)}%`;
+  const width = value === 0 ? "0%" : `${Math.round((value / max) * 100)}%`;
 
   return (
     <div className="bar-row">
@@ -133,7 +133,7 @@ function BarRow({ label, value, max }) {
         <strong>{value}</strong>
       </div>
       <div className="bar-track" aria-hidden="true">
-        <span style={{ width }} />
+        <span style={{ width, minWidth: value === 0 ? 0 : undefined }} />
       </div>
     </div>
   );
