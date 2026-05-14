@@ -680,6 +680,12 @@ p {
   overflow: hidden;
 }
 
+.padded-card {
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+}
+
 .card-head {
   display: flex;
   align-items: flex-start;
@@ -696,6 +702,146 @@ p {
 .card-head span {
   color: var(--ink-muted);
   font-size: 13px;
+}
+
+.admin-grid,
+.report-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.42fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.admin-table {
+  min-width: 760px;
+}
+
+.logs-table {
+  min-width: 760px;
+}
+
+.filter-card {
+  overflow: visible;
+}
+
+.filter-actions {
+  align-self: end;
+}
+
+.action-code {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  padding: 0 10px;
+  background: #f0ebe2;
+  color: var(--primary-dark);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.account-status {
+  min-width: 82px;
+  justify-content: center;
+}
+
+.status-account-active {
+  border-color: #b9d7c8;
+  background: #e8f4ee;
+  color: var(--success);
+}
+
+.status-account-inactive {
+  border-color: #e7b4ad;
+  background: #fae8e5;
+  color: var(--danger);
+}
+
+.print-title {
+  display: none;
+}
+
+.report-summary .stat-card {
+  min-height: 132px;
+}
+
+.report-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.72fr);
+}
+
+.card-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.card-section-head h2 {
+  font-size: 22px;
+}
+
+.card-section-head span {
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.bar-list,
+.requester-list {
+  display: grid;
+  gap: 14px;
+}
+
+.bar-row {
+  display: grid;
+  gap: 8px;
+}
+
+.bar-label,
+.requester-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bar-label strong,
+.requester-row strong {
+  color: var(--primary-dark);
+  font-size: 18px;
+}
+
+.bar-track {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eee7dc;
+}
+
+.bar-track span {
+  display: block;
+  height: 100%;
+  min-width: 3px;
+  border-radius: inherit;
+  background: var(--primary);
+}
+
+.requester-row {
+  min-height: 48px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.requester-row:last-child {
+  border-bottom: 0;
+}
+
+.requester-row span {
+  min-width: 0;
+  color: var(--ink);
+  font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .booking-list {
@@ -1035,7 +1181,9 @@ p {
   }
 
   .content-split,
-  .form-grid {
+  .form-grid,
+  .admin-grid,
+  .report-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1059,5 +1207,65 @@ p {
   .toolbar {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .filter-actions {
+    align-self: stretch;
+  }
+}
+
+@media print {
+  :root {
+    --bg: white;
+    --surface: white;
+    --ink: #111;
+    --ink-muted: #444;
+    --shadow: none;
+  }
+
+  body {
+    background: white;
+  }
+
+  .topbar,
+  .sidebar,
+  .print-hidden,
+  .btn {
+    display: none !important;
+  }
+
+  .app-layout {
+    display: block;
+    min-height: auto;
+  }
+
+  .main-panel {
+    padding: 0;
+  }
+
+  .print-title {
+    display: block;
+    margin-bottom: 18px;
+  }
+
+  .page,
+  .report-page,
+  .report-grid,
+  .stats-grid {
+    display: grid;
+    gap: 14px;
+  }
+
+  .report-grid,
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card,
+  .stat-card,
+  .padded-card {
+    break-inside: avoid;
+    border-color: #999;
+    box-shadow: none;
   }
 }

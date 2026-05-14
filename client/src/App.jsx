@@ -1,12 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { getSession, logout } from "./api/client.js";
 import { AppShell } from "./components/AppShell.jsx";
 import { EmptyState } from "./components/EmptyState.jsx";
 import { LoadingState } from "./components/LoadingState.jsx";
+import { AccountsPage } from "./pages/AccountsPage.jsx";
+import { ActivityLogsPage } from "./pages/ActivityLogsPage.jsx";
 import { CalendarPage } from "./pages/CalendarPage.jsx";
 import { DashboardPage } from "./pages/DashboardPage.jsx";
 import { LoginPage } from "./pages/LoginPage.jsx";
+import { ReportsPage } from "./pages/ReportsPage.jsx";
 import { ReservationFormPage } from "./pages/ReservationFormPage.jsx";
 import { ReservationsPage } from "./pages/ReservationsPage.jsx";
 
@@ -37,8 +40,7 @@ const ROUTES = {
   },
   "/account": {
     title: "Accounts",
-    body: "Admin account management will be implemented in the account screen task.",
-    adminOnly: true
+    body: "Admin account management is available to administrator users."
   }
 };
 
@@ -77,8 +79,6 @@ export function App() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  const route = useMemo(() => resolveRoute(path), [path]);
-
   function handleNavigate(nextPath) {
     const normalized = normalizePath(nextPath);
     window.history.pushState({}, "", normalized);
@@ -109,27 +109,18 @@ export function App() {
     return <LoginPage onLogin={handleLogin} />;
   }
 
-  if (route.adminOnly && sessionState.user.role !== "ADMIN") {
-    return (
-      <AppShell user={sessionState.user} path={path} onNavigate={handleNavigate} onLogout={handleLogout}>
-        <PlaceholderPage
-          title="Access restricted"
-          body="Only administrator accounts can open account management."
-          action={<button className="btn btn-primary" type="button" onClick={() => handleNavigate("/dashboard")}>Return Home</button>}
-        />
-      </AppShell>
-    );
-  }
-
   return (
     <AppShell user={sessionState.user} path={path} onNavigate={handleNavigate} onLogout={handleLogout}>
       {sessionState.error && <div className="alert error">{sessionState.error}</div>}
-      {renderPage(path, handleNavigate)}
+      {renderPage(path, handleNavigate, sessionState.user)}
     </AppShell>
   );
 }
 
-function renderPage(path, navigate) {
+function renderPage(path, navigate, user) {
+  if (path.startsWith("/account")) return <AccountsPage user={user} />;
+  if (path.startsWith("/activity-logs")) return <ActivityLogsPage />;
+  if (path.startsWith("/reports")) return <ReportsPage />;
   if (path === "/reservations/new") return <ReservationFormPage onNavigate={navigate} />;
   const editMatch = path.match(/^\/reservations\/(\d+)\/edit$/);
   if (editMatch) return <ReservationFormPage reservationId={editMatch[1]} onNavigate={navigate} />;
