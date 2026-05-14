@@ -32,7 +32,7 @@ export function DashboardPage({ onNavigate }) {
 
   const todaySchedule = state.data?.todaySchedule || [];
   const summary = state.data?.summary || {};
-  const reservedSlots = todaySchedule.filter((slot) => slot.reservation);
+  const hasScheduleSlots = todaySchedule.length > 0;
 
   return (
     <section className="page">
@@ -64,9 +64,7 @@ export function DashboardPage({ onNavigate }) {
           <h2>Today's schedule</h2>
           <span>Click All Bookings to manage reservation records.</span>
         </div>
-        {reservedSlots.length === 0 ? (
-          <EmptyState title="No reservations today." body="Walang reserbasyon ngayon. The court is open for walk-in scheduling." />
-        ) : (
+        {hasScheduleSlots ? (
           <div className="booking-list">
             {todaySchedule.map((slot) => (
               <div key={slot.slotId} className="booking-row">
@@ -83,6 +81,8 @@ export function DashboardPage({ onNavigate }) {
               </div>
             ))}
           </div>
+        ) : (
+          <EmptyState title="No schedule slots found." body="No court schedule slots were returned for today." />
         )}
       </div>
     </section>
