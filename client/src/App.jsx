@@ -41,6 +41,7 @@ const ROUTES = {
 export function App() {
   const [sessionState, setSessionState] = useState({ loading: true, user: null, error: "" });
   const [path, setPath] = useState(normalizePath(window.location.pathname));
+  const isLoginPath = path === "/login";
 
   useEffect(() => {
     let active = true;
@@ -100,7 +101,7 @@ export function App() {
     );
   }
 
-  if (!sessionState.user) {
+  if (!sessionState.user || isLoginPath) {
     return <LoginPage onLogin={handleLogin} />;
   }
 
