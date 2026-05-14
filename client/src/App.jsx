@@ -7,6 +7,8 @@ import { LoadingState } from "./components/LoadingState.jsx";
 import { CalendarPage } from "./pages/CalendarPage.jsx";
 import { DashboardPage } from "./pages/DashboardPage.jsx";
 import { LoginPage } from "./pages/LoginPage.jsx";
+import { ReservationFormPage } from "./pages/ReservationFormPage.jsx";
+import { ReservationsPage } from "./pages/ReservationsPage.jsx";
 
 const ROUTES = {
   "/dashboard": {
@@ -128,6 +130,10 @@ export function App() {
 }
 
 function renderPage(path, navigate) {
+  if (path === "/reservations/new") return <ReservationFormPage onNavigate={navigate} />;
+  const editMatch = path.match(/^\/reservations\/(\d+)\/edit$/);
+  if (editMatch) return <ReservationFormPage reservationId={editMatch[1]} onNavigate={navigate} />;
+  if (path.startsWith("/reservations")) return <ReservationsPage onNavigate={navigate} />;
   if (path.startsWith("/schedule")) return <CalendarPage />;
   if (path.startsWith("/dashboard")) return <DashboardPage onNavigate={navigate} />;
 
