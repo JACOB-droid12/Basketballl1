@@ -368,6 +368,245 @@ p {
   line-height: 1.05;
 }
 
+.page {
+  display: grid;
+  gap: 24px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.page-header h1 {
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1.05;
+}
+
+.page-kicker {
+  margin-bottom: 12px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.page-subtitle {
+  max-width: 620px;
+  line-height: 1.5;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.stat-card,
+.card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.stat-card {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+}
+
+.stat-card span {
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.stat-card strong {
+  color: var(--primary-dark);
+  font-size: clamp(30px, 4vw, 42px);
+  line-height: 1;
+}
+
+.info-banner {
+  border: 1px solid #d8c39f;
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: #f8efdf;
+  color: #6f470f;
+  font-weight: 800;
+}
+
+.card {
+  overflow: hidden;
+}
+
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.card-head h2 {
+  font-size: 22px;
+}
+
+.card-head span {
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.booking-list {
+  display: grid;
+}
+
+.booking-row {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  min-height: 72px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.booking-row:last-child {
+  border-bottom: 0;
+}
+
+.booking-row span {
+  min-width: 0;
+  font-weight: 800;
+}
+
+.booking-row small {
+  display: block;
+  margin-top: 4px;
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.muted {
+  color: var(--ink-muted);
+}
+
+.date-input {
+  min-height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 12px;
+  background: white;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.date-input:focus {
+  outline: 3px solid var(--primary-soft);
+  border-color: var(--primary);
+}
+
+.calendar-table {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.calendar-header,
+.calendar-row {
+  display: grid;
+  min-width: 980px;
+}
+
+.calendar-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  border-bottom: 1px solid var(--border);
+  background: var(--primary-dark);
+  color: white;
+}
+
+.calendar-header strong,
+.calendar-row > strong,
+.calendar-cell {
+  min-width: 0;
+  padding: 12px;
+  border-right: 1px solid var(--border);
+}
+
+.calendar-header strong:last-child,
+.calendar-row > :last-child {
+  border-right: 0;
+}
+
+.calendar-header small,
+.calendar-row small {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.calendar-header small {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.calendar-row {
+  border-bottom: 1px solid var(--border);
+}
+
+.calendar-row:last-child {
+  border-bottom: 0;
+}
+
+.calendar-row > strong {
+  background: #f0ebe2;
+}
+
+.calendar-row small {
+  color: var(--ink-muted);
+}
+
+.calendar-cell {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-height: 82px;
+  background: white;
+}
+
+.calendar-cell > span:not(.status-badge) {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.calendar-cell.status-available {
+  background: #f4faf7;
+}
+
+.calendar-cell.status-reserved {
+  background: #eef6fb;
+}
+
+.calendar-cell.status-missed,
+.calendar-cell.status-cancelled {
+  background: #fff1ef;
+}
+
+.calendar-cell.status-completed {
+  background: #fbf4e8;
+}
+
 .state-card {
   width: 100%;
   min-height: 220px;
@@ -526,12 +765,23 @@ p {
   }
 
   .topbar-actions,
-  .page-heading {
+  .page-heading,
+  .page-header,
+  .card-head {
     flex-direction: column;
     align-items: stretch;
   }
 
   .user-chip {
     align-items: flex-start;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-row {
+    grid-template-columns: 1fr;
+    align-items: start;
   }
 }

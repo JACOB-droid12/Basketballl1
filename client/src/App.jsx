@@ -4,6 +4,8 @@ import { getSession, logout } from "./api/client.js";
 import { AppShell } from "./components/AppShell.jsx";
 import { EmptyState } from "./components/EmptyState.jsx";
 import { LoadingState } from "./components/LoadingState.jsx";
+import { CalendarPage } from "./pages/CalendarPage.jsx";
+import { DashboardPage } from "./pages/DashboardPage.jsx";
 import { LoginPage } from "./pages/LoginPage.jsx";
 
 const ROUTES = {
@@ -120,9 +122,17 @@ export function App() {
   return (
     <AppShell user={sessionState.user} path={path} onNavigate={handleNavigate} onLogout={handleLogout}>
       {sessionState.error && <div className="alert error">{sessionState.error}</div>}
-      <PlaceholderPage title={route.title} body={route.body} />
+      {renderPage(path, handleNavigate)}
     </AppShell>
   );
+}
+
+function renderPage(path, navigate) {
+  if (path.startsWith("/schedule")) return <CalendarPage />;
+  if (path.startsWith("/dashboard")) return <DashboardPage onNavigate={navigate} />;
+
+  const route = resolveRoute(path);
+  return <PlaceholderPage title={route.title} body={route.body} />;
 }
 
 function PlaceholderPage({ title, body, action }) {
