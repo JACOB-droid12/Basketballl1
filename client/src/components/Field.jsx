@@ -1,0 +1,25 @@
+import { cloneElement } from "react";
+
+export function Field({ id, label, filipino, hint, error, children, wide }) {
+  const errorId = `${id}-error`;
+  const hintId = hint ? `${id}-hint` : undefined;
+  const describedBy = [hintId, error ? errorId : null].filter(Boolean).join(" ") || undefined;
+  const control = cloneElement(children, {
+    id,
+    className: [children.props.className, "input"].filter(Boolean).join(" "),
+    "aria-invalid": error ? "true" : undefined,
+    "aria-describedby": describedBy
+  });
+
+  return (
+    <label className={`field staff-field ${wide ? "wide" : ""}`}>
+      <span className="field-label">
+        {label}
+        {filipino && <span className="fil">· {filipino}</span>}
+      </span>
+      {hint && <span id={hintId} className="field-hint">{hint}</span>}
+      {control}
+      {error && <small id={errorId} className="field-error" role="alert">{error}</small>}
+    </label>
+  );
+}

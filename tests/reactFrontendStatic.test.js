@@ -28,6 +28,17 @@ test("built React app references only local bundled assets", () => {
   assertNoUnsupportedApprovalWorkflow(combined);
 });
 
+test("reservation detail drawer suspends Escape close while the status dialog is open", () => {
+  const reservationsPage = readFileSync(path.join(projectRoot, "client", "src", "pages", "ReservationsPage.jsx"), "utf8");
+  const drawer = readFileSync(path.join(projectRoot, "client", "src", "components", "ReservationDetailDrawer.jsx"), "utf8");
+
+  assert.match(reservationsPage, /suspendEscape=\{Boolean\(dialog\)\}/);
+  assert.match(drawer, /suspendEscape\s*=\s*false/);
+  assert.match(drawer, /suspendEscapeRef = useRef\(suspendEscape\)/);
+  assert.match(drawer, /suspendEscapeRef\.current = suspendEscape/);
+  assert.match(drawer, /event\.key === "Escape" && !suspendEscapeRef\.current/);
+});
+
 function assertNoUnsupportedApprovalWorkflow(source) {
   assert.doesNotMatch(source, /\bPENDING\b/);
   assert.doesNotMatch(source, /\b(?:APPROVED|DECLINED)\b/);

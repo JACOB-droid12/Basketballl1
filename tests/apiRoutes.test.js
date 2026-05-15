@@ -524,6 +524,46 @@ test("GET /api/availability reports conflicts and same-day suggestions", async (
   }
 });
 
+test("GET /api/availability can exclude the reservation being edited from conflicts and suggestions", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      getTimeSlots: async () => buildTimeSlots([
+        { slotId: 1, name: "8:00 AM - 9:00 AM", startTime: "08:00", endTime: "09:00" },
+        { slotId: 2, name: "9:00 AM - 10:00 AM", startTime: "09:00", endTime: "10:00" },
+        { slotId: 3, name: "10:00 AM - 11:00 AM", startTime: "10:00", endTime: "11:00" }
+      ]),
+      listReservations: async () => [
+        buildReservation({ reservationId: 8, reservationDate: "2026-05-14", startTime: "08:00", endTime: "09:00" })
+      ]
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const withoutExclusion = await getJson(server, "/api/availability?date=2026-05-14&startTime=08:00&endTime=10:00");
+    const withExclusion = await getJson(server, "/api/availability?date=2026-05-14&startTime=08:00&endTime=10:00&reservationId=8");
+
+    assert.equal(withoutExclusion.status, 200);
+    assert.equal(withoutExclusion.body.available, false);
+    assert.equal(withoutExclusion.body.conflict.reservationId, 8);
+    assert.equal(withoutExclusion.body.suggestions.some((slot) => slot.date === "2026-05-14" && slot.startTime === "08:00"), false);
+
+    assert.equal(withExclusion.status, 200);
+    assert.equal(withExclusion.body.available, true);
+    assert.equal(withExclusion.body.conflict, null);
+    assert.deepEqual(withExclusion.body.suggestions[0], {
+      date: "2026-05-14",
+      slotId: 1,
+      name: "8:00 AM - 10:00 AM",
+      startTime: "08:00",
+      endTime: "10:00"
+    });
+  } finally {
+    await closeServer(server);
+  }
+});
+
 test("GET /api/availability validates date, time, and requested range", async () => {
   const app = buildApiTestApp({ session: buildSession() });
   const server = app.listen(0);
@@ -532,6 +572,7 @@ test("GET /api/availability validates date, time, and requested range", async ()
     const invalidDate = await getJson(server, "/api/availability?date=2026-02-30&startTime=08:00&endTime=09:00");
     const invalidTime = await getJson(server, "/api/availability?date=2026-05-14&startTime=99:99&endTime=09:00");
     const reversedRange = await getJson(server, "/api/availability?date=2026-05-14&startTime=10:00&endTime=09:00");
+    const invalidReservationId = await getJson(server, "/api/availability?date=2026-05-14&startTime=08:00&endTime=09:00&reservationId=abc");
 
     assert.equal(invalidDate.status, 400);
     assert.deepEqual(invalidDate.body, { errors: { date: "Date must use YYYY-MM-DD format." } });
@@ -539,6 +580,8 @@ test("GET /api/availability validates date, time, and requested range", async ()
     assert.deepEqual(invalidTime.body, { errors: { startTime: "Start time must use HH:MM format." } });
     assert.equal(reversedRange.status, 400);
     assert.deepEqual(reversedRange.body, { errors: { endTime: "End time must be after start time." } });
+    assert.equal(invalidReservationId.status, 400);
+    assert.deepEqual(invalidReservationId.body, { errors: { reservationId: "Reservation ID must be a positive integer." } });
   } finally {
     await closeServer(server);
   }

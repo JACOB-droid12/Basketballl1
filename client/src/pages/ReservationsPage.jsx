@@ -5,10 +5,10 @@ import { formatDate, formatTime, STATUS_LABELS } from "../api/mappers.js";
 import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { EmptyState } from "../components/EmptyState.jsx";
 import { LoadingState } from "../components/LoadingState.jsx";
+import { buildStatusDialog, ReservationDetailDrawer } from "../components/ReservationDetailDrawer.jsx";
 import { StatusBadge } from "../components/StatusBadge.jsx";
 
 const STATUS_OPTIONS = ["all", "RESERVED", "MISSED", "CANCELLED", "COMPLETED"];
-const STATUS_ACTIONS = ["MISSED", "CANCELLED", "COMPLETED"];
 
 export function ReservationsPage({ onNavigate, initialReservationId = null }) {
   const initialSelectedId = parseReservationId(initialReservationId);
@@ -25,28 +25,15 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
   }, [initialSelectedId]);
 
   const reservations = state.reservations;
+  const counts = useMemo(() => buildStatusCounts(reservations), [reservations]);
   const filteredReservations = useMemo(() => {
     return filterReservations(reservations, query, status);
   }, [query, reservations, status]);
 
   const selectedReservation = useMemo(() => {
     if (!selectedId) return null;
-    return filteredReservations.find((reservation) => reservation.reservationId === selectedId) || null;
-  }, [filteredReservations, selectedId]);
-
-  useEffect(() => {
-    const selectedVisible = selectedId && filteredReservations.some((reservation) => reservation.reservationId === selectedId);
-    const initialVisible = initialSelectedId && filteredReservations.some((reservation) => reservation.reservationId === initialSelectedId);
-
-    if (!selectedId && initialVisible) {
-      setSelectedId(initialSelectedId);
-      return;
-    }
-
-    if (selectedId && !selectedVisible && selectedId !== initialSelectedId) {
-      setSelectedId(null);
-    }
-  }, [filteredReservations, initialSelectedId, selectedId]);
+    return reservations.find((reservation) => reservation.reservationId === selectedId) || null;
+  }, [reservations, selectedId]);
 
   async function loadReservations(nextSelectedId = selectedId) {
     setState((current) => ({ ...current, loading: true, error: "" }));
@@ -54,10 +41,9 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
     try {
       const data = await apiRequest("/api/reservations");
       const nextReservations = Array.isArray(data.reservations) ? data.reservations : [];
-      const nextFilteredReservations = filterReservations(nextReservations, query, status);
       setState({ loading: false, reservations: nextReservations, error: "" });
 
-      if (nextSelectedId && nextFilteredReservations.some((reservation) => reservation.reservationId === nextSelectedId)) {
+      if (nextSelectedId && nextReservations.some((reservation) => reservation.reservationId === nextSelectedId)) {
         setSelectedId(nextSelectedId);
       } else {
         setSelectedId(null);
@@ -88,19 +74,32 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
     }
   }
 
+  function openReservation(reservation) {
+    setSelectedId(reservation.reservationId);
+    setActionError("");
+  }
+
+  function closeReservation() {
+    setSelectedId(null);
+    if (initialSelectedId) onNavigate("/reservations");
+  }
+
   if (state.loading) return <LoadingState label="Loading reservations..." />;
 
   return (
-    <section className="page">
-      <div className="page-header">
+    <section className="page staff-bookings-page">
+      <div className="page-header page-head staff-page-head">
         <div>
-          <p className="page-kicker">Reservations</p>
-          <h1>All bookings</h1>
-          <p className="page-subtitle">Search reservation records, open details, and update active reservation status.</p>
+          <h1 className="page-title">All Bookings</h1>
+          <div className="page-sub">Search any reservation, past or upcoming.</div>
+          <div className="page-sub-fil">Lahat ng reserbasyon, nakaraan at paparating.</div>
         </div>
-        <div className="button-row">
-          <a className="btn btn-light" href="/reservations/export.csv">Export CSV</a>
-          <button className="btn btn-primary" type="button" onClick={() => onNavigate("/reservations/new")}>
+        <div className="button-row bookings-actions">
+          <a className="btn btn-light btn-big" href="/reservations/export.csv">Export CSV</a>
+          <button className="btn btn-light btn-big print-hidden" type="button" onClick={() => window.print()}>
+            Print
+          </button>
+          <button className="btn btn-primary btn-big" type="button" onClick={() => onNavigate("/reservations/new")}>
             New Reservation
           </button>
         </div>
@@ -117,71 +116,62 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
         />
       ) : (
         !state.error && (
-          <div className="content-split">
-            <div className="card">
-              <div className="toolbar">
-                <label className="field compact">
-                  <span>Search</span>
-                  <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Name, contact, purpose, ID" />
-                </label>
-                <label className="field compact">
-                  <span>Status</span>
-                  <select value={status} onChange={(event) => setStatus(event.target.value)}>
-                    {STATUS_OPTIONS.map((option) => (
-                      <option key={option} value={option}>
-                        {option === "all" ? "All statuses" : STATUS_LABELS[option]}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+          <div className="card staff-bookings-card">
+            <div className="bookings-toolbar">
+              <label className="search-input" aria-label="Search bookings">
+                <span className="search-mark">⌕</span>
+                <input className="input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by name, purpose, phone, or ID" />
+              </label>
+              <div className="filter-tabs" role="tablist" aria-label="Reservation status filter">
+                {STATUS_OPTIONS.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    className={`filter-tab ${status === option ? "on" : ""}`}
+                    onClick={() => setStatus(option)}
+                    role="tab"
+                    aria-selected={status === option}
+                  >
+                    {option === "all" ? "All" : STATUS_LABELS[option]}
+                    <span>({counts[option] || 0})</span>
+                  </button>
+                ))}
               </div>
-
-              {filteredReservations.length === 0 ? (
-                <EmptyState title="No matching reservations" body="Try a different search term or status filter." />
-              ) : (
-                <div className="table-wrap">
-                  <table className="data-table" role="grid">
-                    <thead>
-                      <tr>
-                        <th>ID</th>
-                        <th>Representative</th>
-                        <th>Contact</th>
-                        <th>Purpose</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredReservations.map((reservation) => (
-                        <ReservationRow
-                          key={reservation.reservationId}
-                          reservation={reservation}
-                          selected={reservation.reservationId === selectedReservation?.reservationId}
-                          onSelect={() => setSelectedId(reservation.reservationId)}
-                        />
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
             </div>
 
-            <ReservationDetail
-              reservation={selectedReservation}
-              onEdit={() => selectedReservation && onNavigate(`/reservations/${selectedReservation.reservationId}/edit`)}
-              onStatusAction={(statusCode) => setDialog({ reservation: selectedReservation, statusCode })}
-            />
+            {filteredReservations.length === 0 ? (
+              <EmptyState title="No matching bookings" body="Try a different search term or status filter." />
+            ) : (
+              <div className="booking-card-list">
+                {filteredReservations.map((reservation) => (
+                  <ReservationCard
+                    key={reservation.reservationId}
+                    reservation={reservation}
+                    selected={reservation.reservationId === selectedId}
+                    onOpen={() => openReservation(reservation)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )
       )}
 
+      <ReservationDetailDrawer
+        reservation={selectedReservation}
+        busy={busy}
+        onClose={closeReservation}
+        onEdit={() => selectedReservation && onNavigate(`/reservations/${selectedReservation.reservationId}/edit`)}
+        onRequestStatus={(action) => selectedReservation && setDialog(buildStatusDialog(selectedReservation, action))}
+        suspendEscape={Boolean(dialog)}
+      />
+
       {dialog && (
         <ConfirmDialog
-          title={`Mark as ${STATUS_LABELS[dialog.statusCode] || dialog.statusCode}?`}
-          body={`This will update reservation #${dialog.reservation.reservationId} for ${dialog.reservation.representativeName}.`}
-          confirmLabel={`Mark ${STATUS_LABELS[dialog.statusCode] || dialog.statusCode}`}
-          danger={dialog.statusCode === "CANCELLED" || dialog.statusCode === "MISSED"}
+          title={dialog.title}
+          body={dialog.body}
+          confirmLabel={dialog.confirmLabel}
+          danger={dialog.danger}
           onConfirm={updateStatus}
           onCancel={() => setDialog(null)}
           busy={busy}
@@ -191,95 +181,25 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
   );
 }
 
-function ReservationRow({ reservation, selected, onSelect }) {
+function ReservationCard({ reservation, selected, onOpen }) {
   return (
-    <tr
-      className={selected ? "selected" : ""}
-      tabIndex={0}
-      aria-selected={selected}
-      onClick={onSelect}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onSelect();
-        }
-      }}
+    <button
+      className={`booking-card ${selected ? "selected" : ""}`}
+      type="button"
+      onClick={onOpen}
+      aria-pressed={selected}
     >
-      <td>#{reservation.reservationId}</td>
-      <td>{reservation.representativeName}</td>
-      <td>{reservation.contactNo}</td>
-      <td>{reservation.purpose}</td>
-      <td>{formatDate(reservation.reservationDate)}</td>
-      <td>{displayRange(reservation.startTime, reservation.endTime)}</td>
-      <td><StatusBadge statusCode={reservation.statusCode} /></td>
-    </tr>
-  );
-}
-
-function ReservationDetail({ reservation, onEdit, onStatusAction }) {
-  if (!reservation) {
-    return (
-      <aside className="detail-panel">
-        <EmptyState title="Select a reservation" body="Choose a row to view details and actions." />
-      </aside>
-    );
-  }
-
-  const canUpdateStatus = reservation.statusCode === "RESERVED";
-
-  return (
-    <aside className="detail-panel" aria-label="Reservation details">
-      <div className="detail-head">
-        <div>
-          <p className="page-kicker">Reservation #{reservation.reservationId}</p>
-          <h2>{reservation.representativeName}</h2>
-        </div>
-        <StatusBadge statusCode={reservation.statusCode} />
+      <div className="booking-card-time">
+        <strong>{displayRange(reservation.startTime, reservation.endTime)}</strong>
+        <span>{formatDate(reservation.reservationDate)}</span>
       </div>
-
-      <dl className="detail-grid">
-        <div>
-          <dt>Date</dt>
-          <dd>{formatDate(reservation.reservationDate)}</dd>
-        </div>
-        <div>
-          <dt>Time</dt>
-          <dd>{displayRange(reservation.startTime, reservation.endTime)}</dd>
-        </div>
-        <div>
-          <dt>Contact</dt>
-          <dd>{reservation.contactNo}</dd>
-        </div>
-        <div>
-          <dt>Address</dt>
-          <dd>{reservation.address}</dd>
-        </div>
-        <div>
-          <dt>Purpose</dt>
-          <dd>{reservation.purpose}</dd>
-        </div>
-        <div>
-          <dt>Remarks</dt>
-          <dd>{reservation.remarks || "No remarks recorded."}</dd>
-        </div>
-      </dl>
-
-      <div className="button-row">
-        <button className="btn btn-light" type="button" onClick={onEdit}>
-          Edit
-        </button>
-        {canUpdateStatus && STATUS_ACTIONS.map((statusCode) => (
-          <button
-            className={`btn ${statusCode === "CANCELLED" || statusCode === "MISSED" ? "btn-danger" : "btn-primary"}`}
-            type="button"
-            key={statusCode}
-            onClick={() => onStatusAction(statusCode)}
-          >
-            {STATUS_LABELS[statusCode]}
-          </button>
-        ))}
+      <div className="booking-card-main">
+        <strong>{reservation.representativeName}</strong>
+        <span>{reservation.purpose}</span>
+        <small>{reservation.contactNo} · #{reservation.reservationId}</small>
       </div>
-    </aside>
+      <StatusBadge statusCode={reservation.statusCode} />
+    </button>
   );
 }
 
@@ -296,19 +216,34 @@ function parseReservationId(value) {
 function filterReservations(reservations, query, status) {
   const needle = query.trim().toLowerCase();
 
-  return reservations.filter((reservation) => {
-    const matchesStatus = status === "all" || reservation.statusCode === status;
-    const searchable = [
-      reservation.reservationId,
-      reservation.representativeName,
-      reservation.contactNo,
-      reservation.purpose,
-      reservation.reservationDate,
-      reservation.startTime,
-      reservation.endTime,
-      STATUS_LABELS[reservation.statusCode] || reservation.statusCode
-    ].join(" ").toLowerCase();
+  return reservations
+    .filter((reservation) => {
+      const matchesStatus = status === "all" || reservation.statusCode === status;
+      const searchable = [
+        reservation.reservationId,
+        reservation.representativeName,
+        reservation.contactNo,
+        reservation.address,
+        reservation.purpose,
+        reservation.reservationDate,
+        reservation.startTime,
+        reservation.endTime,
+        STATUS_LABELS[reservation.statusCode] || reservation.statusCode
+      ].join(" ").toLowerCase();
 
-    return matchesStatus && (!needle || searchable.includes(needle));
-  });
+      return matchesStatus && (!needle || searchable.includes(needle));
+    })
+    .sort((left, right) => {
+      const dateCompare = String(right.reservationDate || "").localeCompare(String(left.reservationDate || ""));
+      if (dateCompare !== 0) return dateCompare;
+      return String(left.startTime || "").localeCompare(String(right.startTime || ""));
+    });
+}
+
+function buildStatusCounts(reservations) {
+  return reservations.reduce((counts, reservation) => {
+    counts.all += 1;
+    counts[reservation.statusCode] = (counts[reservation.statusCode] || 0) + 1;
+    return counts;
+  }, { all: 0 });
 }

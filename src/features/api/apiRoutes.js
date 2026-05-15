@@ -288,12 +288,16 @@ export function createApiRoutes({ db, repositories = {}, todayProvider = getToda
     const date = clean(request.query.date);
     const startTime = normalizeTime(request.query.startTime);
     const endTime = normalizeTime(request.query.endTime);
+    const excludeReservationIdText = clean(request.query.reservationId || request.query.excludeReservationId);
+    const excludeReservationId = excludeReservationIdText ? parsePositiveIntegerParam(excludeReservationIdText) : null;
     const validationErrors = buildAvailabilityValidationErrors({
       date,
       rawStartTime: request.query.startTime,
       rawEndTime: request.query.endTime,
       startTime,
-      endTime
+      endTime,
+      excludeReservationIdText,
+      excludeReservationId
     });
 
     if (Object.keys(validationErrors).length > 0) {
@@ -317,15 +321,18 @@ export function createApiRoutes({ db, repositories = {}, todayProvider = getToda
         days: AVAILABILITY_SUGGESTION_SEARCH_DAYS + 1
       });
       const activeReservations = reservations.filter((reservation) => String(reservation.statusCode).toUpperCase() === "RESERVED");
+      const suggestionReservations = excludeReservationId ?
+        activeReservations.filter((reservation) => Number(reservation.reservationId) !== excludeReservationId) :
+        activeReservations;
       const conflict = findBlockingOverlap(
-        { reservationDate: date, startTime, endTime, statusCode: "RESERVED" },
+        { reservationId: excludeReservationId, reservationDate: date, startTime, endTime, statusCode: "RESERVED" },
         activeReservations
       );
 
       response.json({
         available: !conflict,
         conflict: toApiReservation(conflict),
-        suggestions: findAvailabilitySuggestions({ date, startTime, endTime, timeSlots, reservations: activeReservations })
+        suggestions: findAvailabilitySuggestions({ date, startTime, endTime, timeSlots, reservations: suggestionReservations })
       });
     } catch (error) {
       sendDatabaseError(response, error);
@@ -578,7 +585,7 @@ function findAvailableSlotsForDate({ date, minimumStartMinutes, requestedDuratio
   return suggestions;
 }
 
-function buildAvailabilityValidationErrors({ date, rawStartTime, rawEndTime, startTime, endTime }) {
+function buildAvailabilityValidationErrors({ date, rawStartTime, rawEndTime, startTime, endTime, excludeReservationIdText = "", excludeReservationId = null }) {
   const errors = {};
 
   if (!date) {
@@ -599,6 +606,10 @@ function buildAvailabilityValidationErrors({ date, rawStartTime, rawEndTime, sta
     errors.endTime = "End time must use HH:MM format.";
   } else if (startTime && timeToMinutes(endTime) <= timeToMinutes(startTime)) {
     errors.endTime = "End time must be after start time.";
+  }
+
+  if (excludeReservationIdText && !excludeReservationId) {
+    errors.reservationId = "Reservation ID must be a positive integer.";
   }
 
   return errors;
