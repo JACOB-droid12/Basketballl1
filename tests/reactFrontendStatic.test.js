@@ -8,13 +8,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, "..");
 
-test("React frontend source stays offline and avoids unsupported pending status", () => {
+test("React frontend source stays offline and avoids unsupported approval workflow copy", () => {
   const sourceFiles = collectFiles(path.join(projectRoot, "client", "src"), [".js", ".jsx", ".css"]);
   const combined = sourceFiles.map((file) => readFileSync(file, "utf8")).join("\n");
 
   assert.doesNotMatch(combined, /(?:src|href|url\()=["']?https?:\/\//i);
   assert.doesNotMatch(combined, /fonts\.googleapis\.com|unpkg\.com|cdnjs\.cloudflare\.com/i);
-  assert.doesNotMatch(combined, /\bPENDING\b/);
+  assertNoUnsupportedApprovalWorkflow(combined);
 });
 
 test("built React app references only local bundled assets", () => {
@@ -25,8 +25,16 @@ test("built React app references only local bundled assets", () => {
   assert.match(combined, /\/assets\/|assets\//);
   assert.doesNotMatch(combined, /(?:src|href|url\()=["']?https?:\/\//i);
   assert.doesNotMatch(combined, /fonts\.googleapis\.com|unpkg\.com|cdnjs\.cloudflare\.com/i);
-  assert.doesNotMatch(combined, /\bPENDING\b/);
+  assertNoUnsupportedApprovalWorkflow(combined);
 });
+
+function assertNoUnsupportedApprovalWorkflow(source) {
+  assert.doesNotMatch(source, /\bPENDING\b/);
+  assert.doesNotMatch(source, /\b(?:APPROVED|DECLINED)\b/);
+  assert.doesNotMatch(source, /pending approval/i);
+  assert.doesNotMatch(source, /\bApprove\b/);
+  assert.doesNotMatch(source, /\bDecline\b/);
+}
 
 function collectFiles(root, extensions) {
   return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
