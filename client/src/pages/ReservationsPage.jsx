@@ -10,18 +10,19 @@ import { StatusBadge } from "../components/StatusBadge.jsx";
 const STATUS_OPTIONS = ["all", "RESERVED", "MISSED", "CANCELLED", "COMPLETED"];
 const STATUS_ACTIONS = ["MISSED", "CANCELLED", "COMPLETED"];
 
-export function ReservationsPage({ onNavigate }) {
+export function ReservationsPage({ onNavigate, initialReservationId = null }) {
+  const initialSelectedId = parseReservationId(initialReservationId);
   const [state, setState] = useState({ loading: true, reservations: [], error: "" });
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
-  const [selectedId, setSelectedId] = useState(null);
+  const [selectedId, setSelectedId] = useState(initialSelectedId);
   const [dialog, setDialog] = useState(null);
   const [actionError, setActionError] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    loadReservations();
-  }, []);
+    loadReservations(initialSelectedId);
+  }, [initialSelectedId]);
 
   const reservations = state.reservations;
   const filteredReservations = useMemo(() => {
@@ -34,10 +35,18 @@ export function ReservationsPage({ onNavigate }) {
   }, [filteredReservations, selectedId]);
 
   useEffect(() => {
-    if (selectedId && !filteredReservations.some((reservation) => reservation.reservationId === selectedId)) {
+    const selectedVisible = selectedId && filteredReservations.some((reservation) => reservation.reservationId === selectedId);
+    const initialVisible = initialSelectedId && filteredReservations.some((reservation) => reservation.reservationId === initialSelectedId);
+
+    if (!selectedId && initialVisible) {
+      setSelectedId(initialSelectedId);
+      return;
+    }
+
+    if (selectedId && !selectedVisible && selectedId !== initialSelectedId) {
       setSelectedId(null);
     }
-  }, [filteredReservations, selectedId]);
+  }, [filteredReservations, initialSelectedId, selectedId]);
 
   async function loadReservations(nextSelectedId = selectedId) {
     setState((current) => ({ ...current, loading: true, error: "" }));
@@ -277,6 +286,11 @@ function ReservationDetail({ reservation, onEdit, onStatusAction }) {
 function displayRange(startTime, endTime) {
   if (!startTime || !endTime) return "Time unavailable";
   return `${formatTime(startTime)} - ${formatTime(endTime)}`;
+}
+
+function parseReservationId(value) {
+  const text = String(value || "").trim();
+  return /^[1-9]\d*$/.test(text) ? Number(text) : null;
 }
 
 function filterReservations(reservations, query, status) {

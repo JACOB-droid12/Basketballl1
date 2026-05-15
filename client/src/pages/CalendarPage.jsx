@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 
 import { apiRequest } from "../api/client.js";
 import { formatTime } from "../api/mappers.js";
+import { EmptyState } from "../components/EmptyState.jsx";
 import { LoadingState } from "../components/LoadingState.jsx";
 import { StatusBadge } from "../components/StatusBadge.jsx";
 
-export function CalendarPage() {
+export function CalendarPage({ onNavigate }) {
   const [date, setDate] = useState(getManilaDate);
   const [state, setState] = useState({ loading: true, data: null, error: "" });
 
@@ -28,61 +29,99 @@ export function CalendarPage() {
     };
   }, [date]);
 
-  if (state.loading) return <LoadingState label="Loading weekly calendar..." />;
-
-  const days = Array.isArray(state.data?.days) ? state.data.days : [];
+  const rawDays = Array.isArray(state.data?.days) ? state.data.days : [];
   const rows = Array.isArray(state.data?.rows) ? state.data.rows : [];
+  const weekDays = normalizeWeekDays(rawDays, date);
+  const bookingsByDay = buildBookingsByDay(weekDays, rows);
+  const weekLabel = formatWeekLabel(weekDays);
+  const today = getManilaDate();
 
   return (
     <section className="page">
       <div className="page-header">
         <div>
-          <p className="page-kicker">Calendar</p>
-          <h1>Weekly schedule</h1>
-          <p className="page-subtitle">Tingnan ang available and reserved slots.</p>
+          <p className="page-kicker">Calendar · Week view</p>
+          <h1>{state.loading ? "Weekly schedule" : weekLabel}</h1>
+          <p className="page-subtitle">See every reservation for the week. Tingnan ang lahat ng reserbasyon.</p>
         </div>
-        <label className="date-field">
-          <span>Schedule date</span>
-          <input className="date-input" type="date" value={date} onChange={(event) => setDate(event.target.value)} />
-        </label>
+        <button className="btn btn-primary" type="button" onClick={() => onNavigate("/reservations/new")}>
+          New Reservation
+        </button>
       </div>
-      {state.error ? (
+
+      <div className="calendar-toolbar" aria-label="Calendar week controls">
+        <div className="calendar-week-label">
+          <span>Current week</span>
+          <strong>{weekLabel}</strong>
+        </div>
+        <div className="calendar-actions">
+          <button className="btn btn-light" type="button" onClick={() => setDate(addDays(date, -7))}>
+            Previous week
+          </button>
+          <button className="btn btn-light" type="button" onClick={() => setDate(today)}>
+            This week
+          </button>
+          <button className="btn btn-light" type="button" onClick={() => setDate(addDays(date, 7))}>
+            Next week
+          </button>
+          <label className="date-field compact-date">
+            <span>Jump to date</span>
+            <input className="date-input" type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+          </label>
+        </div>
+      </div>
+
+      {state.loading ? (
+        <div className="calendar-state-card">
+          <LoadingState label="Loading weekly calendar..." />
+        </div>
+      ) : state.error ? (
         <div className="alert error" role="alert">{state.error}</div>
+      ) : rows.length === 0 ? (
+        <EmptyState
+          title="No schedule slots found"
+          body="The calendar could not find active court hours for this week."
+          action={<button className="btn btn-primary" type="button" onClick={() => onNavigate("/reservations/new")}>New Reservation</button>}
+        />
       ) : (
-        <div className="calendar-table">
-          <div className="calendar-header" style={{ gridTemplateColumns: `130px repeat(${days.length}, minmax(120px, 1fr))` }}>
-            <strong>Time</strong>
-            {days.map((day) => (
-              <strong key={day.date}>
-                {day.name}
-                <small>{day.date}</small>
-              </strong>
-            ))}
-          </div>
-          {rows.map((row, rowIndex) => {
-            const safeRow = row || {};
-            const cells = Array.isArray(safeRow.cells) ? safeRow.cells : [];
+        <div className="staff-week-grid" aria-label="Weekly reservation calendar">
+          {weekDays.map((day) => {
+            const bookings = bookingsByDay.get(day.date) || [];
+            const isToday = day.date === today;
 
             return (
-              <div className="calendar-row" style={{ gridTemplateColumns: `130px repeat(${cells.length}, minmax(120px, 1fr))` }} key={safeRow.slotId || rowIndex}>
-                <strong>
-                  {displayTime(safeRow.startTime)}
-                  <small>{displayTime(safeRow.endTime)}</small>
-                </strong>
-                {cells.map((cell, index) => {
-                  const safeCell = cell || {};
-
-                  return (
-                    <div
-                      key={`${safeRow.slotId || rowIndex}-${days[index]?.date || index}-${safeCell.slotId || index}-${safeCell.reservation?.reservationId || "empty"}`}
-                      className={`calendar-cell status-${String(safeCell.statusCode || "AVAILABLE").toLowerCase()}`}
-                    >
-                      <StatusBadge statusCode={safeCell.statusCode} />
-                      {safeCell.reservation && <span>{safeCell.reservation.representativeName}</span>}
+              <article className="staff-day-card" key={day.date}>
+                <header className={`staff-day-head ${isToday ? "today" : ""}`}>
+                  <div>
+                    <span>{day.name}{isToday ? " · Today" : ""}</span>
+                    <strong>{getDayNumber(day.date)}</strong>
+                  </div>
+                  <small>{formatShortDate(day.date)}</small>
+                </header>
+                <div className="staff-day-body">
+                  {bookings.length === 0 ? (
+                    <div className="staff-day-empty">
+                      <strong>No bookings</strong>
+                      <span>Walang reserbasyon</span>
                     </div>
-                  );
-                })}
-              </div>
+                  ) : bookings.map((booking) => (
+                    <button
+                      className={`staff-booking-block status-${String(booking.statusCode || "RESERVED").toLowerCase()}`}
+                      type="button"
+                      key={`${day.date}-${booking.reservationId}`}
+                      onClick={() => onNavigate(`/reservations/${booking.reservationId}`)}
+                    >
+                      <span className="staff-booking-time">{displayRange(booking.startTime, booking.endTime)}</span>
+                      <span className="staff-booking-name">{booking.representativeName || "Reserved booking"}</span>
+                      <span className="staff-booking-purpose">{booking.purpose || "No purpose recorded"}</span>
+                      <StatusBadge statusCode={booking.statusCode} />
+                    </button>
+                  ))}
+                </div>
+                <footer className="staff-day-foot">
+                  {bookings.length} {bookings.length === 1 ? "booking" : "bookings"}
+                </footer>
+              </article>
             );
           })}
         </div>
@@ -91,8 +130,145 @@ export function CalendarPage() {
   );
 }
 
-function displayTime(time) {
-  return time ? formatTime(time) : "";
+function buildBookingsByDay(days, rows) {
+  const byDay = new Map(days.map((day) => [day.date, []]));
+  const seen = new Set();
+
+  rows.forEach((row) => {
+    const cells = Array.isArray(row?.cells) ? row.cells : [];
+
+    cells.forEach((cell, index) => {
+      const day = days[index];
+      const reservation = cell?.reservation;
+
+      if (!day || !reservation?.reservationId) return;
+
+      const key = `${day.date}-${reservation.reservationId}`;
+      if (seen.has(key)) return;
+
+      seen.add(key);
+      byDay.get(day.date)?.push({
+        ...reservation,
+        statusCode: String(reservation.statusCode || cell.statusCode || "RESERVED").toUpperCase()
+      });
+    });
+  });
+
+  byDay.forEach((bookings) => {
+    bookings.sort((first, second) => {
+      const timeCompare = String(first.startTime || "").localeCompare(String(second.startTime || ""));
+      return timeCompare || Number(first.reservationId || 0) - Number(second.reservationId || 0);
+    });
+  });
+
+  return byDay;
+}
+
+function displayRange(startTime, endTime) {
+  if (!startTime || !endTime) return "Time unavailable";
+  return `${formatTime(startTime)} - ${formatTime(endTime)}`;
+}
+
+function formatWeekLabel(days) {
+  if (!days.length) return "";
+
+  const first = days[0].date;
+  const last = days[days.length - 1].date;
+  const firstDate = formatCalendarDate(first, { month: "long", day: "numeric" });
+  const lastDate = formatCalendarDate(last, { month: "long", day: "numeric", year: "numeric" });
+
+  return `${firstDate} - ${lastDate}`;
+}
+
+function formatShortDate(date) {
+  return formatCalendarDate(date, { month: "short", day: "numeric" });
+}
+
+function formatCalendarDate(date, options) {
+  if (!date) return "";
+  const parsed = parseDate(date);
+  if (!parsed) return String(date || "");
+
+  return new Intl.DateTimeFormat("en-US", { ...options, timeZone: "UTC" }).format(parsed);
+}
+
+function getDayNumber(date) {
+  if (!isValidDateString(date)) return "";
+  const [, , day] = String(date || "").split("-");
+  return Number(day) || "";
+}
+
+function normalizeWeekDays(days, anchorDate) {
+  const fallbackDays = buildWeekDays(getWeekStartDate(anchorDate));
+  if (!Array.isArray(days) || days.length === 0) return fallbackDays;
+
+  return fallbackDays.map((fallbackDay, index) => {
+    const day = days[index] || {};
+    const safeDate = isValidDateString(day.date) ? day.date : fallbackDay.date;
+    const safeName = String(day.name || "").trim() || fallbackDay.name;
+
+    return {
+      date: safeDate,
+      name: safeName
+    };
+  });
+}
+
+function buildWeekDays(weekStartDate) {
+  return Array.from({ length: 7 }, (_item, index) => {
+    const date = addDays(weekStartDate, index);
+
+    return {
+      date,
+      name: new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: "UTC" }).format(new Date(`${date}T00:00:00Z`))
+    };
+  });
+}
+
+function getWeekStartDate(date) {
+  const [year, month, day] = String(date || "").split("-").map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+
+  if (Number.isNaN(parsed.getTime())) return getManilaDate();
+
+  parsed.setUTCDate(parsed.getUTCDate() - parsed.getUTCDay());
+  return parsed.toISOString().slice(0, 10);
+}
+
+function addDays(date, offset) {
+  const [year, month, day] = String(date || "").split("-").map(Number);
+  const parsed = new Date(Date.UTC(year, month - 1, day + offset));
+
+  if (Number.isNaN(parsed.getTime())) return getManilaDate();
+
+  return parsed.toISOString().slice(0, 10);
+}
+
+function isValidDateString(date) {
+  return Boolean(parseDate(date));
+}
+
+function parseDate(date) {
+  const text = String(date || "").trim();
+  const match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+
+  const [, yearText, monthText, dayText] = match;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    Number.isNaN(parsed.getTime()) ||
+    parsed.getUTCFullYear() !== year ||
+    parsed.getUTCMonth() !== month - 1 ||
+    parsed.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return parsed;
 }
 
 function getManilaDate() {

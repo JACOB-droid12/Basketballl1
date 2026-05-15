@@ -124,8 +124,10 @@ function renderPage(path, navigate, user) {
   if (path === "/reservations/new") return <ReservationFormPage onNavigate={navigate} />;
   const editMatch = path.match(/^\/reservations\/(\d+)\/edit$/);
   if (editMatch) return <ReservationFormPage reservationId={editMatch[1]} onNavigate={navigate} />;
+  const reservationMatch = path.match(/^\/reservations\/(\d+)$/);
+  if (reservationMatch) return <ReservationsPage onNavigate={navigate} initialReservationId={reservationMatch[1]} />;
   if (path.startsWith("/reservations")) return <ReservationsPage onNavigate={navigate} />;
-  if (path.startsWith("/schedule")) return <CalendarPage />;
+  if (path.startsWith("/schedule")) return <CalendarPage onNavigate={navigate} />;
   if (path.startsWith("/dashboard")) return <DashboardPage onNavigate={navigate} />;
 
   const route = resolveRoute(path);
