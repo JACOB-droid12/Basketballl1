@@ -47,8 +47,6 @@ export function createApp(options = {}) {
     next();
   });
 
-  app.use(createPrototypeRoutes());
-
   app.get("/health", (_request, response) => {
     response.json({ status: "ok", milestone: "foundation" });
   });
@@ -56,9 +54,9 @@ export function createApp(options = {}) {
   app.use(createAuthRoutes({ db, enableLegacyAccountUi: false, enableLegacyLoginUi: false }));
   app.use(createApiRoutes({ db }));
   app.use(createPrototypeApiRoutes({ db }));
-  app.use(createReactAppRoutes({ routes: ["/login"] }));
-  app.use(requireSignedIn);
   app.use(createReactAppRoutes());
+  app.use(createPrototypeRoutes());
+  app.use(requireSignedIn);
   app.use(createDashboardRoutes({ db }));
   app.use(createReservationRoutes({ db }));
   app.use(createScheduleRoutes({ db }));

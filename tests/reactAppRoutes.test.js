@@ -20,6 +20,7 @@ test("main staff routes render the React app shell", async () => {
   const server = app.listen(0);
   try {
     const routes = [
+      "/",
       "/login",
       "/dashboard",
       "/schedule",
@@ -40,6 +41,7 @@ test("main staff routes render the React app shell", async () => {
       assert.equal(response.status, 200, route);
       assert.match(body, /id="root"/, route);
       assert.match(body, /\/app\/assets\//, route);
+      assert.doesNotMatch(body, /mockup-topbar|prototype-backend-unsupported-style|\/css\/styles\.css/, route);
       assert.doesNotMatch(body, /unpkg\.com|cdnjs\.cloudflare\.com|fonts\.googleapis\.com/, route);
     }
   } finally {

@@ -52,6 +52,7 @@ test("createApp serves React staff shell for authenticated main staff routes", a
 
   try {
     const routes = [
+      "/",
       "/dashboard",
       "/schedule",
       "/reservations",
@@ -71,6 +72,7 @@ test("createApp serves React staff shell for authenticated main staff routes", a
       assert.equal(response.status, 200, route);
       assert.match(body, /id="root"/, route);
       assert.match(body, /\/app\/assets\//, route);
+      assert.doesNotMatch(body, /mockup-topbar|prototype-backend-unsupported-style|\/css\/styles\.css/, route);
       assert.doesNotMatch(body, /unpkg\.com|cdnjs\.cloudflare\.com|fonts\.googleapis\.com/, route);
     }
   } finally {
@@ -79,7 +81,7 @@ test("createApp serves React staff shell for authenticated main staff routes", a
   }
 });
 
-test("createApp serves the React login route for signed-out staff", async () => {
+test("createApp serves React shell for signed-out normal staff routes", async () => {
   const db = { end: async () => {} };
   const app = createApp({
     db,
@@ -91,13 +93,31 @@ test("createApp serves the React login route for signed-out staff", async () => 
   const server = app.listen(0);
 
   try {
-    const response = await fetch(`http://127.0.0.1:${server.address().port}/login`);
-    const body = await response.text();
+    const routes = [
+      "/",
+      "/login",
+      "/dashboard",
+      "/schedule",
+      "/reservations",
+      "/reservations/new",
+      "/reservations/1",
+      "/reservations/1/edit",
+      "/account",
+      "/account/password",
+      "/activity-logs",
+      "/reports"
+    ];
 
-    assert.equal(response.status, 200);
-    assert.match(body, /id="root"/);
-    assert.match(body, /\/app\/assets\//);
-    assert.doesNotMatch(body, /unpkg\.com|cdnjs\.cloudflare\.com|fonts\.googleapis\.com/);
+    for (const route of routes) {
+      const response = await fetch(`http://127.0.0.1:${server.address().port}${route}`);
+      const body = await response.text();
+
+      assert.equal(response.status, 200, route);
+      assert.match(body, /id="root"/, route);
+      assert.match(body, /\/app\/assets\//, route);
+      assert.doesNotMatch(body, /mockup-topbar|prototype-backend-unsupported-style|\/css\/styles\.css/, route);
+      assert.doesNotMatch(body, /unpkg\.com|cdnjs\.cloudflare\.com|fonts\.googleapis\.com/, route);
+    }
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await app.locals.db?.end?.();
@@ -156,32 +176,6 @@ test("createApp keeps reservation CSV export on the legacy handler", async () =>
     assert.doesNotMatch(body, /id="root"/);
     assert.match(executeCall.sql, /FROM reservations r/);
     assert.deepEqual(executeCall.params, {});
-  } finally {
-    await new Promise((resolve) => server.close(resolve));
-    await app.locals.db?.end?.();
-  }
-});
-
-test("createApp redirects signed-out main staff routes to login", async () => {
-  const db = { end: async () => {} };
-  const app = createApp({
-    db,
-    sessionMiddleware: (request, _response, next) => {
-      request.session = {};
-      next();
-    }
-  });
-  const server = app.listen(0);
-
-  try {
-    for (const route of ["/dashboard", "/account"]) {
-      const response = await fetch(`http://127.0.0.1:${server.address().port}${route}`, {
-        redirect: "manual"
-      });
-
-      assert.equal(response.status, 302, route);
-      assert.equal(response.headers.get("location"), "/login", route);
-    }
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await app.locals.db?.end?.();

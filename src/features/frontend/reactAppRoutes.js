@@ -7,6 +7,7 @@ const PROJECT_ROOT = path.dirname(path.dirname(path.dirname(path.dirname(fileURL
 const MANIFEST_PATH = path.join(PROJECT_ROOT, "public", "app", ".vite", "manifest.json");
 
 const MAIN_ROUTES = [
+  "/",
   "/login",
   "/dashboard",
   "/schedule",
