@@ -1874,6 +1874,66 @@ p {
   overflow: hidden;
 }
 
+.attention-panel {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 100%);
+}
+
+.attention-panel h2 {
+  margin: 2px 0 6px;
+  color: var(--primary-dark);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 400;
+  line-height: 1.08;
+}
+
+.attention-panel p {
+  max-width: 780px;
+  color: var(--ink-muted);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.attention-count {
+  flex: 0 0 190px;
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  min-height: 118px;
+  border: 2px solid var(--primary-soft);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--primary-softer);
+  color: var(--primary-dark);
+  text-align: center;
+}
+
+.attention-count:hover,
+.attention-count:focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--surface);
+  box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+.attention-count strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 46px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.attention-count span {
+  font-size: 14px;
+  font-weight: 900;
+}
+
 .bookings-toolbar {
   display: flex;
   align-items: center;
@@ -2000,6 +2060,19 @@ p {
 .booking-card-main span,
 .booking-card-main small {
   overflow-wrap: anywhere;
+}
+
+.attention-reason {
+  width: fit-content;
+  margin-top: 4px;
+  border-radius: 8px;
+  padding: 5px 9px;
+  background: var(--warning-soft);
+  color: #6d4a0d;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1.25;
 }
 
 .drawer-backdrop {
@@ -2195,6 +2268,15 @@ p {
 
   .staff-day-card {
     min-height: 300px;
+  }
+
+  .attention-panel {
+    flex-direction: column;
+  }
+
+  .attention-count {
+    flex-basis: auto;
+    min-height: 96px;
   }
 }
 

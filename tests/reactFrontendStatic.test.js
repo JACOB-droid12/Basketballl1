@@ -39,6 +39,27 @@ test("reservation detail drawer suspends Escape close while the status dialog is
   assert.match(drawer, /event\.key === "Escape" && !suspendEscapeRef\.current/);
 });
 
+test("attention surface is backend-backed and uses only supported reservation statuses", () => {
+  const reservationsPage = readFileSync(path.join(projectRoot, "client", "src", "pages", "ReservationsPage.jsx"), "utf8");
+
+  assert.match(reservationsPage, /apiRequest\("\/api\/reservations"\)/);
+  assert.match(reservationsPage, /const STATUS_OPTIONS = \["all", "attention", "RESERVED", "MISSED", "CANCELLED", "COMPLETED"\]/);
+  assert.match(reservationsPage, /reservation\.statusCode === "MISSED" \|\| reservation\.statusCode === "CANCELLED"/);
+  assert.match(reservationsPage, /reservation\.statusCode === "RESERVED" && reservation\.reservationDate === todayKey/);
+  assert.doesNotMatch(reservationsPage, /\bPENDING\b|\bAPPROVED\b|\bDECLINED\b/);
+  assert.doesNotMatch(reservationsPage, /active overlap|conflict state|pending approval/i);
+});
+
+test("attention date key uses Manila calendar date and refreshes after reloads", () => {
+  const reservationsPage = readFileSync(path.join(projectRoot, "client", "src", "pages", "ReservationsPage.jsx"), "utf8");
+
+  assert.match(reservationsPage, /useState\(getManilaDateKey\)/);
+  assert.match(reservationsPage, /new Intl\.DateTimeFormat\("en-CA", \{\s*timeZone: "Asia\/Manila"/s);
+  assert.match(reservationsPage, /formatToParts\(date\)/);
+  assert.match(reservationsPage, /setTodayKey\(getManilaDateKey\(\)\)/);
+  assert.doesNotMatch(reservationsPage, /date\.getFullYear\(\)|date\.getMonth\(\)|date\.getDate\(\)/);
+});
+
 function assertNoUnsupportedApprovalWorkflow(source) {
   assert.doesNotMatch(source, /\bPENDING\b/);
   assert.doesNotMatch(source, /\b(?:APPROVED|DECLINED)\b/);

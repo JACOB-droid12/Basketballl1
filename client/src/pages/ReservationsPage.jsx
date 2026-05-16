@@ -8,7 +8,7 @@ import { LoadingState } from "../components/LoadingState.jsx";
 import { buildStatusDialog, ReservationDetailDrawer } from "../components/ReservationDetailDrawer.jsx";
 import { StatusBadge } from "../components/StatusBadge.jsx";
 
-const STATUS_OPTIONS = ["all", "RESERVED", "MISSED", "CANCELLED", "COMPLETED"];
+const STATUS_OPTIONS = ["all", "attention", "RESERVED", "MISSED", "CANCELLED", "COMPLETED"];
 
 export function ReservationsPage({ onNavigate, initialReservationId = null }) {
   const initialSelectedId = parseReservationId(initialReservationId);
@@ -19,16 +19,25 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
   const [dialog, setDialog] = useState(null);
   const [actionError, setActionError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [todayKey, setTodayKey] = useState(getManilaDateKey);
 
   useEffect(() => {
     loadReservations(initialSelectedId);
   }, [initialSelectedId]);
 
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setTodayKey(getManilaDateKey()), 60_000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
   const reservations = state.reservations;
-  const counts = useMemo(() => buildStatusCounts(reservations), [reservations]);
+  const attentionReservations = useMemo(() => {
+    return reservations.filter((reservation) => isAttentionReservation(reservation, todayKey));
+  }, [reservations, todayKey]);
+  const counts = useMemo(() => buildStatusCounts(reservations, todayKey), [reservations, todayKey]);
   const filteredReservations = useMemo(() => {
-    return filterReservations(reservations, query, status);
-  }, [query, reservations, status]);
+    return filterReservations(reservations, query, status, todayKey);
+  }, [query, reservations, status, todayKey]);
 
   const selectedReservation = useMemo(() => {
     if (!selectedId) return null;
@@ -41,6 +50,7 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
     try {
       const data = await apiRequest("/api/reservations");
       const nextReservations = Array.isArray(data.reservations) ? data.reservations : [];
+      setTodayKey(getManilaDateKey());
       setState({ loading: false, reservations: nextReservations, error: "" });
 
       if (nextSelectedId && nextReservations.some((reservation) => reservation.reservationId === nextSelectedId)) {
@@ -117,6 +127,25 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
       ) : (
         !state.error && (
           <div className="card staff-bookings-card">
+            <section className="attention-panel" aria-labelledby="attention-title">
+              <div>
+                <p className="page-kicker">Needs attention</p>
+                <h2 id="attention-title">Records staff may need to check today</h2>
+                <p>
+                  Missed or cancelled bookings stay visible here. Today's reserved bookings are also listed so staff can mark them done or missed after the scheduled time.
+                </p>
+              </div>
+              <button
+                className="attention-count"
+                type="button"
+                onClick={() => setStatus("attention")}
+                aria-label={`${attentionReservations.length} reservation records need staff attention`}
+              >
+                <strong>{attentionReservations.length}</strong>
+                <span>Kailangang tingnan</span>
+              </button>
+            </section>
+
             <div className="bookings-toolbar">
               <label className="search-input" aria-label="Search bookings">
                 <span className="search-mark">⌕</span>
@@ -132,7 +161,7 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
                     role="tab"
                     aria-selected={status === option}
                   >
-                    {option === "all" ? "All" : STATUS_LABELS[option]}
+                    {getFilterLabel(option)}
                     <span>({counts[option] || 0})</span>
                   </button>
                 ))}
@@ -140,13 +169,14 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
             </div>
 
             {filteredReservations.length === 0 ? (
-              <EmptyState title="No matching bookings" body="Try a different search term or status filter." />
+              <EmptyState title="No matching bookings" body={getEmptyMessage(status)} />
             ) : (
               <div className="booking-card-list">
                 {filteredReservations.map((reservation) => (
                   <ReservationCard
                     key={reservation.reservationId}
                     reservation={reservation}
+                    attentionReason={status === "attention" ? getAttentionReason(reservation, todayKey) : ""}
                     selected={reservation.reservationId === selectedId}
                     onOpen={() => openReservation(reservation)}
                   />
@@ -181,7 +211,7 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
   );
 }
 
-function ReservationCard({ reservation, selected, onOpen }) {
+function ReservationCard({ reservation, selected, onOpen, attentionReason = "" }) {
   return (
     <button
       className={`booking-card ${selected ? "selected" : ""}`}
@@ -197,6 +227,7 @@ function ReservationCard({ reservation, selected, onOpen }) {
         <strong>{reservation.representativeName}</strong>
         <span>{reservation.purpose}</span>
         <small>{reservation.contactNo} · #{reservation.reservationId}</small>
+        {attentionReason && <em className="attention-reason">{attentionReason}</em>}
       </div>
       <StatusBadge statusCode={reservation.statusCode} />
     </button>
@@ -213,12 +244,14 @@ function parseReservationId(value) {
   return /^[1-9]\d*$/.test(text) ? Number(text) : null;
 }
 
-function filterReservations(reservations, query, status) {
+function filterReservations(reservations, query, status, todayKey) {
   const needle = query.trim().toLowerCase();
 
   return reservations
     .filter((reservation) => {
-      const matchesStatus = status === "all" || reservation.statusCode === status;
+      const matchesStatus = status === "all"
+        || (status === "attention" && isAttentionReservation(reservation, todayKey))
+        || reservation.statusCode === status;
       const searchable = [
         reservation.reservationId,
         reservation.representativeName,
@@ -240,10 +273,55 @@ function filterReservations(reservations, query, status) {
     });
 }
 
-function buildStatusCounts(reservations) {
+function buildStatusCounts(reservations, todayKey) {
   return reservations.reduce((counts, reservation) => {
     counts.all += 1;
+    if (isAttentionReservation(reservation, todayKey)) {
+      counts.attention += 1;
+    }
     counts[reservation.statusCode] = (counts[reservation.statusCode] || 0) + 1;
     return counts;
-  }, { all: 0 });
+  }, { all: 0, attention: 0 });
+}
+
+function getFilterLabel(option) {
+  if (option === "all") return "All";
+  if (option === "attention") return "Needs attention";
+  return STATUS_LABELS[option];
+}
+
+function getEmptyMessage(status) {
+  if (status === "attention") {
+    return "No missed, cancelled, or today's reserved bookings match this search.";
+  }
+
+  return "Try a different search term or status filter.";
+}
+
+function isAttentionReservation(reservation, todayKey) {
+  if (!reservation) return false;
+  if (reservation.statusCode === "MISSED" || reservation.statusCode === "CANCELLED") return true;
+  return reservation.statusCode === "RESERVED" && reservation.reservationDate === todayKey;
+}
+
+function getAttentionReason(reservation, todayKey) {
+  if (reservation.statusCode === "MISSED") return "Marked missed - review if staff need follow-up.";
+  if (reservation.statusCode === "CANCELLED") return "Cancelled booking - keep visible for desk questions.";
+  if (reservation.statusCode === "RESERVED" && reservation.reservationDate === todayKey) {
+    return "Today reserved - mark done or missed when finished.";
+  }
+
+  return "";
+}
+
+function getManilaDateKey(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+
+  return `${values.year}-${values.month}-${values.day}`;
 }
