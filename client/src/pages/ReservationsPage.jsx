@@ -4,6 +4,7 @@ import { apiRequest } from "../api/client.js";
 import { formatDate, formatTime, STATUS_LABELS } from "../api/mappers.js";
 import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { EmptyState } from "../components/EmptyState.jsx";
+import { Icon } from "../components/Icon.jsx";
 import { LoadingState } from "../components/LoadingState.jsx";
 import { buildStatusDialog, ReservationDetailDrawer } from "../components/ReservationDetailDrawer.jsx";
 import { StatusBadge } from "../components/StatusBadge.jsx";
@@ -148,7 +149,7 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
 
             <div className="bookings-toolbar">
               <label className="search-input" aria-label="Search bookings">
-                <span className="search-mark">⌕</span>
+                <span className="search-mark"><Icon name="search" size={20} /></span>
                 <input id="reservation-search" name="search" className="input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by name, purpose, phone, or ID" />
               </label>
               <div className="filter-tabs" role="tablist" aria-label="Reservation status filter">

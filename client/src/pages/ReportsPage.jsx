@@ -69,9 +69,9 @@ export function ReportsPage() {
             </div>
 
             <div className="stats-grid report-summary">
-              <SummaryCard label="Total reservations" value={summary.totalReservations ?? 0} helper="All records included in this local report." />
-              <SummaryCard label="Court-hours booked" value={formatHours(summary.courtHoursBooked)} helper="Cancelled reservations are excluded from booked hours." />
-              <SummaryCard label="Top requester" value={busiestRequester?.name || "None yet"} helper={busiestRequester ? `${formatHours(busiestRequester.hours)} booked` : "Appears once active bookings exist."} />
+              <SummaryCard label="Total reservations" filipino="Kabuuang bilang" value={summary.totalReservations ?? 0} helper="All records included in this local report." />
+              <SummaryCard label="Court-hours booked" filipino="Oras na ginamit" value={formatHours(summary.courtHoursBooked)} helper="Cancelled reservations are excluded from booked hours." />
+              <SummaryCard label="Top requester" filipino="Pinaka-aktibong grupo" value={busiestRequester?.name || "None yet"} helper={busiestRequester ? `${formatHours(busiestRequester.hours)} booked` : "Appears once active bookings exist."} />
             </div>
 
             <div className="status-summary-grid">
@@ -135,10 +135,13 @@ export function ReportsPage() {
   );
 }
 
-function SummaryCard({ label, value, helper }) {
+function SummaryCard({ label, filipino, value, helper }) {
   return (
     <div className="stat-card">
-      <span>{label}</span>
+      <span>
+        {label}
+        {filipino && <small className="stat-fil">{filipino}</small>}
+      </span>
       <strong>{value}</strong>
       {helper && <small>{helper}</small>}
     </div>

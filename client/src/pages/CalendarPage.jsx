@@ -38,13 +38,13 @@ export function CalendarPage({ onNavigate }) {
 
   return (
     <section className="page">
-      <div className="page-header">
+      <div className="page-header page-head staff-page-head">
         <div>
-          <p className="page-kicker">Calendar · Week view</p>
-          <h1>{state.loading ? "Weekly schedule" : weekLabel}</h1>
-          <p className="page-subtitle">See every reservation for the week. Tingnan ang lahat ng reserbasyon.</p>
+          <h1 className="page-title">Calendar</h1>
+          <div className="page-sub">{state.loading ? "Weekly schedule" : weekLabel}</div>
+          <div className="page-sub-fil">Tingnan ang lahat ng reserbasyon ngayong linggo.</div>
         </div>
-        <button className="btn btn-primary" type="button" onClick={() => onNavigate("/reservations/new")}>
+        <button className="btn btn-primary btn-big" type="button" onClick={() => onNavigate("/reservations/new")}>
           New Reservation
         </button>
       </div>

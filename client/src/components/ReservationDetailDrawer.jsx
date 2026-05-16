@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { formatDate, formatTime, STATUS_LABELS } from "../api/mappers.js";
+import { Icon } from "./Icon.jsx";
 import { StatusBadge } from "./StatusBadge.jsx";
 
 const STATUS_ACTIONS = [
@@ -93,7 +94,7 @@ export function ReservationDetailDrawer({ reservation, busy, onClose, onEdit, on
             aria-label="Close reservation details"
             ref={closeButtonRef}
           >
-            X
+            <Icon name="x" size={20} />
           </button>
         </div>
 

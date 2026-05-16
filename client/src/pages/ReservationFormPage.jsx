@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../api/client.js";
 import { formatDate, formatTime } from "../api/mappers.js";
 import { Field } from "../components/Field.jsx";
+import { Icon } from "../components/Icon.jsx";
 import { LoadingState } from "../components/LoadingState.jsx";
 
 const TIME_OPTIONS = [
@@ -150,6 +151,19 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
     if (nextEnd) updateField("endTime", nextEnd);
   }
 
+  function applyStartTime(time) {
+    const startIndex = TIME_OPTIONS.indexOf(time);
+    if (startIndex < 0) return;
+    const currentDuration = Math.max(1, durationHours(form.startTime, form.endTime) || 1);
+    const nextEnd = TIME_OPTIONS[startIndex + currentDuration] || TIME_OPTIONS[TIME_OPTIONS.length - 1];
+    setForm((current) => ({ ...current, startTime: time, endTime: nextEnd }));
+    setState((current) => ({
+      ...current,
+      fieldErrors: { ...current.fieldErrors, startTime: "", endTime: "", timeRange: "" },
+      error: ""
+    }));
+  }
+
   function applySuggestion(slot) {
     setForm((current) => ({
       ...current,
@@ -197,7 +211,7 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
       </div>
 
       <div className="banner banner-info reservation-instruction">
-        <div className="b-ic">i</div>
+        <div className="b-ic"><Icon name="info" /></div>
         <div>
           <h4>How this works</h4>
           <p>1. Ask for the details below. 2. Pick a free court time. 3. Save the record. New bookings are saved as reserved.</p>
@@ -247,11 +261,6 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
             <Field id="reservationDate" label="Date" filipino="Petsa" error={state.fieldErrors.reservationDate}>
               <input type="date" autoComplete="off" value={form.reservationDate} onChange={(event) => updateField("reservationDate", event.target.value)} required />
             </Field>
-            <Field id="startTime" label="Start time" filipino="Simula" error={state.fieldErrors.startTime}>
-              <select value={form.startTime} onChange={(event) => updateField("startTime", event.target.value)} required>
-                {TIME_OPTIONS.slice(0, -1).map((time) => <option key={time} value={time}>{formatTime(time)}</option>)}
-              </select>
-            </Field>
             <Field id="endTime" label="End time" filipino="Tapos" error={state.fieldErrors.endTime || state.fieldErrors.timeRange}>
               <select value={form.endTime} onChange={(event) => updateField("endTime", event.target.value)} required>
                 {TIME_OPTIONS.slice(1).map((time) => <option key={time} value={time}>{formatTime(time)}</option>)}
@@ -268,6 +277,33 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="slot-picker time-chip-picker" aria-label="Start time picker">
+            <span className="field-label">
+              Start time <span className="fil">· Anong oras magsisimula</span>
+              <span className="req"> *</span>
+            </span>
+            <span className="field-hint">Pick a start time. Saving will confirm availability against the schedule.</span>
+            <div className="time-grid" role="radiogroup" aria-label="Start time">
+              {TIME_OPTIONS.slice(0, -1).map((time) => {
+                const selected = form.startTime === time;
+                return (
+                  <button
+                    key={time}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    aria-pressed={selected}
+                    className={`time-chip ${selected ? "selected" : ""}`}
+                    onClick={() => applyStartTime(time)}
+                  >
+                    {formatTime(time)}
+                  </button>
+                );
+              })}
+            </div>
+            {state.fieldErrors.startTime && <span className="field-error">{state.fieldErrors.startTime}</span>}
           </div>
 
           <AvailabilityNotice
@@ -306,7 +342,7 @@ function AvailabilityNotice({ availability, canCheck, isEdit, hasEditedTimeChang
 
     return (
       <div className="banner banner-info availability-panel">
-        <div className="b-ic">i</div>
+        <div className="b-ic"><Icon name="info" /></div>
         <div>
           <h4>{unchangedEditSlot ? "Current saved time" : "Pick a valid date and time"}</h4>
           <p>{unchangedEditSlot ? "Change the date or time to check availability again." : "The system will check the real court schedule before saving."}</p>
@@ -318,7 +354,7 @@ function AvailabilityNotice({ availability, canCheck, isEdit, hasEditedTimeChang
   if (availability.loading) {
     return (
       <div className="banner banner-info availability-panel">
-        <div className="b-ic">i</div>
+        <div className="b-ic"><Icon name="info" /></div>
         <div>
           <h4>Checking court availability</h4>
           <p>Please wait while the schedule is checked.</p>
@@ -330,7 +366,7 @@ function AvailabilityNotice({ availability, canCheck, isEdit, hasEditedTimeChang
   if (availability.error) {
     return (
       <div className="banner banner-warn availability-panel" role="alert">
-        <div className="b-ic">!</div>
+        <div className="b-ic"><Icon name="warn" /></div>
         <div>
           <h4>Availability could not be confirmed</h4>
           <p>{availability.error}</p>
@@ -345,7 +381,7 @@ function AvailabilityNotice({ availability, canCheck, isEdit, hasEditedTimeChang
   if (availability.data.available) {
     return (
       <div className="banner banner-ok availability-panel" role="status">
-        <div className="b-ic">✓</div>
+        <div className="b-ic"><Icon name="check" /></div>
         <div>
           <h4>This time is available</h4>
           <p>Final save will still be checked by the backend.</p>
@@ -359,7 +395,7 @@ function AvailabilityNotice({ availability, canCheck, isEdit, hasEditedTimeChang
 
   return (
     <div className="banner banner-warn availability-panel" role="alert">
-      <div className="b-ic">!</div>
+      <div className="b-ic"><Icon name="warn" /></div>
       <div>
         <h4>This time is already booked</h4>
         {conflict && (
