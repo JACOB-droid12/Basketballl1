@@ -25,11 +25,10 @@ export function createReactAppRoutes(options = {}) {
   const router = Router();
   const manifestPath = options.manifestPath || MANIFEST_PATH;
   const routes = options.routes || MAIN_ROUTES;
-  let cachedAssets = null;
 
   router.get(routes, (_request, response) => {
-    cachedAssets ||= readReactAssets(manifestPath);
-    const assets = cachedAssets;
+    response.set("Cache-Control", "no-store");
+    const assets = readReactAssets(manifestPath);
     response.render("app", assets);
   });
 

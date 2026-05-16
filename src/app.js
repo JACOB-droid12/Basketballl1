@@ -30,6 +30,9 @@ export function createApp(options = {}) {
   app.use(express.urlencoded({ extended: false }));
   app.use(express.json());
   app.use(express.static(path.join(projectRoot, "public")));
+  app.use("/app/assets", (_request, response) => {
+    response.status(404).type("text/plain").send("React asset not found.");
+  });
   app.use(
     options.sessionMiddleware || session({
       name: "barangay_scheduler_sid",
@@ -49,6 +52,9 @@ export function createApp(options = {}) {
 
   app.get("/health", (_request, response) => {
     response.json({ status: "ok", milestone: "foundation" });
+  });
+  app.get("/favicon.ico", (_request, response) => {
+    response.status(204).end();
   });
 
   app.use(createAuthRoutes({ db, enableLegacyAccountUi: false, enableLegacyLoginUi: false }));

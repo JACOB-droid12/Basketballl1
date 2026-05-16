@@ -46,13 +46,12 @@ export function AccountPasswordPage({ user }) {
 
   return (
     <section className="page account-password-page">
-      <div className="page-header">
+      <div className="page-header page-head staff-page-head">
         <div>
           <p className="page-kicker">Account access</p>
-          <h1>Change password</h1>
-          <p className="page-subtitle">
-            Update your own staff login for this barangay office device. This does not change other staff accounts.
-          </p>
+          <h1 className="page-title">Change password</h1>
+          <div className="page-sub">Update your own staff login for this barangay office device.</div>
+          <div className="page-sub-fil">Hindi nito binabago ang password ng ibang staff.</div>
         </div>
       </div>
 

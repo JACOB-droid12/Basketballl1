@@ -151,6 +151,23 @@ test("account password route uses a dedicated React page and JSON account API", 
   assert.doesNotMatch(passwordPage, /\bPENDING\b|\bAPPROVED\b|\bDECLINED\b/);
 });
 
+test("reservation form fields declare autocomplete behavior for browser form checks", () => {
+  const formPage = readFileSync(path.join(projectRoot, "client", "src", "pages", "ReservationFormPage.jsx"), "utf8");
+
+  assert.match(formPage, /autoComplete="name"/);
+  assert.match(formPage, /autoComplete="tel"/);
+  assert.match(formPage, /autoComplete="street-address"/);
+  assert.match(formPage, /autoComplete="off"/);
+});
+
+test("account creation fields declare autocomplete behavior for browser form checks", () => {
+  const accountsPage = readFileSync(path.join(projectRoot, "client", "src", "pages", "AccountsPage.jsx"), "utf8");
+
+  assert.match(accountsPage, /name="fullName"[\s\S]*autoComplete="name"/);
+  assert.match(accountsPage, /name="username"[\s\S]*autoComplete="username"/);
+  assert.match(accountsPage, /name="password"[\s\S]*autoComplete="new-password"/);
+});
+
 function assertNoUnsupportedApprovalWorkflow(source) {
   assert.doesNotMatch(source, /\bPENDING\b/);
   assert.doesNotMatch(source, /\b(?:APPROVED|DECLINED)\b/);

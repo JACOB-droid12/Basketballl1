@@ -70,11 +70,12 @@ export function ActivityLogsPage() {
 
   return (
     <section className="page">
-      <div className="page-header">
+      <div className="page-header page-head staff-page-head">
         <div>
           <p className="page-kicker">Audit trail</p>
-          <h1>Activity logs</h1>
-          <p className="page-subtitle">Search staff actions recorded by the local system. Tala ng ginawa sa opisina.</p>
+          <h1 className="page-title">Activity logs</h1>
+          <div className="page-sub">Search staff actions recorded by the local system.</div>
+          <div className="page-sub-fil">Tala ng ginawa sa opisina.</div>
         </div>
       </div>
 

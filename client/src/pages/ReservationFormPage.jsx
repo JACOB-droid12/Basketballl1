@@ -219,13 +219,13 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
               error={state.fieldErrors.representativeName}
               wide
             >
-              <input value={form.representativeName} onChange={(event) => updateField("representativeName", event.target.value)} required />
+              <input autoComplete="name" value={form.representativeName} onChange={(event) => updateField("representativeName", event.target.value)} required />
             </Field>
             <Field id="contactNo" label="Contact number" filipino="Cellphone number" error={state.fieldErrors.contactNo}>
-              <input value={form.contactNo} onChange={(event) => updateField("contactNo", event.target.value)} required />
+              <input autoComplete="tel" value={form.contactNo} onChange={(event) => updateField("contactNo", event.target.value)} required />
             </Field>
             <Field id="address" label="Address" filipino="Tirahan" error={state.fieldErrors.address}>
-              <input value={form.address} onChange={(event) => updateField("address", event.target.value)} required />
+              <input autoComplete="street-address" value={form.address} onChange={(event) => updateField("address", event.target.value)} required />
             </Field>
             <Field
               id="purpose"
@@ -235,7 +235,7 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
               error={state.fieldErrors.purpose}
               wide
             >
-              <input value={form.purpose} onChange={(event) => updateField("purpose", event.target.value)} required />
+              <input autoComplete="off" value={form.purpose} onChange={(event) => updateField("purpose", event.target.value)} required />
             </Field>
           </div>
         </section>
@@ -245,7 +245,7 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
           <div className="section-hint">Kailan nila gustong gamitin?</div>
           <div className="form-grid time-control-grid">
             <Field id="reservationDate" label="Date" filipino="Petsa" error={state.fieldErrors.reservationDate}>
-              <input type="date" value={form.reservationDate} onChange={(event) => updateField("reservationDate", event.target.value)} required />
+              <input type="date" autoComplete="off" value={form.reservationDate} onChange={(event) => updateField("reservationDate", event.target.value)} required />
             </Field>
             <Field id="startTime" label="Start time" filipino="Simula" error={state.fieldErrors.startTime}>
               <select value={form.startTime} onChange={(event) => updateField("startTime", event.target.value)} required>
@@ -283,7 +283,7 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
           <h3><span className="section-num">3</span>Any notes?</h3>
           <div className="section-hint">Mga paalala</div>
           <Field id="remarks" label="Remarks" filipino="Paalala" error={state.fieldErrors.remarks} wide>
-            <textarea value={form.remarks} onChange={(event) => updateField("remarks", event.target.value)} rows="4" />
+            <textarea autoComplete="off" value={form.remarks} onChange={(event) => updateField("remarks", event.target.value)} rows="4" />
           </Field>
         </section>
 

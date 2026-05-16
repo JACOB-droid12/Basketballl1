@@ -46,13 +46,14 @@ export function ReportsPage() {
 
   return (
     <section className="page report-page">
-      <div className="page-header print-hidden">
+      <div className="page-header page-head staff-page-head print-hidden">
         <div>
           <p className="page-kicker">Reports</p>
-          <h1>Office report</h1>
-          <p className="page-subtitle">Current reservation totals from the local database. Ulat para sa mabilis na review ng staff.</p>
+          <h1 className="page-title">Office report</h1>
+          <div className="page-sub">Current reservation totals from the local database.</div>
+          <div className="page-sub-fil">Ulat para sa mabilis na review ng staff.</div>
         </div>
-        <button className="btn btn-primary" type="button" onClick={() => window.print()}>Print</button>
+        <button className="btn btn-primary btn-big" type="button" onClick={() => window.print()}>Print</button>
       </div>
 
       {state.error && <div className="alert error" role="alert">{state.error}</div>}

@@ -124,6 +124,56 @@ test("createApp serves React shell for signed-out normal staff routes", async ()
   }
 });
 
+test("createApp returns 404 for missing React assets instead of auth HTML", async () => {
+  const db = { end: async () => {} };
+  const app = createApp({
+    db,
+    sessionMiddleware: (request, _response, next) => {
+      request.session = {};
+      next();
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/app/assets/missing-stale-build.js`, {
+      redirect: "manual"
+    });
+    const body = await response.text();
+
+    assert.equal(response.status, 404);
+    assert.doesNotMatch(body, /id="root"|Login your account|Barangay Sto\. Niño Court Scheduler/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await app.locals.db?.end?.();
+  }
+});
+
+test("createApp returns an empty favicon response without auth redirects", async () => {
+  const db = { end: async () => {} };
+  const app = createApp({
+    db,
+    sessionMiddleware: (request, _response, next) => {
+      request.session = {};
+      next();
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/favicon.ico`, {
+      redirect: "manual"
+    });
+    const body = await response.text();
+
+    assert.equal(response.status, 204);
+    assert.equal(body, "");
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await app.locals.db?.end?.();
+  }
+});
+
 test("createApp keeps reservation CSV export on the legacy handler", async () => {
   let executeCall = null;
   const db = {

@@ -125,11 +125,12 @@ export function AccountsPage({ user }) {
   if (!isAdmin) {
     return (
       <section className="page">
-        <div className="page-header">
+        <div className="page-header page-head staff-page-head">
           <div>
             <p className="page-kicker">Accounts</p>
-            <h1>Admin access required</h1>
-            <p className="page-subtitle">Only administrator accounts can create staff users or change account status.</p>
+            <h1 className="page-title">Admin access required</h1>
+            <div className="page-sub">Only administrator accounts can create staff users or change account status.</div>
+            <div className="page-sub-fil">Para sa administrator lang ang account management.</div>
           </div>
         </div>
         <div className="alert warning" role="alert">Sign in as an administrator to manage local staff accounts.</div>
@@ -141,11 +142,12 @@ export function AccountsPage({ user }) {
 
   return (
     <section className="page">
-      <div className="page-header">
+      <div className="page-header page-head staff-page-head">
         <div>
           <p className="page-kicker">Admin</p>
-          <h1>Accounts</h1>
-          <p className="page-subtitle">Create local logins and control who can use this office device. Para sa admin lang.</p>
+          <h1 className="page-title">Accounts</h1>
+          <div className="page-sub">Create local logins and control who can use this office device.</div>
+          <div className="page-sub-fil">Para sa admin lang.</div>
         </div>
       </div>
 
@@ -179,6 +181,7 @@ export function AccountsPage({ user }) {
             <input
               id="account-fullName"
               name="fullName"
+              autoComplete="name"
               value={form.fullName}
               onChange={(event) => updateField("fullName", event.target.value)}
               aria-invalid={Boolean(fieldErrors.fullName)}
@@ -191,6 +194,7 @@ export function AccountsPage({ user }) {
             <input
               id="account-username"
               name="username"
+              autoComplete="username"
               value={form.username}
               onChange={(event) => updateField("username", event.target.value)}
               aria-invalid={Boolean(fieldErrors.username)}
