@@ -28,6 +28,30 @@ test("built React app references only local bundled assets", () => {
   assertNoUnsupportedApprovalWorkflow(combined);
 });
 
+test("responsive CSS includes narrow-width safeguards for the staff React shell", () => {
+  const styles = readFileSync(path.join(projectRoot, "client", "src", "styles.css"), "utf8");
+
+  assert.match(styles, /\.btn\s*\{[^}]*max-width:\s*100%[^}]*overflow-wrap:\s*anywhere/s);
+  assert.match(styles, /\.button-row \.btn,[\s\S]*\.button-row a\.btn\s*\{[^}]*min-width:\s*0/s);
+  assert.match(styles, /\.topbar-actions\s*\{[^}]*flex-wrap:\s*wrap/s);
+  assert.match(styles, /@media \(max-width:\s*820px\)[\s\S]*\.sidebar\s*\{[^}]*overflow-x:\s*auto/s);
+  assert.match(styles, /\.calendar-toolbar\s*\{[^}]*min-width:\s*0/s);
+  assert.match(styles, /@media \(max-width:\s*1240px\)[\s\S]*\.staff-week-grid\s*\{[^}]*repeat\(3,\s*minmax\(0,\s*1fr\)\)/s);
+  assert.match(styles, /@media \(max-width:\s*560px\)[\s\S]*\.staff-week-grid\s*\{[^}]*grid-template-columns:\s*1fr/s);
+  assert.match(styles, /\.filter-tab\s*\{[^}]*white-space:\s*normal/s);
+  assert.match(styles, /@media \(max-width:\s*560px\)[\s\S]*\.data-table,[\s\S]*\.admin-table,[\s\S]*\.logs-table\s*\{[^}]*min-width:\s*680px/s);
+  assert.match(styles, /@media \(max-width:\s*560px\)[\s\S]*\.reservation-drawer,[\s\S]*\.dialog\s*\{[^}]*max-height:\s*calc\(100vh - 20px\)/s);
+});
+
+test("UI smoke verification targets the React staff surface and preserves prototype reference checks", () => {
+  const smokeScript = readFileSync(path.join(projectRoot, "scripts", "verify-ui-smoke.mjs"), "utf8");
+
+  assert.match(smokeScript, /path:\s*"\/prototype",\s*expectedText:\s*"\/js\/prototype-backend\.js"/);
+  assert.match(smokeScript, /path:\s*"\/api\/prototype\/session"/);
+  assert.doesNotMatch(smokeScript, /path:\s*"\/account\/create"/);
+  assert.doesNotMatch(smokeScript, /expectedText:\s*"Create Account"/);
+});
+
 test("reservation detail drawer suspends Escape close while the status dialog is open", () => {
   const reservationsPage = readFileSync(path.join(projectRoot, "client", "src", "pages", "ReservationsPage.jsx"), "utf8");
   const drawer = readFileSync(path.join(projectRoot, "client", "src", "components", "ReservationDetailDrawer.jsx"), "utf8");

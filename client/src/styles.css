@@ -106,6 +106,7 @@ p {
 }
 
 .btn {
+  max-width: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -116,7 +117,14 @@ p {
   padding: 0 20px;
   font-size: 16px;
   font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  overflow-wrap: anywhere;
   transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.btn svg {
+  flex: 0 0 auto;
 }
 
 .btn:hover:not(:disabled),
@@ -249,6 +257,7 @@ p {
 .user-chip {
   display: flex;
   align-items: center;
+  min-width: 0;
 }
 
 .brand-row,
@@ -429,12 +438,20 @@ p {
   display: grid;
   gap: 2px;
   line-height: 1.15;
+  min-width: 0;
 }
 
 .brand-title {
   color: white;
   font-size: 19px;
   font-weight: 700;
+}
+
+.brand-title,
+.brand-subtitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .brand-subtitle,
@@ -444,6 +461,8 @@ p {
 }
 
 .topbar-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 14px;
   min-width: 0;
 }
@@ -693,7 +712,7 @@ p {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: max-content;
+  min-width: 0;
   text-decoration: none;
 }
 
@@ -1353,6 +1372,7 @@ p {
   display: flex;
   align-items: center;
   gap: 16px;
+  min-width: 0;
   margin-bottom: 18px;
   padding: 16px;
   border: 1px solid var(--border);
@@ -1366,6 +1386,7 @@ p {
   gap: 2px;
   min-width: 230px;
   margin-right: auto;
+  min-inline-size: 0;
 }
 
 .calendar-week-label span,
@@ -1382,6 +1403,7 @@ p {
   font-size: 24px;
   font-weight: 400;
   line-height: 1.1;
+  overflow-wrap: anywhere;
 }
 
 .calendar-actions {
@@ -1390,6 +1412,7 @@ p {
   justify-content: flex-end;
   gap: 10px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .compact-date {
@@ -1409,6 +1432,7 @@ p {
   grid-template-columns: repeat(7, minmax(132px, 1fr));
   gap: 10px;
   align-items: stretch;
+  min-width: 0;
 }
 
 .staff-day-card {
@@ -2032,6 +2056,7 @@ p {
   align-items: center;
   gap: 14px;
   flex-wrap: wrap;
+  min-width: 0;
   padding: 18px 24px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
@@ -2040,6 +2065,7 @@ p {
 .search-input {
   position: relative;
   flex: 1 1 280px;
+  min-width: min(280px, 100%);
 }
 
 .search-mark {
@@ -2061,9 +2087,11 @@ p {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .filter-tab {
+  max-width: 100%;
   min-height: 48px;
   border: 2px solid transparent;
   border-radius: 8px;
@@ -2072,6 +2100,9 @@ p {
   color: var(--ink);
   font-size: 15px;
   font-weight: 800;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .filter-tab span {
@@ -2156,7 +2187,7 @@ p {
 }
 
 .attention-reason {
-  width: fit-content;
+  max-width: 100%;
   margin-top: 4px;
   border-radius: 8px;
   padding: 5px 9px;
@@ -2166,6 +2197,7 @@ p {
   font-style: normal;
   font-weight: 900;
   line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .drawer-backdrop {
@@ -2181,6 +2213,7 @@ p {
 .reservation-drawer {
   width: min(620px, 100%);
   max-height: min(820px, 92vh);
+  min-width: 0;
   overflow-y: auto;
   border-radius: 16px;
   background: var(--surface);
@@ -2201,11 +2234,13 @@ p {
   font-size: 30px;
   font-weight: 400;
   line-height: 1.1;
+  overflow-wrap: anywhere;
 }
 
 .dialog-head .d-sub {
   color: var(--ink-muted);
   font-size: 15px;
+  overflow-wrap: anywhere;
 }
 
 .dialog-close {
@@ -2273,6 +2308,12 @@ p {
   z-index: 90;
 }
 
+@media (max-width: 1240px) {
+  .staff-week-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @keyframes shimmer {
   from {
     background-position: 100% 0;
@@ -2296,6 +2337,10 @@ p {
 
   .login-side {
     min-height: 360px;
+  }
+
+  .login-form-side {
+    align-items: start;
   }
 
   .home-hero {
@@ -2329,6 +2374,7 @@ p {
   .sidebar {
     flex-direction: row;
     overflow-x: auto;
+    overscroll-behavior-inline: contain;
     border-right: 0;
     border-bottom: 1px solid var(--border);
     padding: 12px 16px;
@@ -2336,6 +2382,15 @@ p {
 
   .nav-item {
     flex: 0 0 180px;
+    grid-template-columns: 36px minmax(0, 1fr);
+    min-height: 60px;
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .nav-icon {
+    width: 36px;
+    height: 36px;
   }
 
   .sidebar-help {
@@ -2379,10 +2434,23 @@ p {
 }
 
 @media (max-width: 560px) {
+  :root {
+    font-size: 16px;
+  }
+
   .login-side,
   .login-form-side,
   .main-panel {
     padding: 18px;
+  }
+
+  .login-page {
+    min-height: auto;
+  }
+
+  .login-side {
+    gap: 28px;
+    min-height: 0;
   }
 
   .login-side h1 {
@@ -2395,7 +2463,21 @@ p {
   }
 
   .login-card {
+    width: 100%;
     padding: 22px;
+  }
+
+  .login-card h2 {
+    font-size: 34px;
+  }
+
+  .brand {
+    align-items: flex-start;
+  }
+
+  .brand-title,
+  .brand-subtitle {
+    white-space: normal;
   }
 
   .topbar-actions,
@@ -2409,6 +2491,7 @@ p {
 
   .user-chip {
     align-items: flex-start;
+    border-radius: 12px;
   }
 
   .stats-grid {
@@ -2453,6 +2536,12 @@ p {
     width: 100%;
   }
 
+  .data-table,
+  .admin-table,
+  .logs-table {
+    min-width: 680px;
+  }
+
   .toolbar {
     align-items: stretch;
     flex-direction: column;
@@ -2488,6 +2577,8 @@ p {
   .booking-card {
     grid-template-columns: 1fr;
     align-items: start;
+    gap: 10px;
+    padding: 18px;
   }
 
   .form-footer,
@@ -2528,6 +2619,64 @@ p {
 
   .staff-booking-block {
     min-height: 104px;
+  }
+
+  .drawer-backdrop,
+  .dialog-backdrop {
+    align-items: end;
+    padding: 10px;
+  }
+
+  .reservation-drawer,
+  .dialog {
+    max-height: calc(100vh - 20px);
+    border-radius: 12px;
+  }
+
+  .dialog-head,
+  .dialog-body,
+  .dialog-foot {
+    padding-inline: 18px;
+  }
+}
+
+@media (max-width: 380px) {
+  .login-side,
+  .login-form-side,
+  .main-panel {
+    padding: 14px;
+  }
+
+  .brand-row {
+    align-items: flex-start;
+  }
+
+  .brand-seal {
+    width: 52px;
+    height: 52px;
+    font-size: 24px;
+  }
+
+  .brand-seal.small {
+    width: 38px;
+    height: 38px;
+    font-size: 19px;
+  }
+
+  .login-side h1,
+  .login-card h2 {
+    font-size: 30px;
+  }
+
+  .btn,
+  .btn-big {
+    min-height: 52px;
+    padding-inline: 14px;
+    font-size: 15px;
+  }
+
+  .nav-item {
+    flex-basis: 156px;
   }
 }
 

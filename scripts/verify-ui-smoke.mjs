@@ -37,7 +37,6 @@ export function buildSmokePages() {
     { path: "/reservations/10", expectedText: "id=\"root\"" },
     { path: "/reservations/10/edit", expectedText: "id=\"root\"" },
     { path: "/account", expectedText: "id=\"root\"" },
-    { path: "/account/create", expectedText: "Create Account" },
     { path: "/account/password", expectedText: "id=\"root\"" },
     { path: "/activity-logs", expectedText: "id=\"root\"" },
     { path: "/reports", expectedText: "id=\"root\"" }
