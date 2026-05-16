@@ -5,6 +5,11 @@ import { startServer } from "./serverStartup.js";
 dotenv.config();
 
 const port = Number(process.env.APP_PORT || 3000);
-const app = createApp();
 
-startServer({ app, port });
+try {
+  const app = createApp();
+  startServer({ app, port });
+} catch (error) {
+  console.error(error?.message || error);
+  process.exitCode = 1;
+}

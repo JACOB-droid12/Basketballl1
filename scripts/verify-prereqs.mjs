@@ -5,6 +5,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import dotenv from "dotenv";
 
+import { hasStrongSessionSecret } from "../src/config/sessionSecret.js";
+
 dotenv.config();
 
 const PROJECT_ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -81,7 +83,7 @@ export async function buildPrereqReport(options = {}) {
   checks.push({
     name: "APP_SESSION_SECRET",
     ok: hasStrongSessionSecret(env.APP_SESSION_SECRET),
-    detail: "set APP_SESSION_SECRET to a long local secret in .env"
+    detail: "set APP_SESSION_SECRET to a 32+ character local secret in .env"
   });
 
   return {
@@ -157,11 +159,6 @@ function missingDetail(command, result) {
 
 function cleanOutput(value) {
   return String(value || "").trim().replace(/\s+/g, " ");
-}
-
-function hasStrongSessionSecret(value) {
-  const secret = String(value || "").trim();
-  return secret.length >= 24 && secret !== "replace-with-a-long-random-local-secret";
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

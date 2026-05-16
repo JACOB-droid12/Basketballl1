@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { createDatabasePool } from "./config/database.js";
+import { getRequiredSessionSecret } from "./config/sessionSecret.js";
 import { createApiRoutes } from "./features/api/apiRoutes.js";
 import { createActivityLogRoutes } from "./features/activityLogs/activityLogRoutes.js";
 import { createReactAppRoutes } from "./features/frontend/reactAppRoutes.js";
@@ -22,6 +23,7 @@ const projectRoot = path.resolve(__dirname, "..");
 export function createApp(options = {}) {
   const app = express();
   const db = options.db || createDatabasePool();
+  const env = options.env || process.env;
   app.locals.db = db;
 
   app.set("view engine", "ejs");
@@ -36,7 +38,7 @@ export function createApp(options = {}) {
   app.use(
     options.sessionMiddleware || session({
       name: "barangay_scheduler_sid",
-      secret: process.env.APP_SESSION_SECRET || "development-only-change-me",
+      secret: getRequiredSessionSecret(env),
       resave: false,
       saveUninitialized: false,
       cookie: {

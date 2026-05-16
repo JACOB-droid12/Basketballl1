@@ -1,3 +1,5 @@
+export const MIN_PASSWORD_LENGTH = 8;
+
 export function validateCreateUserInput(input = {}) {
   const fullName = clean(input.fullName);
   const username = clean(input.username).toLowerCase();
@@ -15,6 +17,8 @@ export function validateCreateUserInput(input = {}) {
 
   if (!password) {
     errors.password = "Password is required.";
+  } else if (password.length < MIN_PASSWORD_LENGTH) {
+    errors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
   }
 
   if (!role) {
@@ -46,6 +50,8 @@ export function validateChangePasswordInput(input = {}) {
 
   if (!newPassword) {
     errors.newPassword = "New password is required.";
+  } else if (newPassword.length < MIN_PASSWORD_LENGTH) {
+    errors.newPassword = `New password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
   }
 
   if (!confirmPassword) {

@@ -74,6 +74,48 @@ test("rejects reservation dates before today when future dates are required", ()
   assert.equal(result.errors.reservationDate, "Reservation date cannot be before today.");
 });
 
+test("rejects same-day reservations with start times earlier than Manila current time", () => {
+  const result = validateReservationInput(
+    buildReservationInput({
+      reservationDate: "2026-05-07",
+      startTime: "09:00",
+      endTime: "10:00"
+    }),
+    { today: "2026-05-07", currentTime: "09:30", requireTodayOrFuture: true }
+  );
+
+  assert.equal(result.valid, false);
+  assert.equal(result.errors.startTime, "Start time must be later than the current time for today's reservations.");
+});
+
+test("accepts same-day reservations with start times later than Manila current time", () => {
+  const result = validateReservationInput(
+    buildReservationInput({
+      reservationDate: "2026-05-07",
+      startTime: "10:00",
+      endTime: "11:00"
+    }),
+    { today: "2026-05-07", currentTime: "09:30", requireTodayOrFuture: true }
+  );
+
+  assert.equal(result.valid, true);
+  assert.deepEqual(result.errors, {});
+});
+
+test("accepts future-date reservations regardless of current Manila time", () => {
+  const result = validateReservationInput(
+    buildReservationInput({
+      reservationDate: "2026-05-08",
+      startTime: "07:00",
+      endTime: "08:00"
+    }),
+    { today: "2026-05-07", currentTime: "23:30", requireTodayOrFuture: true }
+  );
+
+  assert.equal(result.valid, true);
+  assert.deepEqual(result.errors, {});
+});
+
 test("accepts a complete reservation and normalizes trimmed values", () => {
   const result = validateReservationInput(
     {
@@ -102,3 +144,16 @@ test("accepts a complete reservation and normalizes trimmed values", () => {
     statusCode: "RESERVED"
   });
 });
+
+function buildReservationInput(overrides = {}) {
+  return {
+    reservationDate: "2026-05-07",
+    startTime: "07:00",
+    endTime: "08:00",
+    representativeName: "Juan Dela Cruz",
+    contactNo: "09171234567",
+    address: "Barangay Sto. Niño",
+    purpose: "Practice",
+    ...overrides
+  };
+}

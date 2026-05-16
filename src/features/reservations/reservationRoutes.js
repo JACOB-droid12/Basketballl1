@@ -22,7 +22,12 @@ const defaultRepositories = {
   updateReservationStatus
 };
 
-export function createReservationRoutes({ db, todayProvider = getTodayDate, repositories = {} } = {}) {
+export function createReservationRoutes({
+  db,
+  todayProvider = getTodayDate,
+  currentTimeProvider = getCurrentManilaTime,
+  repositories = {}
+} = {}) {
   const repo = { ...defaultRepositories, ...repositories };
   const router = Router();
 
@@ -148,6 +153,7 @@ export function createReservationRoutes({ db, todayProvider = getTodayDate, repo
   router.post("/reservations/:reservationId/edit", async (request, response) => {
     const result = validateReservationInput(request.body, {
       today: todayProvider(),
+      currentTime: currentTimeProvider(),
       requireTodayOrFuture: true
     });
 
@@ -182,6 +188,7 @@ export function createReservationRoutes({ db, todayProvider = getTodayDate, repo
   router.post("/reservations", async (request, response) => {
     const result = validateReservationInput(request.body, {
       today: todayProvider(),
+      currentTime: currentTimeProvider(),
       requireTodayOrFuture: true
     });
 
@@ -285,4 +292,16 @@ function getTodayDate() {
 
   const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return `${values.year}-${values.month}-${values.day}`;
+}
+
+function getCurrentManilaTime() {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Manila",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(new Date());
+
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.hour}:${values.minute}`;
 }

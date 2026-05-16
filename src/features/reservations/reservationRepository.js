@@ -22,6 +22,16 @@ export function buildReservationListQuery(filters = {}) {
     params.reservationDate = filters.reservationDate;
   }
 
+  if (filters.fromDate) {
+    where.push("r.reservation_date >= :fromDate");
+    params.fromDate = filters.fromDate;
+  }
+
+  if (filters.toDate) {
+    where.push("r.reservation_date <= :toDate");
+    params.toDate = filters.toDate;
+  }
+
   if (filters.statusCode) {
     where.push("rs.status_code = :statusCode");
     params.statusCode = filters.statusCode;
@@ -231,7 +241,7 @@ export async function getReservationStatuses(db) {
 }
 
 export async function createReservation(db, reservation, options = {}) {
-  const createdByUserId = Number(options.createdByUserId || process.env.DEFAULT_CREATED_BY_USER_ID || 1);
+  const createdByUserId = requireAuthenticatedUserId(options.createdByUserId);
   const connection = await db.getConnection();
 
   try {
@@ -283,7 +293,7 @@ export async function createReservation(db, reservation, options = {}) {
 }
 
 export async function updateReservation(db, reservationId, reservation, options = {}) {
-  const userId = Number(options.userId || process.env.DEFAULT_CREATED_BY_USER_ID || 1);
+  const userId = requireAuthenticatedUserId(options.userId);
   const connection = await db.getConnection();
   const numericReservationId = Number(reservationId);
   const candidate = { ...reservation, reservationId: numericReservationId };
@@ -328,7 +338,7 @@ export async function updateReservation(db, reservationId, reservation, options 
 }
 
 export async function updateReservationStatus(db, reservationId, statusCode, options = {}) {
-  const userId = Number(options.userId || process.env.DEFAULT_CREATED_BY_USER_ID || 1);
+  const userId = requireAuthenticatedUserId(options.userId);
   const connection = await db.getConnection();
   const numericReservationId = Number(reservationId);
 
@@ -449,6 +459,16 @@ async function writeActivityLog(connection, { reservationId, userId, action, det
     `,
     { reservationId, userId, action, details }
   );
+}
+
+function requireAuthenticatedUserId(value) {
+  const userId = Number(value);
+
+  if (!Number.isInteger(userId) || userId <= 0) {
+    throw new Error("Authenticated user ID is required for reservation mutations.");
+  }
+
+  return userId;
 }
 
 function formatDateValue(value) {

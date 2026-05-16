@@ -148,6 +148,8 @@ BACKUP DATABASE
 1. Double-click START-HERE.bat.
 2. Choose "Back up the database now".
 3. Keep the generated backups folder on a protected local drive or barangay-controlled external drive.
+4. Copy the backups folder to a USB drive once a week. Keep one copy in the
+   barangay office and one off-site.
 
 DATABASE-ONLY SETUP
 
@@ -166,6 +168,7 @@ IMPORTANT NOTES
 - Do not use a cloud database for barangay office deployment.
 - Keep .env private.
 - Keep backups on a protected local drive or barangay-controlled external drive.
+- Copy the backups folder to a USB drive once a week. Keep one copy in the barangay office and one off-site.
 - Use START-HERE.bat > "Create final office sign-off report" on the actual office computer before final sign-off.
 - Open TROUBLESHOOT-WINDOWS.txt for common Windows setup and startup errors.
 - For the detailed guide, open docs\OFFLINE_INSTALL_CHECKLIST.md and docs\DEPLOYMENT_GUIDE.md.

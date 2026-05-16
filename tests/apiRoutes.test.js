@@ -106,6 +106,28 @@ test("POST /api/account/password returns validation errors as JSON for signed-in
   }
 });
 
+test("POST /api/account/password rejects too-short new passwords for signed-in staff", async () => {
+  const app = buildApiTestApp({ session: buildSession({ role: "STAFF" }) });
+  const server = app.listen(0);
+
+  try {
+    const response = await postJson(server, "/api/account/password", {
+      currentPassword: "current-password",
+      newPassword: "short",
+      confirmPassword: "short"
+    });
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(response.body, {
+      errors: {
+        newPassword: "New password must be at least 8 characters."
+      }
+    });
+  } finally {
+    await closeServer(server);
+  }
+});
+
 test("POST /api/account/password rejects an incorrect current password for signed-in staff", async () => {
   const passwordHash = await bcrypt.hash("correct-password", 4);
   let updateCalled = false;
@@ -848,7 +870,7 @@ test("accounts APIs require admin, map duplicate username, and block self status
     const duplicate = await postJson(adminServer, "/api/accounts", {
       fullName: "Maria Santos",
       username: "maria",
-      password: "secret",
+      password: "secret123",
       role: "STAFF"
     });
     const selfChange = await postJson(adminServer, "/api/accounts/1/status", { accountStatus: "INACTIVE" });
@@ -862,6 +884,38 @@ test("accounts APIs require admin, map duplicate username, and block self status
     assert.deepEqual(badId.body, { error: "User ID must be a positive integer." });
   } finally {
     await closeServer(adminServer);
+  }
+});
+
+test("POST /api/accounts rejects too-short passwords before creating accounts", async () => {
+  let createCalled = false;
+  const app = buildApiTestApp({
+    session: buildSession({ role: "ADMIN" }),
+    repositories: {
+      createUser: async () => {
+        createCalled = true;
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await postJson(server, "/api/accounts", {
+      fullName: "Maria Santos",
+      username: "maria",
+      password: "short",
+      role: "STAFF"
+    });
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(response.body, {
+      errors: {
+        password: "Password must be at least 8 characters."
+      }
+    });
+    assert.equal(createCalled, false);
+  } finally {
+    await closeServer(server);
   }
 });
 
@@ -1001,7 +1055,135 @@ test("GET /api/reports excludes cancelled hours and returns stable zero status k
   }
 });
 
-function buildApiTestApp({ session = {}, repositories = {}, todayProvider = () => "2026-05-13" } = {}) {
+test("GET /api/reports passes inclusive from and to date filters to reservation storage", async () => {
+  let receivedFilters = null;
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      listReservations: async (_db, filters) => {
+        receivedFilters = filters;
+        assert.deepEqual(filters, {
+          fromDate: "2026-05-10",
+          toDate: "2026-05-12"
+        });
+        return [
+          buildReservation({ reservationId: 10, reservationDate: "2026-05-10", representativeName: "Range Start" }),
+          buildReservation({ reservationId: 11, reservationDate: "2026-05-12", representativeName: "Range End" })
+        ];
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/reports?from=2026-05-10&to=2026-05-12");
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(receivedFilters, {
+      fromDate: "2026-05-10",
+      toDate: "2026-05-12"
+    });
+    assert.equal(response.body.summary.totalReservations, 2);
+    assert.deepEqual(response.body.topRequesters.map((requester) => requester.name), ["Range End", "Range Start"]);
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/reports range query does not fall back to all-time reservations", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      listReservations: async (_db, filters) => {
+        if (filters.fromDate === "2026-05-11" && filters.toDate === "2026-05-11") {
+          return [
+            buildReservation({ reservationId: 11, reservationDate: "2026-05-11", representativeName: "Only Inside Range" })
+          ];
+        }
+
+        return [
+          buildReservation({ reservationId: 9, reservationDate: "2026-05-09", representativeName: "Before Range" }),
+          buildReservation({ reservationId: 11, reservationDate: "2026-05-11", representativeName: "Only Inside Range" }),
+          buildReservation({ reservationId: 13, reservationDate: "2026-05-13", representativeName: "After Range" })
+        ];
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/reports?from=2026-05-11&to=2026-05-11");
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.summary.totalReservations, 1);
+    assert.deepEqual(response.body.topRequesters, [{ name: "Only Inside Range", hours: 1 }]);
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/reports preserves all-time behavior without date filters", async () => {
+  let receivedFilters = null;
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      listReservations: async (_db, filters) => {
+        receivedFilters = filters;
+        return [
+          buildReservation({ reservationId: 1, reservationDate: "2026-05-09" }),
+          buildReservation({ reservationId: 2, reservationDate: "2026-05-12" })
+        ];
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/reports");
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(receivedFilters, {});
+    assert.equal(response.body.summary.totalReservations, 2);
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/reports rejects invalid date filters before querying reservations", async () => {
+  let listCalled = false;
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      listReservations: async () => {
+        listCalled = true;
+        return [];
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/reports?from=2026-02-30&to=not-a-date");
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(response.body, {
+      errors: {
+        from: "From date must use YYYY-MM-DD format.",
+        to: "To date must use YYYY-MM-DD format."
+      }
+    });
+    assert.equal(listCalled, false);
+  } finally {
+    await closeServer(server);
+  }
+});
+
+function buildApiTestApp({
+  session = {},
+  repositories = {},
+  todayProvider = () => "2026-05-13",
+  currentTimeProvider = () => "06:00"
+} = {}) {
   const app = express();
   app.use(express.json());
   app.use((request, _response, next) => {
@@ -1014,7 +1196,8 @@ function buildApiTestApp({ session = {}, repositories = {}, todayProvider = () =
       findUserByUsername: async () => null,
       ...repositories
     },
-    todayProvider
+    todayProvider,
+    currentTimeProvider
   }));
   return app;
 }

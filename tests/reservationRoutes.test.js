@@ -300,6 +300,7 @@ test("POST /reservations/:reservationId/edit updates a reservation and redirects
     createReservationRoutes({
       db: {},
       todayProvider: () => "2026-05-08",
+      currentTimeProvider: () => "06:00",
       repositories: {
         updateReservation: async (_db, reservationId, reservation) => {
           updatedReservation = { reservationId, reservation };

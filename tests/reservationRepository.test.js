@@ -6,6 +6,7 @@ import {
   buildReservationListQuery,
   buildReservationOverlapQuery,
   buildReservationUpdateQuery,
+  createReservation,
   mapReservationRow,
   ReservationNotFoundError,
   updateReservation,
@@ -30,6 +31,20 @@ test("builds reservation list query with parameterized filters", () => {
     statusCode: "RESERVED",
     searchLike: "%Sto. Niño Youth%",
     purposeLike: "%Practice%"
+  });
+});
+
+test("builds reservation list query with inclusive report date range filters", () => {
+  const query = buildReservationListQuery({
+    fromDate: "2026-05-10",
+    toDate: "2026-05-12"
+  });
+
+  assert.match(query.sql, /r\.reservation_date >= :fromDate/);
+  assert.match(query.sql, /r\.reservation_date <= :toDate/);
+  assert.deepEqual(query.params, {
+    fromDate: "2026-05-10",
+    toDate: "2026-05-12"
   });
 });
 
@@ -221,6 +236,92 @@ test("updateReservation throws not found before creating resident or writing act
   );
 
   assert.deepEqual(calls, ["begin", "select-reservation", "rollback", "release"]);
+});
+
+test("createReservation requires an explicit authenticated creator user id", async () => {
+  const db = {
+    getConnection: async () => {
+      throw new Error("database connection should not be opened without a creator user id");
+    }
+  };
+
+  await assert.rejects(
+    () => createReservation(db, buildReservationInput()),
+    /Authenticated user ID is required/
+  );
+});
+
+test("updateReservation requires an explicit authenticated user id", async () => {
+  const db = {
+    getConnection: async () => {
+      throw new Error("database connection should not be opened without a user id");
+    }
+  };
+
+  await assert.rejects(
+    () => updateReservation(db, 7, buildReservationInput()),
+    /Authenticated user ID is required/
+  );
+});
+
+test("updateReservationStatus requires an explicit authenticated user id", async () => {
+  const db = {
+    getConnection: async () => {
+      throw new Error("database connection should not be opened without a user id");
+    }
+  };
+
+  await assert.rejects(
+    () => updateReservationStatus(db, 7, "COMPLETED"),
+    /Authenticated user ID is required/
+  );
+});
+
+test("createReservation writes activity log with the supplied creator user id", async () => {
+  let insertedReservationId = 0;
+  let activityLogParams = null;
+  const connection = {
+    beginTransaction: async () => {},
+    commit: async () => {},
+    rollback: async () => {},
+    release: () => {},
+    execute: async (sql, params = {}) => {
+      if (sql.includes("existing.reservation_id")) {
+        return [[]];
+      }
+
+      if (sql.includes("SELECT resident_id")) {
+        return [[{ resident_id: 5 }]];
+      }
+
+      if (sql.includes("SELECT status_id")) {
+        return [[{ status_id: 2 }]];
+      }
+
+      if (sql.includes("INSERT INTO reservations")) {
+        insertedReservationId = 77;
+        assert.equal(params.createdByUserId, 42);
+        assert.equal(params.approvedByUserId, 42);
+        return [{ insertId: insertedReservationId }];
+      }
+
+      if (sql.includes("INSERT INTO activity_logs")) {
+        activityLogParams = params;
+        return [{ affectedRows: 1 }];
+      }
+
+      throw new Error(`Unexpected SQL: ${sql}`);
+    }
+  };
+  const db = {
+    getConnection: async () => connection
+  };
+
+  const reservationId = await createReservation(db, buildReservationInput(), { createdByUserId: 42 });
+
+  assert.equal(reservationId, insertedReservationId);
+  assert.equal(activityLogParams.userId, 42);
+  assert.equal(activityLogParams.action, "CREATE_RESERVATION");
 });
 
 test("updateReservation writes activity log when existing reservation update is a no-op", async () => {

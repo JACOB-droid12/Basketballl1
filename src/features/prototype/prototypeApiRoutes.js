@@ -33,7 +33,12 @@ const defaultRepositories = {
   updateReservationStatus
 };
 
-export function createPrototypeApiRoutes({ db, repositories = {}, todayProvider = getTodayDate } = {}) {
+export function createPrototypeApiRoutes({
+  db,
+  repositories = {},
+  todayProvider = getTodayDate,
+  currentTimeProvider = getCurrentManilaTime
+} = {}) {
   const repo = { ...defaultRepositories, ...repositories };
   const router = Router();
 
@@ -91,7 +96,7 @@ export function createPrototypeApiRoutes({ db, repositories = {}, todayProvider 
   });
 
   router.post("/api/prototype/reservations", async (request, response) => {
-    const result = validatePrototypeReservation(request.body, todayProvider());
+    const result = validatePrototypeReservation(request.body, todayProvider(), currentTimeProvider());
 
     if (!result.valid) {
       response.status(400).json({ errors: result.errors });
@@ -112,7 +117,7 @@ export function createPrototypeApiRoutes({ db, repositories = {}, todayProvider 
   });
 
   router.put("/api/prototype/reservations/:reservationId", async (request, response) => {
-    const result = validatePrototypeReservation(request.body, todayProvider());
+    const result = validatePrototypeReservation(request.body, todayProvider(), currentTimeProvider());
 
     if (!result.valid) {
       response.status(400).json({ errors: result.errors });
@@ -176,7 +181,9 @@ export function createPrototypeApiRoutes({ db, repositories = {}, todayProvider 
     }
 
     try {
-      const account = await repo.createUser(db, result.value);
+      const account = await repo.createUser(db, result.value, {
+        createdByUserId: request.session.user.userId
+      });
       response.status(201).json({ account: toPrototypeAccount(account) });
     } catch (error) {
       if (error instanceof DuplicateUsernameError) {
@@ -191,7 +198,7 @@ export function createPrototypeApiRoutes({ db, repositories = {}, todayProvider 
   return router;
 }
 
-function validatePrototypeReservation(input, today) {
+function validatePrototypeReservation(input, today, currentTime) {
   return validateReservationInput({
     reservationDate: input.reservationDate,
     startTime: input.startTime,
@@ -204,6 +211,7 @@ function validatePrototypeReservation(input, today) {
     statusCode: "RESERVED"
   }, {
     today,
+    currentTime,
     requireTodayOrFuture: true
   });
 }
@@ -268,4 +276,16 @@ function getTodayDate() {
 
   const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return `${values.year}-${values.month}-${values.day}`;
+}
+
+function getCurrentManilaTime() {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Manila",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(new Date());
+
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.hour}:${values.minute}`;
 }

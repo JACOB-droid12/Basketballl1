@@ -53,7 +53,12 @@ const defaultRepositories = {
 const AVAILABILITY_SUGGESTION_SEARCH_DAYS = 14;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
-export function createApiRoutes({ db, repositories = {}, todayProvider = getTodayDate } = {}) {
+export function createApiRoutes({
+  db,
+  repositories = {},
+  todayProvider = getTodayDate,
+  currentTimeProvider = getCurrentManilaTime
+} = {}) {
   const repo = { ...defaultRepositories, ...repositories };
   const router = Router();
 
@@ -163,7 +168,7 @@ export function createApiRoutes({ db, repositories = {}, todayProvider = getToda
   router.post("/api/reservations", async (request, response) => {
     const result = validateReservationInput(
       { ...request.body, statusCode: "RESERVED" },
-      { today: todayProvider(), requireTodayOrFuture: true }
+      { today: todayProvider(), currentTime: currentTimeProvider(), requireTodayOrFuture: true }
     );
 
     if (!result.valid) {
@@ -192,6 +197,7 @@ export function createApiRoutes({ db, repositories = {}, todayProvider = getToda
 
     const result = validateReservationInput(request.body, {
       today: todayProvider(),
+      currentTime: currentTimeProvider(),
       requireTodayOrFuture: true
     });
 
@@ -445,9 +451,16 @@ export function createApiRoutes({ db, repositories = {}, todayProvider = getToda
     }
   });
 
-  router.get("/api/reports", async (_request, response) => {
+  router.get("/api/reports", async (request, response) => {
+    const reportFilters = cleanReportFilters(request.query);
+
+    if (!reportFilters.valid) {
+      sendValidationError(response, reportFilters.errors);
+      return;
+    }
+
     try {
-      const reservations = await repo.listReservations(db, {});
+      const reservations = await repo.listReservations(db, reportFilters.value);
       response.json(buildReportsPayload(reservations));
     } catch (error) {
       sendDatabaseError(response, error);
@@ -494,6 +507,31 @@ function cleanActivityLogFilters(query) {
     action: clean(query.action).toUpperCase(),
     date: clean(query.date),
     search: clean(query.search)
+  };
+}
+
+function cleanReportFilters(query) {
+  const from = clean(query.from);
+  const to = clean(query.to);
+  const errors = {};
+  const value = {};
+
+  if (from && !isValidDateString(from)) {
+    errors.from = "From date must use YYYY-MM-DD format.";
+  } else if (from) {
+    value.fromDate = from;
+  }
+
+  if (to && !isValidDateString(to)) {
+    errors.to = "To date must use YYYY-MM-DD format.";
+  } else if (to) {
+    value.toDate = to;
+  }
+
+  return {
+    valid: Object.keys(errors).length === 0,
+    errors,
+    value
   };
 }
 
@@ -747,4 +785,16 @@ export function getTodayDate() {
 
   const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return `${values.year}-${values.month}-${values.day}`;
+}
+
+export function getCurrentManilaTime() {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Manila",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(new Date());
+
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.hour}:${values.minute}`;
 }

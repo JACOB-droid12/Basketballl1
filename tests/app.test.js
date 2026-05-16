@@ -3,8 +3,43 @@ import test from "node:test";
 
 import { createApp } from "../src/app.js";
 
+const TEST_SESSION_SECRET = "test-session-secret-123456789012345";
+
+test("createApp rejects missing placeholder and short session secrets in normal runtime", () => {
+  const invalidSecrets = [
+    undefined,
+    "",
+    "short-secret",
+    "development-only-change-me",
+    "replace-with-a-long-random-local-secret"
+  ];
+
+  for (const secret of invalidSecrets) {
+    assert.throws(
+      () => createApp({
+        db: { end: async () => {} },
+        env: { APP_SESSION_SECRET: secret }
+      }),
+      /APP_SESSION_SECRET must be at least 32 characters.*npm run setup:env/
+    );
+  }
+});
+
+test("createApp accepts a valid session secret for normal startup configuration", async () => {
+  const db = { end: async () => {} };
+  const app = createApp({
+    db,
+    env: { APP_SESSION_SECRET: TEST_SESSION_SECRET }
+  });
+
+  assert.equal(app.locals.db, db);
+  await app.locals.db.end();
+});
+
 test("createApp exposes the database pool for verification shutdown hooks", async () => {
-  const app = createApp();
+  const app = createApp({
+    env: { ...process.env, APP_SESSION_SECRET: TEST_SESSION_SECRET }
+  });
 
   try {
     assert.equal(typeof app.locals.db?.end, "function");
@@ -14,7 +49,9 @@ test("createApp exposes the database pool for verification shutdown hooks", asyn
 });
 
 test("createApp serves the backend-injected prototype at the office URL", async () => {
-  const app = createApp();
+  const app = createApp({
+    env: { ...process.env, APP_SESSION_SECRET: TEST_SESSION_SECRET }
+  });
   const server = app.listen(0);
 
   try {

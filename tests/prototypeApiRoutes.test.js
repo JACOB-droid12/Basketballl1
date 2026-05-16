@@ -156,8 +156,9 @@ test("prototype account API is admin-only and maps duplicate username errors", a
   const adminApp = buildPrototypeApiTestApp({
     session: signedInAdminSession(),
     repositories: {
-      createUser: async (_db, user) => {
+      createUser: async (_db, user, options) => {
         receivedUser = user;
+        assert.deepEqual(options, { createdByUserId: 1 });
         return {
           userId: 9,
           fullName: user.fullName,
@@ -225,7 +226,8 @@ function buildPrototypeApiTestApp({ session = {}, repositories = {} } = {}) {
       updateReservationStatus: async () => {},
       ...repositories
     },
-    todayProvider: () => TODAY
+    todayProvider: () => TODAY,
+    currentTimeProvider: () => "06:00"
   }));
   return app;
 }

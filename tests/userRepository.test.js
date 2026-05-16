@@ -83,6 +83,24 @@ test("createUser writes an account creation activity log without the plaintext p
   assert.doesNotMatch(logCall.params.details, /plain-password/);
 });
 
+test("createUser requires an explicit authenticated actor for the account activity log", async () => {
+  const db = {
+    execute: async () => {
+      throw new Error("database should not be mutated without an actor user id");
+    }
+  };
+
+  await assert.rejects(
+    () => createUser(db, {
+      fullName: "Maria Santos",
+      username: "maria",
+      password: "plain-password",
+      role: "STAFF"
+    }),
+    /Authenticated user ID is required/
+  );
+});
+
 test("updateUserAccountStatus writes activation and deactivation activity logs", async () => {
   const logParams = [];
   const db = {
@@ -108,6 +126,19 @@ test("updateUserAccountStatus writes activation and deactivation activity logs",
   assert.equal(logParams[0].userId, 1);
   assert.match(logParams[0].details, /account #8/i);
   assert.match(logParams[1].details, /ACTIVE/);
+});
+
+test("updateUserAccountStatus requires an explicit authenticated actor", async () => {
+  const db = {
+    execute: async () => {
+      throw new Error("database should not be mutated without an actor user id");
+    }
+  };
+
+  await assert.rejects(
+    () => updateUserAccountStatus(db, 8, "INACTIVE"),
+    /Authenticated user ID is required/
+  );
 });
 
 test("updateUserPassword stores a bcrypt hash", async () => {
@@ -138,6 +169,19 @@ test("updateUserPassword stores a bcrypt hash", async () => {
   assert.equal(logParams.action, "CHANGE_PASSWORD");
   assert.match(logParams.details, /account #1/i);
   assert.doesNotMatch(logParams.details, /new-local-password/);
+});
+
+test("updateUserPassword requires an explicit authenticated actor", async () => {
+  const db = {
+    execute: async () => {
+      throw new Error("database should not be mutated without an actor user id");
+    }
+  };
+
+  await assert.rejects(
+    () => updateUserPassword(db, 1, "new-local-password"),
+    /Authenticated user ID is required/
+  );
 });
 
 test("maps account user rows for the account management view", () => {

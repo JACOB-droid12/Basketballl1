@@ -47,6 +47,43 @@ test("builds prereq report with missing MySQL tools and env warnings", async () 
   ]);
 });
 
+test("requires APP_SESSION_SECRET to be at least 32 characters and not a placeholder", async () => {
+  const baseOptions = {
+    cwd: "C:\\BarangayCourtScheduler",
+    fileExists: async () => true,
+    runCommand: async () => commandResult({ ok: true, stdout: "v20.19.0" })
+  };
+
+  const shortSecretReport = await buildPrereqReport({
+    ...baseOptions,
+    env: {
+      DB_NAME: "barangay_court_scheduler",
+      DB_USER: "root",
+      APP_SESSION_SECRET: "1234567890123456789012345678901"
+    }
+  });
+  const placeholderReport = await buildPrereqReport({
+    ...baseOptions,
+    env: {
+      DB_NAME: "barangay_court_scheduler",
+      DB_USER: "root",
+      APP_SESSION_SECRET: "development-only-change-me"
+    }
+  });
+  const validReport = await buildPrereqReport({
+    ...baseOptions,
+    env: {
+      DB_NAME: "barangay_court_scheduler",
+      DB_USER: "root",
+      APP_SESSION_SECRET: "12345678901234567890123456789012"
+    }
+  });
+
+  assert.equal(shortSecretReport.checks.find((check) => check.name === "APP_SESSION_SECRET").ok, false);
+  assert.equal(placeholderReport.checks.find((check) => check.name === "APP_SESSION_SECRET").ok, false);
+  assert.equal(validReport.checks.find((check) => check.name === "APP_SESSION_SECRET").ok, true);
+});
+
 test("formats prereq report without leaking database password", () => {
   const formatted = formatPrereqReport({
     ok: false,

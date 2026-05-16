@@ -5,6 +5,7 @@ const VALID_STATUS_CODES = new Set(["RESERVED", "MISSED", "CANCELLED", "COMPLETE
 export function validateReservationInput(input = {}, options = {}) {
   const errors = {};
   const value = {};
+  const currentTime = normalizeTime(options.currentTime);
 
   value.reservationDate = normalizeText(input.reservationDate);
   value.startTime = normalizeTime(input.startTime);
@@ -38,6 +39,17 @@ export function validateReservationInput(input = {}, options = {}) {
 
   if (value.startTime && value.endTime && timeToMinutes(value.endTime) <= timeToMinutes(value.startTime)) {
     errors.endTime = "End time must be after start time.";
+  }
+
+  if (
+    options.requireTodayOrFuture &&
+    options.today &&
+    value.reservationDate === options.today &&
+    value.startTime &&
+    currentTime &&
+    timeToMinutes(value.startTime) <= timeToMinutes(currentTime)
+  ) {
+    errors.startTime = "Start time must be later than the current time for today's reservations.";
   }
 
   if (!value.representativeName) {

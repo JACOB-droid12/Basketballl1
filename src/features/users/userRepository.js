@@ -37,6 +37,7 @@ export async function findUserByUsername(db, username) {
 
 export async function createUser(db, user, options = {}) {
   const username = String(user.username || "").trim().toLowerCase();
+  const actorUserId = requireAuthenticatedUserId(options.createdByUserId ?? options.userId);
 
   return runUserMutation(db, async (connection) => {
     const existing = await findAnyUserByUsername(connection, username);
@@ -60,7 +61,7 @@ export async function createUser(db, user, options = {}) {
     );
 
     await writeAccountActivityLog(connection, {
-      actorUserId: options.createdByUserId || options.userId,
+      actorUserId,
       action: "CREATE_ACCOUNT",
       details: `Created ${user.role} account for ${user.fullName} (${username}).`
     });
@@ -128,6 +129,7 @@ export function buildUpdateUserPasswordQuery(userId, passwordHash) {
 
 export async function updateUserAccountStatus(db, userId, accountStatus, options = {}) {
   const query = buildUpdateUserStatusQuery(userId, accountStatus);
+  const actorUserId = requireAuthenticatedUserId(options.userId ?? options.updatedByUserId);
   await runUserMutation(db, async (connection) => {
     const [result] = await connection.execute(query.sql, query.params);
 
@@ -136,7 +138,7 @@ export async function updateUserAccountStatus(db, userId, accountStatus, options
     }
 
     await writeAccountActivityLog(connection, {
-      actorUserId: options.userId || options.updatedByUserId,
+      actorUserId,
       action: accountStatus === "ACTIVE" ? "ACTIVATE_ACCOUNT" : "DEACTIVATE_ACCOUNT",
       details: `Set account #${Number(userId)} to ${accountStatus}.`
     });
@@ -144,6 +146,7 @@ export async function updateUserAccountStatus(db, userId, accountStatus, options
 }
 
 export async function updateUserPassword(db, userId, newPassword, options = {}) {
+  const actorUserId = requireAuthenticatedUserId(options.userId ?? options.updatedByUserId);
   const passwordHash = await bcrypt.hash(newPassword, 12);
   const query = buildUpdateUserPasswordQuery(userId, passwordHash);
   await runUserMutation(db, async (connection) => {
@@ -154,7 +157,7 @@ export async function updateUserPassword(db, userId, newPassword, options = {}) 
     }
 
     await writeAccountActivityLog(connection, {
-      actorUserId: options.userId || userId,
+      actorUserId,
       action: "CHANGE_PASSWORD",
       details: `Changed password for account #${Number(userId)}.`
     });
@@ -203,11 +206,21 @@ async function writeAccountActivityLog(connection, { actorUserId, action, detail
     `,
     {
       reservationId: null,
-      userId: actorUserId ? Number(actorUserId) : null,
+      userId: actorUserId,
       action,
       details
     }
   );
+}
+
+function requireAuthenticatedUserId(value) {
+  const userId = Number(value);
+
+  if (!Number.isInteger(userId) || userId <= 0) {
+    throw new Error("Authenticated user ID is required for account mutations.");
+  }
+
+  return userId;
 }
 
 function mapUserRow(row) {
