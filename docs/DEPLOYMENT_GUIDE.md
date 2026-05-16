@@ -132,7 +132,7 @@ For final deployment sign-off on the office computer, use `START-HERE.bat` and c
 maintenance-tools\run-office-signoff.bat
 ```
 
-This creates a timestamped text report under `reports\office-signoff`. It runs only local commands: prerequisite verification, runtime database readiness, live MySQL/app smoke verification, UI smoke verification, offline prototype runtime verification, and a local MySQL backup. It also writes the manual office workflow checklist into the report. Generated sign-off reports are local deployment records and are ignored by git.
+This creates a timestamped text report under `reports\office-signoff`. It runs only local commands: prerequisite verification, runtime database readiness, live MySQL/app smoke verification, UI smoke verification, offline runtime verification, and a local MySQL backup. It also writes the manual office workflow checklist into the report. Generated sign-off reports are local deployment records and are ignored by git.
 
 If any setup, startup, or sign-off message is unclear, open `TROUBLESHOOT-WINDOWS.txt` before changing files manually.
 
@@ -229,8 +229,8 @@ Expected result:
 - SQL static verification confirms required schema, seed, and diagnostics safeguards before live MySQL setup.
 - Database diagnostics prints PASS rows for the installed MySQL database setup checks.
 - MySQL verification applies the schema and seed, checks reference data, confirms at least one active Admin account, verifies the starter account still uses a bcrypt password hash, creates/completes a temporary reservation, verifies activity logging, confirms overlap-trigger rejection, and logs in through the app over HTTP to check authenticated office pages.
-- UI smoke verification renders the prototype frontend and the main office screens with sample data and confirms each page contains the expected workflow text.
-- Offline runtime verification starts the local app on a temporary port, checks `/health`, loads `/prototype`, and fails if the served prototype contains external internet resource references.
+- UI smoke verification renders the local UI surfaces and main office screens with sample data and confirms each page contains the expected workflow text.
+- Offline runtime verification starts the local app on a temporary port, checks `/health`, loads the local runtime UI, and fails if served assets contain external internet resource references.
 - Automated tests pass.
 
 ## Start the App
@@ -244,10 +244,10 @@ npm start
 Open:
 
 ```text
-http://localhost:3000/prototype
+http://localhost:3000/login
 ```
 
-This is the default address. If `APP_PORT` is changed in `.env`, use the address shown in the startup window instead.
+This is the normal staff-console login address. If `APP_PORT` is changed in `.env`, use the address shown in the startup window instead.
 
 Seeded starter account:
 

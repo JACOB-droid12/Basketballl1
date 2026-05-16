@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 import { apiRequest } from "../api/client.js";
 import { formatDate, formatTime } from "../api/mappers.js";
 import { EmptyState } from "../components/EmptyState.jsx";
+import { Icon } from "../components/Icon.jsx";
 import { LoadingState } from "../components/LoadingState.jsx";
 import { StatusBadge } from "../components/StatusBadge.jsx";
 
-export function DashboardPage({ onNavigate }) {
+export function DashboardPage({ onNavigate, user }) {
   const [state, setState] = useState({ loading: true, data: null, error: "" });
 
   useEffect(() => {
@@ -36,48 +37,62 @@ export function DashboardPage({ onNavigate }) {
   const bookedSlots = todaySchedule.filter((slot) => slot?.reservation);
   const todayLabel = formatDate(summary.today);
   const nearestAvailable = state.data?.nearestAvailableSlot;
+  const totalHours = bookedSlots.reduce((sum, slot) => sum + getSlotHours(slot), 0);
+  const firstName = getStaffFirstName(user?.fullName);
 
   return (
     <section className="page home-page">
-      <div className="page-header home-header">
+      <div className="page-head staff-page-head">
         <div>
-          <p className="page-kicker">Home · {todayLabel || "Today"}</p>
-          <h1>Today at the court</h1>
-          <p className="page-subtitle">Ngayong araw na schedule, reserved bookings, and open court times from the live system.</p>
+          <h1 className="page-title">Today</h1>
+          <div className="page-sub">{todayLabel || "Today"}</div>
+          <div className="page-sub-fil">Ngayong araw</div>
         </div>
         <button className="btn btn-primary btn-big home-action" type="button" onClick={() => onNavigate("/reservations/new")}>
-          New Reservation
+          <Icon name="plus" />
+          <span>New Reservation<span className="btn-fil">Magpa-reserba</span></span>
         </button>
       </div>
 
       <div className="home-hero">
         <div className="hero-card">
-          <p className="eyebrow">Court status</p>
-          <h2>{todayLabel || "Today's schedule"}</h2>
+          <h2>Good day, {firstName}.</h2>
+          <div className="hero-date">Here is what's happening at the court today.</div>
           <div className="hero-stat">
-            <strong>{summary.reservedCount ?? 0}</strong>
-            <span>reserved booking{summary.reservedCount === 1 ? "" : "s"} today</span>
+            <div className="num">{bookedSlots.length}</div>
+            <div className="unit">booking{bookedSlots.length === 1 ? "" : "s"} listed</div>
           </div>
-          <p className="hero-note">
-            {hasScheduleSlots ? `${summary.availableCount ?? 0} slot${summary.availableCount === 1 ? "" : "s"} still available for staff encoding.` : "No schedule slots were returned for today."}
-          </p>
+          <div className="hero-note">
+            That's {formatHourCount(totalHours)} of court time today.
+            {hasScheduleSlots && <><br /><strong>{summary.availableCount ?? 0} open slot{summary.availableCount === 1 ? "" : "s"} still available for staff encoding.</strong></>}
+          </div>
         </div>
         <div className="quick-actions">
-          <button className="quick-action primary" type="button" onClick={() => onNavigate("/reservations/new")}>
-            <span>New Reservation</span>
-            <small>Encode a walk-in request</small>
+          <button className="quick-action" type="button" onClick={() => onNavigate("/reservations/new")}>
+            <span className="qa-ic"><Icon name="plus" /></span>
+            <span className="qa-label">
+              <span className="l1">Make a reservation</span>
+              <span className="l2">Someone came to the office to book</span>
+            </span>
+            <span className="qa-arrow"><Icon name="chevronRight" /></span>
           </button>
           <button className="quick-action" type="button" onClick={() => onNavigate("/schedule")}>
-            <span>Open Schedule</span>
-            <small>Check the full calendar</small>
+            <span className="qa-ic"><Icon name="calendar" /></span>
+            <span className="qa-label">
+              <span className="l1">Check the calendar</span>
+              <span className="l2">See which days are free</span>
+            </span>
+            <span className="qa-arrow"><Icon name="chevronRight" /></span>
+          </button>
+          <button className="quick-action" type="button" onClick={() => onNavigate("/reservations")}>
+            <span className="qa-ic"><Icon name="search" /></span>
+            <span className="qa-label">
+              <span className="l1">Find a booking</span>
+              <span className="l2">Search by name or date</span>
+            </span>
+            <span className="qa-arrow"><Icon name="chevronRight" /></span>
           </button>
         </div>
-      </div>
-
-      <div className="stats-grid home-stats">
-        <Stat label="Reserved today" helper="Naka-book ngayong araw" value={summary.reservedCount ?? 0} />
-        <Stat label="Available slots" helper="Puwedeng i-book" value={summary.availableCount ?? 0} />
-        <Stat label="Did not show up" helper="Marked missed today" value={summary.missedCount ?? 0} />
       </div>
 
       {nearestAvailable ? (
@@ -93,62 +108,52 @@ export function DashboardPage({ onNavigate }) {
       <div className="card">
         <div className="card-head">
           <div>
-            <h2>Today's schedule</h2>
-            <span>Live slots from the backend schedule.</span>
+            <h2 className="card-title">Today's Schedule<span className="fil">Iskedyul ngayong araw</span></h2>
           </div>
-          <span>{bookedSlots.length} booking{bookedSlots.length === 1 ? "" : "s"}</span>
+          <span>Click a booking to see details</span>
         </div>
-        {hasScheduleSlots ? (
+        {bookedSlots.length > 0 ? (
           <div className="booking-list">
-            {todaySchedule.map((slot, index) => {
+            {bookedSlots.map((slot, index) => {
               const reservation = slot.reservation;
               const slotKey = slot.slotId ?? `${slot.startTime ?? "slot"}-${slot.endTime ?? index}`;
 
               return (
-                <div key={slotKey} className="booking-row">
-                  <strong>{displayRange(slot.startTime, slot.endTime)}</strong>
-                  {reservation ? (
-                    <span>
-                      {reservation.representativeName || "Reserved"}
-                      <small>{reservation.purpose || "No purpose listed"}</small>
-                    </span>
-                  ) : (
-                    <span>
-                      Available
-                      <small>Pwede pang i-reserve</small>
-                    </span>
-                  )}
-                  <StatusBadge statusCode={slot.statusCode || reservation?.statusCode || "AVAILABLE"} />
+                <div
+                  key={slotKey}
+                  className={`booking-row ${String(slot.statusCode || reservation?.statusCode || "").toLowerCase()}`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onNavigate(`/reservations/${reservation.reservationId}`)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      onNavigate(`/reservations/${reservation.reservationId}`);
+                    }
+                  }}
+                >
+                  <div className="b-time">
+                    {displayCompactRange(slot.startTime, slot.endTime)}
+                    <span className="b-dur">{formatHourCount(getSlotHours(slot))}</span>
+                  </div>
+                  <div>
+                    <div className="b-name">{reservation.representativeName || "Reserved"}</div>
+                    <div className="b-purpose">{reservation.purpose || "No purpose listed"}</div>
+                    <div className="b-meta">Contact: {reservation.contactNo || "Not listed"}</div>
+                  </div>
+                  <StatusBadge statusCode={slot.statusCode || reservation?.statusCode || "RESERVED"} />
                 </div>
               );
             })}
           </div>
         ) : (
           <EmptyState
-            title="No schedule slots found."
-            body="The dashboard did not receive court time slots for today. Check the local schedule setup before encoding bookings."
+            title="No reservations today."
+            body="Walang reserbasyon ngayon. Staff can still check the calendar for available court time."
           />
         )}
       </div>
-
-      {hasScheduleSlots && bookedSlots.length === 0 && (
-        <EmptyState
-          title="No bookings yet today."
-          body="All returned court slots are currently open. Staff can start by creating a new reservation."
-          action={<button className="btn btn-primary" type="button" onClick={() => onNavigate("/reservations/new")}>New Reservation</button>}
-        />
-      )}
     </section>
-  );
-}
-
-function Stat({ label, helper, value }) {
-  return (
-    <div className="stat-card">
-      <span>{label}</span>
-      <strong>{value}</strong>
-      {helper && <small>{helper}</small>}
-    </div>
   );
 }
 
@@ -157,8 +162,46 @@ function displayRange(startTime, endTime) {
   return `${formatTime(startTime)} - ${formatTime(endTime)}`;
 }
 
+function displayCompactRange(startTime, endTime) {
+  if (!startTime || !endTime) return "Time unavailable";
+  return `${formatCompactTime(startTime)}-${formatCompactTime(endTime)}`;
+}
+
+function formatCompactTime(value) {
+  const match = String(value).match(/^(\d{1,2}):(\d{2})/);
+  if (!match) return formatTime(value);
+  const hour = Number(match[1]);
+  const suffix = hour >= 12 ? "p" : "a";
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}${suffix}`;
+}
+
 function formatNearestSlot(slot) {
   const date = formatDate(slot.date);
   const range = slot.name || displayRange(slot.startTime, slot.endTime);
   return date ? `${date}, ${range}` : range;
+}
+
+function getSlotHours(slot) {
+  const start = minutesFromTime(slot.startTime);
+  const end = minutesFromTime(slot.endTime);
+  if (start == null || end == null || end <= start) return 0;
+  return (end - start) / 60;
+}
+
+function minutesFromTime(value) {
+  const match = String(value || "").match(/^(\d{1,2}):(\d{2})/);
+  if (!match) return null;
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
+function formatHourCount(hours) {
+  const value = Number.isInteger(hours) ? hours : Number(hours.toFixed(1));
+  return `${value} hour${value === 1 ? "" : "s"}`;
+}
+
+function getStaffFirstName(fullName) {
+  const name = String(fullName || "staff").trim();
+  if (!name) return "staff";
+  return name.split(/\s+/)[0];
 }

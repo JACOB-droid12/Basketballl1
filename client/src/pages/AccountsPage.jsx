@@ -177,6 +177,8 @@ export function AccountsPage({ user }) {
           <label className="field">
             <span>Full name</span>
             <input
+              id="account-fullName"
+              name="fullName"
               value={form.fullName}
               onChange={(event) => updateField("fullName", event.target.value)}
               aria-invalid={Boolean(fieldErrors.fullName)}
@@ -187,6 +189,8 @@ export function AccountsPage({ user }) {
           <label className="field">
             <span>Username</span>
             <input
+              id="account-username"
+              name="username"
               value={form.username}
               onChange={(event) => updateField("username", event.target.value)}
               aria-invalid={Boolean(fieldErrors.username)}
@@ -198,7 +202,10 @@ export function AccountsPage({ user }) {
           <label className="field">
             <span>Password</span>
             <input
+              id="account-password"
+              name="password"
               type="password"
+              autoComplete="new-password"
               value={form.password}
               onChange={(event) => updateField("password", event.target.value)}
               aria-invalid={Boolean(fieldErrors.password)}
@@ -208,7 +215,7 @@ export function AccountsPage({ user }) {
 
           <label className="field">
             <span>Role</span>
-            <select value={form.role} onChange={(event) => updateField("role", event.target.value)} aria-invalid={Boolean(fieldErrors.role)}>
+            <select id="account-role" name="role" value={form.role} onChange={(event) => updateField("role", event.target.value)} aria-invalid={Boolean(fieldErrors.role)}>
               <option value="STAFF">Staff</option>
               <option value="ADMIN">Admin</option>
             </select>

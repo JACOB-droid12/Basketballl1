@@ -76,7 +76,7 @@ Included scope verified from proposal, slides, and implementation:
 - Admin account management and Staff/Admin login.
 - Nearest available slot suggestion on the dashboard.
 - Missed, Cancelled, and Completed status marking.
-- Activity logs for reservation actions.
+- Activity logs for reservation actions and account/password changes.
 - Offline setup, startup, backup, restore, diagnostics, and sign-off scripts.
 
 
@@ -124,6 +124,8 @@ Outside scope:
 
 
 ## Complete Feature Guide
+
+The normal staff workflow is the React console under `client/src` served through `src/features/frontend/reactAppRoutes.js` and `views/app.ejs`. Some feature rows also list legacy EJS views because those pages remain in the repository for compatibility and reference.
 
 
 ### Login and session authentication
@@ -288,10 +290,10 @@ Outside scope:
 | --- | --- |
 | Implementation status | Implemented |
 | Role involved | Admin, Staff |
-| Frontend/UI reference | views/activityLogs/index.ejs |
+| Frontend/UI reference | client/src/pages/ActivityLogsPage.jsx; legacy views/activityLogs/index.ejs |
 | Backend/API reference | src/features/activityLogs/activityLogRoutes.js:13, src/features/activityLogs/activityLogRepository.js:1 |
 | Database reference | activity_logs |
-| Workflow | Reservation create/edit/status actions write logs. The log page filters by date, action, and user/details search. |
+| Workflow | Reservation create/edit/status and account create/status/password-change actions write logs. The log page filters by date, action, and user/details search. |
 | Validation and errors | Log list is limited to 200 recent records. |
 | Defense explanation | Logs give the barangay traceability for who encoded or changed reservation records. |
 
@@ -308,18 +310,18 @@ Outside scope:
 | Validation and errors | The search depends on seeded active time slots and reservation statuses. |
 | Defense explanation | This supports the proposal requirement to suggest the next possible time when a requested slot is unavailable. |
 
-### Prototype frontend and API bridge
+### React staff console and legacy prototype bridge
 
 | Item | Verified detail |
 | --- | --- |
 | Implementation status | Implemented |
 | Role involved | Admin, Staff |
-| Frontend/UI reference | public/prototype/sto-nino-court-reservation-system-prototype.html, public/js/prototype-backend.js |
-| Backend/API reference | src/features/prototype/prototypeRoutes.js:18, src/features/prototype/prototypeApiRoutes.js:36 |
+| Frontend/UI reference | client/src, public/app, views/app.ejs; legacy public/prototype and public/js/prototype-backend.js |
+| Backend/API reference | src/features/frontend/reactAppRoutes.js; src/features/api/apiRoutes.js; legacy src/features/prototype/prototypeRoutes.js and src/features/prototype/prototypeApiRoutes.js |
 | Database reference | users, reservations, residents |
-| Workflow | The app serves the supplied prototype at /, /prototype, and /app, injects a local backend bridge, and exposes prototype API routes for login, reservations, statuses, and accounts. |
+| Workflow | The normal staff workflow uses the React console at /login, /dashboard, /schedule, /reservations, /reports, /activity-logs, and /account routes. Legacy prototype routes remain available for compatibility/reference checks. |
 | Validation and errors | Routes require session login; account API requires Admin role. |
-| Defense explanation | The prototype UI is used as the visible office interface while persistence remains in the local backend/database. |
+| Defense explanation | The browser UI is local and backend-backed. The current React staff console follows the Barangay (1) staff-friendly reference while persistence remains in the local Express/MySQL backend. |
 
 ### Offline startup and maintenance scripts
 
@@ -353,7 +355,7 @@ Outside scope:
 
 | Step | Actor | Action | System behavior | Implementation status |
 | --- | --- | --- | --- | --- |
-| 1 | Admin/Staff | Open local office URL. | Local Express app serves login/prototype interface. | Implemented |
+| 1 | Admin/Staff | Open local office URL. | Local Express app serves the React staff console login. | Implemented |
 | 2 | Admin/Staff | Log in. | Session created after bcrypt password match. | Implemented |
 | 3 | Admin | Create Staff account if needed. | User is validated, password-hashed, and inserted. | Implemented |
 | 4 | Resident | Visits or coordinates with barangay office. | No resident account or remote booking needed. | Implemented by scope |
@@ -396,7 +398,7 @@ Required reservation data verified in code and schema: reservation date, start t
 | time_slots | Default schedule slots | slot_id, name, start_time, end_time, display_order, is_active | Unique time range; end_time > start_time | Schedule grid and nearest-slot search |
 | court_settings | Local system settings | setting_key, setting_value, description, updated_at | Primary key setting_key | Barangay/court/timezone/opening/closing settings |
 | reservations | Reservation transaction records | reservation_id, resident_id, time_slot_id, status_id, approved_by_user_id, created_by_user_id, reservation_date, start_time, end_time, purpose, remarks | Foreign keys; date/time indexes; end_time > start_time | Core reservation management |
-| activity_logs | Audit trail for reservation actions | log_id, reservation_id, user_id, action, details, created_at | Foreign keys to reservations/users; indexes | Activity log monitoring |
+| activity_logs | Activity trail for reservation and account/password actions | log_id, reservation_id, user_id, action, details, created_at | Foreign keys to reservations/users; indexes | Activity log monitoring |
 
 
 ### ERD / Relationship Explanation
@@ -441,9 +443,10 @@ The proposal diagram used STAFF, RESIDENTS, RESERVATIONS, TIME_SLOTS, RESERVATIO
 | Schedule | src/features/schedule/scheduleRoutes.js | Daily schedule page. |
 | Activity logs | src/features/activityLogs/activityLogRepository.js | Activity log filter query and row mapping. |
 | Activity logs | src/features/activityLogs/activityLogRoutes.js | Activity log page route. |
-| Prototype | src/features/prototype/prototypeRoutes.js | Serves supplied prototype and injects local backend bridge. |
+| React staff console | src/features/frontend/reactAppRoutes.js, client/src, public/app | Serves the normal Barangay (1)-style staff workflow backed by Express APIs. |
+| Prototype | src/features/prototype/prototypeRoutes.js | Serves supplied prototype for legacy/reference checks. |
 | Prototype | src/features/prototype/prototypeApiRoutes.js | JSON API for prototype login, reservations, statuses, and accounts. |
-| Views | views/*.ejs | Server-rendered login, dashboard, schedule, reservation, account, and log pages. |
+| Views | views/*.ejs | Legacy server-rendered pages and shared React host template. |
 | Assets | public/css/styles.css | Barangay-style red/gold/tan interface and print styles. |
 | Assets | public/js/prototype-backend.js | Connects prototype UI to backend API. |
 | SQL | database/schema.sql | Creates database, tables, foreign keys, checks, indexes, and overlap triggers. |
@@ -461,8 +464,9 @@ The proposal diagram used STAFF, RESIDENTS, RESERVATIONS, TIME_SLOTS, RESERVATIO
 
 | Page/screen | Route | Purpose | Inputs/actions | Backend interaction |
 | --- | --- | --- | --- | --- |
-| Login | /login | Authenticate Admin/Staff. | Username and password. | authRoutes compares bcrypt hash. |
-| Prototype | /, /prototype, /app | Visible prototype-style office frontend. | Prototype login/reservation/account actions. | prototypeApiRoutes JSON endpoints. |
+| React staff console | /login, /dashboard, /schedule, /reservations, /reports, /activity-logs, /account, /account/password | Normal staff/admin office workflow. | Backend-backed login, schedule, reservation, report, log, account, and password actions. | createReactAppRoutes and apiRoutes. |
+| Legacy prototype | /prototype | Compatibility/reference frontend. | Prototype login/reservation/account actions. | prototypeApiRoutes JSON endpoints. |
+| Login | /login | Authenticate Admin/Staff. | Username and password. | authRoutes and API session routes. |
 | Home | /dashboard | Today/weekly schedule overview. | Click available/reserved slots, Add Reservation. | dashboardRoutes and scheduleService. |
 | Schedule | /schedule | Daily slot display. | Date selector, Reserve/View Details, Print Schedule. | scheduleRoutes and reservation queries. |
 | Reservations | /reservations | Record list and status actions. | Filters, print, export, add, edit, status forms. | reservationRoutes and reservationRepository. |
@@ -470,7 +474,7 @@ The proposal diagram used STAFF, RESIDENTS, RESERVATIONS, TIME_SLOTS, RESERVATIO
 | Add/Edit reservation | /reservations/new, /reservations/:id/edit | Encode or update reservation. | Date/time/representative/contact/address/purpose/remarks. | validateReservationInput and create/update repository calls. |
 | Account | /account | Admin user management. | Create, deactivate/reactivate, change password. | Admin-only authRoutes. |
 | Change Password | /account/password | Signed-in user password update. | Current/new/confirm password. | bcrypt compare and new hash update. |
-| Activity Logs | /activity-logs | Monitor reservation actions. | Date/action/search filters. | activityLogRepository query. |
+| Activity Logs | /activity-logs | Monitor reservation actions and account/password changes. | Date/action/search filters. | activityLogRepository query. |
 
 
 ## Offline Deployment Explanation
@@ -496,7 +500,7 @@ The system is not a public website. It is a local web application: the browser i
 ## Security Explanation
 
 
-Security claims should be realistic. Verified safeguards include bcrypt password hashing, active-account filtering during login, Admin-only account-management middleware, express-session cookies with httpOnly and sameSite=lax, parameterized MySQL queries, duplicate username checks, and offline local storage of resident contact/address data. Risks remain: shared office passwords, unattended unlocked computer, exposed `.env`, unprotected backups, and no advanced audit trail for account actions. Recommended safeguards are changing the starter password, using separate accounts, locking the office computer, restricting backup access, and keeping the database local.
+Security claims should be realistic. Verified safeguards include bcrypt password hashing, active-account filtering during login, Admin-only account-management middleware, express-session cookies with httpOnly and sameSite=lax, parameterized MySQL queries, duplicate username checks, account/password activity logs, and offline local storage of resident contact/address data. Risks remain: shared office passwords, unattended unlocked computer, exposed `.env`, unprotected backups, and no complete audit trail for login/logout or maintenance events. Recommended safeguards are changing the starter password, using separate accounts, locking the office computer, restricting backup access, and keeping the database local.
 
 
 ## ISO 25010 Evaluation Mapping
@@ -505,11 +509,11 @@ Security claims should be realistic. Verified safeguards include bcrypt password
 | Characteristic | Simple definition | Evidence | Weakness | Defense talking point |
 | --- | --- | --- | --- | --- |
 | Functional suitability | Does the system provide needed functions? | Reservations, schedules, overlap prevention, accounts, logs, export/print. | Barangay policy rules beyond conflict prevention are not deeply encoded. | It satisfies the core scheduling problem. |
-| Performance efficiency | Does it respond acceptably? | Server-rendered EJS and indexed SQL queries. | Needs target-PC test with real data volume. | Simple local stack is appropriate for one-office use. |
+| Performance efficiency | Does it respond acceptably? | Built React assets, Express API routes, and indexed SQL queries. | Needs target-PC test with real data volume. | Simple local stack is appropriate for one-office use. |
 | Compatibility | Does it work in target environment? | Browser interface, local MySQL/MariaDB, Windows scripts. | Final office computer sign-off required. | It is designed for local Windows office use. |
-| Usability | Is it understandable for users? | Login, Home, Schedule, Reservations, Account, print/export. | Prototype accessibility warnings should be improved later. | Staff can follow clear office workflows. |
+| Usability | Is it understandable for users? | Barangay (1)-style React login, Home, Schedule, Reservations, Reports, Activity Logs, Account, and Password screens. | Final office user sign-off is still required. | Staff can follow clear office workflows. |
 | Reliability | Does it avoid failures and invalid records? | Validation, SQL constraints, triggers, controlled DB errors. | Power/database failure still needs backup discipline. | App and database both protect core conflict rule. |
-| Security | Does it protect accounts and data? | bcrypt, sessions, roles, local DB, parameterized queries. | No MFA or advanced audit for account changes. | Security is suitable for a local student office system but not overclaimed. |
+| Security | Does it protect accounts and data? | bcrypt, sessions, roles, local DB, parameterized queries, account/password activity logs. | No MFA and no complete audit for login/logout or maintenance events. | Security is suitable for a local student office system but not overclaimed. |
 | Maintainability | Can it be modified and tested? | Feature folders, SQL files, 32 test files, docs. | No migration framework yet. | The code is organized by feature and backed by tests. |
 | Portability | Can it move to another computer? | Offline bundle scripts and .env configuration. | Runtime folders must be included or installed. | It can be prepared as a copyable Windows folder. |
 
@@ -599,24 +603,24 @@ A separate file, `docs/IMPLEMENTATION_VERIFICATION_REPORT.md`, compares proposed
 | Deployment | Installing and preparing the system for real use. |
 | ERD | Entity Relationship Diagram showing database entities and links. |
 | API | Backend endpoint used by UI code to send/receive data. |
-| Frontend | User-facing pages and prototype interface. |
+| Frontend | React staff console, with legacy prototype/reference screens retained. |
 | Backend | Server-side Express routes, validation, and database logic. |
 
 
 ## Future Enhancements
 
 
-The following are future enhancements, not current implemented features: online reservation portal, SMS notifications, mobile-friendly resident view, multi-court support, barangay announcement integration, printable reservation reports beyond current print/export, advanced analytics, cloud backup, QR-code reservation confirmation, and stronger audit trail for account actions.
+The following are future enhancements, not current implemented features: online reservation portal, SMS notifications, resident self-service mobile view, multi-court support, barangay announcement integration, printable reservation reports beyond current print/export, advanced analytics, cloud backup, QR-code reservation confirmation, and a fuller audit trail for login/logout, backup, restore, and maintenance events.
 
 
 ## Codebase Explanation for Defense
 
 
-The programming language is JavaScript running on Node.js. The backend framework is Express. The view layer uses EJS templates. The database layer uses mysql2 with named placeholders. Sessions are handled by express-session. Password hashing uses bcryptjs. Environment configuration uses dotenv. The main code flow is: browser request -> Express route -> validation/service/repository -> MySQL query -> EJS page or JSON response.
+The programming language is JavaScript running on Node.js. The backend framework is Express. The normal staff interface is a React 18/Vite console served from local built assets, with EJS retained for legacy pages and the React host template. The database layer uses mysql2 with named placeholders. Sessions are handled by express-session. Password hashing uses bcryptjs. Environment configuration uses dotenv. The main code flow is: browser request -> Express route/API -> validation/service/repository -> MySQL query -> React UI update, EJS page, or JSON response.
 
 Reservation creation code flow: the user fills the reservation form; `reservationRoutes.js` calls `validateReservationInput`; `reservationRepository.js` checks overlap; the repository creates or reuses a resident; it finds the RESERVED status id; it inserts the reservation; it writes an activity log; then the browser is redirected to the reservation list. Schedule conflict prevention is implemented in the repository overlap query and backed by MySQL triggers in `database/schema.sql`.
 
-The most important files to explain during defense are `src/app.js`, `src/features/users/authRoutes.js`, `src/features/reservations/reservationRoutes.js`, `src/features/reservations/reservationRepository.js`, `src/features/schedule/scheduleService.js`, `database/schema.sql`, `database/seed.sql`, `views/dashboard.ejs`, `views/schedule/index.ejs`, and `views/reservations/*.ejs`.
+The most important files to explain during defense are `src/app.js`, `src/features/frontend/reactAppRoutes.js`, `src/features/api/apiRoutes.js`, `client/src/App.jsx`, `client/src/pages/*`, `src/features/users/authRoutes.js`, `src/features/reservations/reservationRepository.js`, `src/features/schedule/scheduleService.js`, `database/schema.sql`, and `database/seed.sql`.
 
 
 | Major feature | Frontend file/page | Backend route/service | Database table | Plain code flow |
@@ -633,9 +637,9 @@ The most important files to explain during defense are `src/app.js`, `src/featur
 | Reservation editing | views/reservations/edit.ejs | src/features/reservations/reservationRoutes.js:90, src/features/reservations/reservationRepository.js:285 | reservations, residents, activity_logs | Personnel open an existing record, edit details, pass the same validation and overlap checks, then the system updates the row and logs UPDATE_RESERVATION. |
 | Reservation status updates | views/reservations/index.ejs, views/reservations/show.ejs | src/features/reservations/reservationRoutes.js:214, src/features/reservations/reservationRepository.js:328 | reservation_statuses, reservations, activity_logs | Personnel mark a record MISSED, CANCELLED, or COMPLETED. The status is updated and an activity log is written. |
 | Reservation list, filtering, print, and CSV export | views/reservations/index.ejs | src/features/reservations/reservationRoutes.js:29, src/features/reservations/reservationExport.js:13 | reservations, residents, reservation_statuses, users | Personnel filter by date, status, name/contact, or purpose. They can print records or export filtered records as reservations.csv. |
-| Activity logs | views/activityLogs/index.ejs | src/features/activityLogs/activityLogRoutes.js:13, src/features/activityLogs/activityLogRepository.js:1 | activity_logs | Reservation create/edit/status actions write logs. The log page filters by date, action, and user/details search. |
+| Activity logs | client/src/pages/ActivityLogsPage.jsx; legacy views/activityLogs/index.ejs | src/features/activityLogs/activityLogRoutes.js:13, src/features/activityLogs/activityLogRepository.js:1 | activity_logs | Reservation create/edit/status and account create/status/password-change actions write logs. The log page filters by date, action, and user/details search. |
 | Nearest available slot suggestion | views/dashboard.ejs | src/features/schedule/scheduleService.js:66 | time_slots, reservations | The service searches from today across a 14-day window and returns the first non-blocking slot. |
-| Prototype frontend and API bridge | public/prototype/sto-nino-court-reservation-system-prototype.html, public/js/prototype-backend.js | src/features/prototype/prototypeRoutes.js:18, src/features/prototype/prototypeApiRoutes.js:36 | users, reservations, residents | The app serves the supplied prototype at /, /prototype, and /app, injects a local backend bridge, and exposes prototype API routes for login, reservations, statuses, and accounts. |
+| React staff console and legacy prototype bridge | client/src, public/app, views/app.ejs; legacy public/prototype and public/js/prototype-backend.js | src/features/frontend/reactAppRoutes.js, src/features/api/apiRoutes.js; legacy prototypeRoutes/prototypeApiRoutes | users, reservations, residents | The normal staff workflow uses the React console and real backend APIs. Legacy prototype routes remain for compatibility/reference checks. |
 | Offline startup and maintenance scripts | START-HERE.bat, start-barangay-office.bat, maintenance-tools/*.bat | scripts/*.mjs, scripts/*.ps1, src/serverStartup.js | Local MySQL/MariaDB from .env or bundled runtime | START-HERE.bat provides setup and maintenance. start-barangay-office.bat checks runtime, .env, database readiness, starts local app, and opens the browser. |
 | Database backup and restore | maintenance-tools/backup-database.bat, maintenance-tools/restore-database.bat | scripts/backup-mysql.mjs, scripts/restore-mysql.mjs | MySQL/MariaDB database dump | Backup uses mysqldump with routines/triggers. Restore requires an explicit .sql file path. |
 
@@ -647,6 +651,6 @@ The system is an offline office-based scheduling tool for Barangay Sto. Niño's 
 
 **60-second project script:** Our project is a Basketball Court Scheduling System for Barangay Sto. Niño, Parañaque City. The barangay basketball court is shared by residents, so informal scheduling can lead to conflicts. Our system is installed offline in the barangay office. Residents still coordinate with barangay personnel in person, and authorized Admin or Staff users encode reservations. The system shows available and reserved slots, prevents overlapping active reservations, records resident representative details, supports account management, and keeps activity logs. This improves organization, fairness, and record keeping while matching the barangay's preference for direct office management.
 
-**Technical architecture script:** The system uses Node.js and Express for the local backend, EJS for server-rendered pages, and a local MySQL/MariaDB database. The browser opens localhost, which means it is only talking to the local barangay computer. Express routes handle login, schedules, reservations, accounts, and logs. The database stores users, residents, reservations, time slots, statuses, settings, and activity logs. Passwords are hashed with bcrypt, and reservation conflicts are checked in both code and database triggers.
+**Technical architecture script:** The system uses Node.js and Express for the local backend, a React staff console for normal office use, legacy EJS/reference pages where needed, and a local MySQL/MariaDB database. The browser opens localhost, which means it is only talking to the local barangay computer. Express routes and APIs handle login, schedules, reservations, accounts, reports, and logs. The database stores users, residents, reservations, time slots, statuses, settings, and activity logs. Passwords are hashed with bcrypt, and reservation conflicts are checked in both code and database triggers.
 
 **Offline deployment script:** We chose offline deployment because the proposal and slides state that barangay officials prefer an office-installed system and residents should coordinate directly with personnel. The browser is only the interface; the server and database run locally. This means normal operation does not require public internet, and the barangay keeps reservation records on its office computer.

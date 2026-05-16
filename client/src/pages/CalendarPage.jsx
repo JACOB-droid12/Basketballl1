@@ -66,7 +66,7 @@ export function CalendarPage({ onNavigate }) {
           </button>
           <label className="date-field compact-date">
             <span>Jump to date</span>
-            <input className="date-input" type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+            <input id="schedule-jump-date" name="date" className="date-input" type="date" value={date} onChange={(event) => setDate(event.target.value)} />
           </label>
         </div>
       </div>

@@ -27,9 +27,10 @@ import {
   findUserByUsername,
   listUsers,
   updateUserAccountStatus,
+  updateUserPassword,
   UserNotFoundError
 } from "../users/userRepository.js";
-import { validateCreateUserInput } from "../users/userValidation.js";
+import { validateChangePasswordInput, validateCreateUserInput } from "../users/userValidation.js";
 import { sendAdminRequired, sendDatabaseError, sendLoginRequired, sendValidationError } from "./apiErrors.js";
 import { toApiAccount, toApiReservation, toApiScheduleSlot, toApiUser } from "./apiMappers.js";
 import { buildReportsPayload } from "./apiReports.js";
@@ -46,7 +47,8 @@ const defaultRepositories = {
   listUsers,
   updateReservation,
   updateReservationStatus,
-  updateUserAccountStatus
+  updateUserAccountStatus,
+  updateUserPassword
 };
 const AVAILABILITY_SUGGESTION_SEARCH_DAYS = 14;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -98,6 +100,34 @@ export function createApiRoutes({ db, repositories = {}, todayProvider = getToda
   });
 
   router.use("/api", requireApiSignedIn);
+
+  router.post("/api/account/password", async (request, response) => {
+    const result = validateChangePasswordInput(request.body);
+
+    if (!result.valid) {
+      sendValidationError(response, result.errors);
+      return;
+    }
+
+    try {
+      const user = await repo.findUserByUsername(db, request.session.user.username);
+      const currentPasswordMatches = user ?
+        await bcrypt.compare(result.value.currentPassword, user.passwordHash) :
+        false;
+
+      if (!currentPasswordMatches) {
+        sendValidationError(response, { currentPassword: "Current password is incorrect." });
+        return;
+      }
+
+      await repo.updateUserPassword(db, request.session.user.userId, result.value.newPassword, {
+        userId: request.session.user.userId
+      });
+      response.json({ ok: true });
+    } catch (error) {
+      sendDatabaseError(response, error);
+    }
+  });
 
   router.get("/api/reservations", async (request, response) => {
     try {
@@ -392,7 +422,9 @@ export function createApiRoutes({ db, repositories = {}, todayProvider = getToda
     }
 
     try {
-      await repo.updateUserAccountStatus(db, userId, accountStatus);
+      await repo.updateUserAccountStatus(db, userId, accountStatus, {
+        userId: request.session.user.userId
+      });
       response.json({ ok: true });
     } catch (error) {
       if (error instanceof UserNotFoundError) {

@@ -4,6 +4,7 @@ import { getSession, logout } from "./api/client.js";
 import { AppShell } from "./components/AppShell.jsx";
 import { EmptyState } from "./components/EmptyState.jsx";
 import { LoadingState } from "./components/LoadingState.jsx";
+import { AccountPasswordPage } from "./pages/AccountPasswordPage.jsx";
 import { AccountsPage } from "./pages/AccountsPage.jsx";
 import { ActivityLogsPage } from "./pages/ActivityLogsPage.jsx";
 import { CalendarPage } from "./pages/CalendarPage.jsx";
@@ -118,6 +119,7 @@ export function App() {
 }
 
 function renderPage(path, navigate, user) {
+  if (path === "/account/password") return <AccountPasswordPage user={user} />;
   if (path.startsWith("/account")) return <AccountsPage user={user} />;
   if (path.startsWith("/activity-logs")) return <ActivityLogsPage />;
   if (path.startsWith("/reports")) return <ReportsPage />;
@@ -128,7 +130,7 @@ function renderPage(path, navigate, user) {
   if (reservationMatch) return <ReservationsPage onNavigate={navigate} initialReservationId={reservationMatch[1]} />;
   if (path.startsWith("/reservations")) return <ReservationsPage onNavigate={navigate} />;
   if (path.startsWith("/schedule")) return <CalendarPage onNavigate={navigate} />;
-  if (path.startsWith("/dashboard")) return <DashboardPage onNavigate={navigate} />;
+  if (path.startsWith("/dashboard")) return <DashboardPage onNavigate={navigate} user={user} />;
 
   const route = resolveRoute(path);
   return <PlaceholderPage title={route.title} body={route.body} />;

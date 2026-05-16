@@ -9,6 +9,7 @@ The system is designed for authorized barangay personnel. Residents request rese
 The current milestone is one-stop offline Windows setup packaging. Milestones 1 through 4 are implemented in code and tests, and the generated offline bundle has passed strict one-stop validation on this Windows PC with bundled Node.js and bundled MariaDB runtime folders present. Final barangay-office deployment sign-off is still a later activity, but this milestone focuses only on copy/extract, first-time setup through `START-HERE.bat`, daily startup through `Barangay Court Scheduler`, and local browser/backend/database verification:
 
 - Local Node.js + Express application skeleton
+- React 18/Vite staff console built into local `public/app` assets
 - Local MySQL target schema
 - Seed data for reservation statuses, court settings, and hourly time slots
 - Architecture and reference review documents
@@ -26,7 +27,8 @@ The current milestone is one-stop offline Windows setup packaging. Milestones 1 
 ## Target Stack
 
 - Node.js + Express for a simple local web app
-- EJS server-rendered pages for straightforward offline deployment
+- React 18/Vite staff console for normal barangay-office use
+- Legacy EJS/prototype routes retained for compatibility, export/reference, and smoke checks
 - Local MySQL for reservation, schedule, user, and activity-log records
 - bcrypt password hashes for user accounts
 
@@ -34,7 +36,7 @@ The app does not use cloud services for core functionality.
 
 Deployment focus is Windows only for this project. Use the included `.bat` and PowerShell scripts for barangay-office setup and startup.
 
-The deployment goal is a high-quality, fully tested offline Windows local web application: staff use the supplied prototype UI in a browser, the backend and MySQL/MariaDB database run on the barangay office computer, daily use is started from a simple Desktop shortcut, and setup/backup/checks are kept in a separate maintenance launcher. The safest automation path is portable/bundled runtime support: launchers prefer `runtime\node` and `runtime\mariadb` when those folders are supplied, then fall back to installed local tools for development machines.
+The deployment goal is a high-quality, fully tested offline Windows local web application: staff use the backend-backed React staff console in a browser, the backend and MySQL/MariaDB database run on the barangay office computer, daily use is started from a simple Desktop shortcut, and setup/backup/checks are kept in a separate maintenance launcher. The React console was restyled to follow the Barangay (1) staff-friendly reference while preserving the real Express/MySQL workflows. The safest automation path is portable/bundled runtime support: launchers prefer `runtime\node` and `runtime\mariadb` when those folders are supplied, then fall back to installed local tools for development machines.
 
 ## Offline Package Modes
 
@@ -140,7 +142,7 @@ If the starter `admin` password has already been changed, set `VERIFY_LOGIN_PASS
 npm run verify:ui
 ```
 
-This command renders the prototype frontend plus the main office screens with safe sample data and checks the prototype backend bridge, login, dashboard, schedule, reservation, account, and activity-log pages.
+This command renders the local UI surfaces plus the main office screens with safe sample data and checks the backend bridge, login, dashboard, schedule, reservation, account, and activity-log pages.
 
 10. Run the local offline runtime check:
 
@@ -148,7 +150,7 @@ This command renders the prototype frontend plus the main office screens with sa
 npm run verify:offline-runtime
 ```
 
-This starts the local app on a temporary port, checks `/health`, loads `/prototype`, and fails if the served prototype contains external `http://` or `https://` font, script, image, or stylesheet references. It is a fast offline safety gate; it does not replace the real browser/manual sign-off on the barangay office computer.
+This starts the local app on a temporary port, checks `/health`, loads the local runtime UI, and fails if served assets contain external `http://` or `https://` font, script, image, or stylesheet references. It is a fast offline safety gate; it does not replace the real browser/manual sign-off on the barangay office computer.
 
 11. Run the automated tests:
 
@@ -211,7 +213,7 @@ For a database-only daily startup check without opening the app, run:
 npm run check:database
 ```
 
-`maintenance-tools\run-office-signoff.bat` runs the office-focused local verification sequence, including the offline prototype runtime check, and writes a timestamped report for presentation/deployment records. It does not download packages or use online services. Generated reports stay local under `reports\office-signoff` and are ignored by git.
+`maintenance-tools\run-office-signoff.bat` runs the office-focused local verification sequence, including the offline runtime check, and writes a timestamped report for presentation/deployment records. It does not download packages or use online services. Generated reports stay local under `reports\office-signoff` and are ignored by git.
 
 See `docs/OFFLINE_INSTALL_CHECKLIST.md` for the full pure-offline checklist.
 
@@ -225,13 +227,13 @@ npm start
 
 Useful local URLs, assuming the default `APP_PORT=3000`:
 
-- `http://localhost:3000/prototype` - prototype frontend used by barangay staff
-- `http://localhost:3000/login`
+- `http://localhost:3000/login` - normal React staff console login
 - `http://localhost:3000/account`
 - `http://localhost:3000/schedule`
 - `http://localhost:3000/reservations`
 - `http://localhost:3000/reservations/new`
 - `http://localhost:3000/activity-logs`
+- `http://localhost:3000/prototype` - legacy prototype/reference screen retained for compatibility checks
 
 Seeded starter login after applying `database/seed.sql`:
 
@@ -265,7 +267,7 @@ npm run restore:mysql -- backups\backup-file.sql
 - `docs/USER_GUIDE.md` explains the daily workflow for barangay Admin and Staff users.
 - `STAFF-DAILY-USE.txt` is the shortest daily-use sheet for ordinary barangay staff.
 - `docs/DEPLOYMENT_GUIDE.md` explains offline Windows + local MySQL installation, startup, backup, restore, and update steps.
-- `npm run verify:offline-runtime` starts the app locally and checks that the served prototype runtime uses only local resources.
+- `npm run verify:offline-runtime` starts the app locally and checks that served runtime assets use only local resources.
 - `START-HERE.bat` groups readiness checks, backup, restore, sign-off, and database support under Maintenance/admin tools.
 - `maintenance-tools\check-office-readiness.bat` checks whether a barangay office computer has the local files and tools needed before running setup.
 - `maintenance-tools\run-office-signoff.bat` runs final local verification on the office computer and saves a sign-off report.

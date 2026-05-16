@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { login } from "../api/client.js";
+import { Icon } from "../components/Icon.jsx";
 
 export function LoginPage({ onLogin }) {
   const [form, setForm] = useState({ username: "", password: "" });
@@ -41,36 +42,33 @@ export function LoginPage({ onLogin }) {
   return (
     <main className="login-page">
       <section className="login-side">
-        <div className="brand-row seal-row">
-          <div className="brand-seal">N</div>
+        <div className="seal-row">
+          <div className="seal">N</div>
           <div>
             <span className="login-republic">Republika ng Pilipinas</span>
             <strong>Barangay Sto. Niño</strong>
-            <span>Basketball Court Office Terminal</span>
           </div>
         </div>
         <div>
-          <p className="eyebrow">Court Scheduling System</p>
-          <h1>The community court, organized.</h1>
-          <p>Use this local office system to check open times, record walk-in requests, and keep court reservations clear for residents.</p>
-          <p className="welcome-fil">Para sa maayos na pila, malinaw na oras, at iisang talaan ng court bookings.</p>
+          <h1>Welcome.<br /><em>Maligayang pagdating.</em></h1>
+          <p>This is the basketball court reservation system. Please sign in to start.</p>
+          <p className="welcome-fil">Ito ang sistema para sa reserbasyon ng basketball court. Mag-sign in upang magsimula.</p>
         </div>
-        <div className="login-terminal-note">
-          <span>Office use only</span>
-          <span>Barangay staff terminal</span>
-        </div>
+        <div className="login-install-note">Installed at the Barangay Office · Version 1.0</div>
       </section>
       <section className="login-form-side">
-        <form className="login-card" onSubmit={handleSubmit}>
+        <form className="login-form-card" onSubmit={handleSubmit}>
           <div>
-            <p className="eyebrow">Personnel Sign-in</p>
-            <h2>Welcome back.</h2>
-            <p className="login-subtitle">Sign in with your barangay-assigned staff account.</p>
+            <h2>Sign in</h2>
+            <p className="sub">Mag-sign in gamit ang iyong account.</p>
           </div>
           {error && <div className="alert error" role="alert">{error}</div>}
           <label className="field">
-            <span>Username</span>
+            <span className="field-label">Username <span className="fil">· Pangalan ng user</span></span>
             <input
+              className="input"
+              id="login-username"
+              name="username"
               value={form.username}
               onChange={(event) => setForm({ ...form, username: event.target.value })}
               autoComplete="username"
@@ -79,8 +77,11 @@ export function LoginPage({ onLogin }) {
             />
           </label>
           <label className="field">
-            <span>Password</span>
+            <span className="field-label">Password <span className="fil">· Password</span></span>
             <input
+              className="input"
+              id="login-password"
+              name="password"
               type="password"
               value={form.password}
               onChange={(event) => setForm({ ...form, password: event.target.value })}
@@ -89,11 +90,11 @@ export function LoginPage({ onLogin }) {
             />
           </label>
           <button className="btn btn-primary btn-big" type="submit" disabled={loading}>
-            {loading ? "Verifying..." : "Sign in to dashboard"}
+            {loading ? "Signing in..." : "Sign in"}
           </button>
           <div className="login-hint">
-            <strong>Authorized barangay personnel only.</strong>
-            <span>Kung hindi ka naka-duty, huwag gamitin ang account ng ibang staff.</span>
+            <Icon name="info" />
+            <span>Only barangay personnel can use this system. If you forgot your password, please see the Kapitan.</span>
           </div>
         </form>
       </section>

@@ -86,6 +86,102 @@ test("GET /api/reservations returns 401 JSON when signed out", async () => {
   }
 });
 
+test("POST /api/account/password returns validation errors as JSON for signed-in staff", async () => {
+  const app = buildApiTestApp({ session: buildSession({ role: "STAFF" }) });
+  const server = app.listen(0);
+
+  try {
+    const response = await postJson(server, "/api/account/password", {});
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(response.body, {
+      errors: {
+        currentPassword: "Current password is required.",
+        newPassword: "New password is required.",
+        confirmPassword: "Confirm password is required."
+      }
+    });
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("POST /api/account/password rejects an incorrect current password for signed-in staff", async () => {
+  const passwordHash = await bcrypt.hash("correct-password", 4);
+  let updateCalled = false;
+  const app = buildApiTestApp({
+    session: buildSession({ role: "STAFF" }),
+    repositories: {
+      findUserByUsername: async (_db, username) => ({
+        userId: 1,
+        fullName: "Staff User",
+        username,
+        passwordHash,
+        role: "STAFF"
+      }),
+      updateUserPassword: async () => {
+        updateCalled = true;
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await postJson(server, "/api/account/password", {
+      currentPassword: "wrong-password",
+      newPassword: "new-local-password",
+      confirmPassword: "new-local-password"
+    });
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(response.body, {
+      errors: { currentPassword: "Current password is incorrect." }
+    });
+    assert.equal(updateCalled, false);
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("POST /api/account/password updates the signed-in user's password on success", async () => {
+  const passwordHash = await bcrypt.hash("old-local-password", 4);
+  let updateArgs = null;
+  const app = buildApiTestApp({
+    session: buildSession({ userId: 44, role: "STAFF" }),
+    repositories: {
+      findUserByUsername: async (_db, username) => ({
+        userId: 44,
+        fullName: "Staff User",
+        username,
+        passwordHash,
+        role: "STAFF"
+      }),
+      updateUserPassword: async (_db, userId, newPassword, options) => {
+        updateArgs = { userId, newPassword, options };
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await postJson(server, "/api/account/password", {
+      currentPassword: "old-local-password",
+      newPassword: "new-local-password",
+      confirmPassword: "new-local-password"
+    });
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(response.body, { ok: true });
+    assert.deepEqual(updateArgs, {
+      userId: 44,
+      newPassword: "new-local-password",
+      options: { userId: 44 }
+    });
+  } finally {
+    await closeServer(server);
+  }
+});
+
 test("API protection allows existing prototype API routes to remain available", async () => {
   const app = buildApiTestApp();
   app.get("/api/prototype/session", (_request, response) => {
@@ -766,6 +862,33 @@ test("accounts APIs require admin, map duplicate username, and block self status
     assert.deepEqual(badId.body, { error: "User ID must be a positive integer." });
   } finally {
     await closeServer(adminServer);
+  }
+});
+
+test("POST /api/accounts/:userId/status passes the signed-in admin user to account status updates", async () => {
+  let updateCall = null;
+  const app = buildApiTestApp({
+    session: buildSession({ userId: 1, role: "ADMIN" }),
+    repositories: {
+      updateUserAccountStatus: async (_db, userId, accountStatus, options) => {
+        updateCall = { userId, accountStatus, options };
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await postJson(server, "/api/accounts/2/status", { accountStatus: "INACTIVE" });
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(response.body, { ok: true });
+    assert.deepEqual(updateCall, {
+      userId: 2,
+      accountStatus: "INACTIVE",
+      options: { userId: 1 }
+    });
+  } finally {
+    await closeServer(server);
   }
 });
 

@@ -149,7 +149,7 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
             <div className="bookings-toolbar">
               <label className="search-input" aria-label="Search bookings">
                 <span className="search-mark">⌕</span>
-                <input className="input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by name, purpose, phone, or ID" />
+                <input id="reservation-search" name="search" className="input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by name, purpose, phone, or ID" />
               </label>
               <div className="filter-tabs" role="tablist" aria-label="Reservation status filter">
                 {STATUS_OPTIONS.map((option) => (

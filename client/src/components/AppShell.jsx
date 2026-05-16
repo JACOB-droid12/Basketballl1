@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { path: "/reservations", label: "All Bookings", helper: "Search records", icon: "list" },
   { path: "/reports", label: "Summary", helper: "Local reports", icon: "chart" },
   { path: "/activity-logs", label: "Activity Logs", helper: "Audit trail", icon: "clock" },
+  { path: "/account/password", label: "Password", helper: "Change login", icon: "lock" },
   { path: "/account", label: "Accounts", helper: "Admin only", icon: "users", adminOnly: true }
 ];
 

@@ -6,6 +6,7 @@ export function Field({ id, label, filipino, hint, error, children, wide }) {
   const describedBy = [hintId, error ? errorId : null].filter(Boolean).join(" ") || undefined;
   const control = cloneElement(children, {
     id,
+    name: children.props.name || id,
     className: [children.props.className, "input"].filter(Boolean).join(" "),
     "aria-invalid": error ? "true" : undefined,
     "aria-describedby": describedBy

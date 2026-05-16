@@ -16,6 +16,17 @@ const ICON_PATHS = {
       <path d="M12 5v14M5 12h14" />
     </>
   ),
+  search: (
+    <>
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.35-4.35" />
+    </>
+  ),
+  chevronRight: (
+    <>
+      <path d="m9 18 6-6-6-6" />
+    </>
+  ),
   list: (
     <>
       <path d="M8 6h13M8 12h13M8 18h13" />
@@ -32,6 +43,12 @@ const ICON_PATHS = {
     <>
       <circle cx="12" cy="12" r="10" />
       <path d="M12 6v6l4 2" />
+    </>
+  ),
+  lock: (
+    <>
+      <rect x="3" y="11" width="18" height="11" rx="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
     </>
   ),
   users: (
@@ -53,6 +70,13 @@ const ICON_PATHS = {
       <circle cx="12" cy="12" r="10" />
       <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
       <path d="M12 17h.01" />
+    </>
+  ),
+  info: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
     </>
   ),
   fallback: (

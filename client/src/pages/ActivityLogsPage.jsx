@@ -9,7 +9,11 @@ const COMMON_ACTIONS = [
   "UPDATE_RESERVATION",
   "MARK_MISSED",
   "MARK_CANCELLED",
-  "MARK_COMPLETED"
+  "MARK_COMPLETED",
+  "CREATE_ACCOUNT",
+  "ACTIVATE_ACCOUNT",
+  "DEACTIVATE_ACCOUNT",
+  "CHANGE_PASSWORD"
 ];
 
 export function ActivityLogsPage() {
@@ -85,11 +89,11 @@ export function ActivityLogsPage() {
         <div className="toolbar staff-filter-toolbar">
           <label className="field compact">
             <span>Search name, action, or details</span>
-            <input value={filters.search} onChange={(event) => updateFilter("search", event.target.value)} placeholder="User, action, or details" />
+            <input id="activity-search" name="search" value={filters.search} onChange={(event) => updateFilter("search", event.target.value)} placeholder="User, action, or details" />
           </label>
           <label className="field compact">
             <span>Action</span>
-            <select value={filters.action} onChange={(event) => updateFilter("action", event.target.value)}>
+            <select id="activity-action" name="action" value={filters.action} onChange={(event) => updateFilter("action", event.target.value)}>
               <option value="">All actions</option>
               {actionOptions.map((action) => (
                 <option key={action} value={action}>{formatAction(action)}</option>
@@ -98,7 +102,7 @@ export function ActivityLogsPage() {
           </label>
           <label className="field compact">
             <span>Date recorded</span>
-            <input type="date" value={filters.date} onChange={(event) => updateFilter("date", event.target.value)} />
+            <input id="activity-date" name="date" type="date" value={filters.date} onChange={(event) => updateFilter("date", event.target.value)} />
           </label>
           <div className="button-row filter-actions">
             <button className="btn btn-primary" type="submit">Apply</button>

@@ -115,7 +115,9 @@ export function createAuthRoutes({
         return;
       }
 
-      await repo.updateUserPassword(db, request.session.user.userId, result.value.newPassword);
+      await repo.updateUserPassword(db, request.session.user.userId, result.value.newPassword, {
+        userId: request.session.user.userId
+      });
       response.redirect("/account/password?updated=1");
     } catch (error) {
       renderChangePassword(response.status(503), {
@@ -206,7 +208,9 @@ export function createAuthRoutes({
     }
 
     try {
-      await repo.updateUserAccountStatus(db, request.params.userId, accountStatus);
+      await repo.updateUserAccountStatus(db, request.params.userId, accountStatus, {
+        userId: request.session.user.userId
+      });
       response.redirect("/account");
     } catch (error) {
       const status = error instanceof UserNotFoundError ? 404 : 503;

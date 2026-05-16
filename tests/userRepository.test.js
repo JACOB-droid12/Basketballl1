@@ -3,10 +3,12 @@ import bcrypt from "bcryptjs";
 import test from "node:test";
 
 import {
+  createUser,
   buildUpdateUserPasswordQuery,
   buildUpdateUserStatusQuery,
   buildUserListQuery,
   mapAccountUserRow,
+  updateUserAccountStatus,
   updateUserPassword
 } from "../src/features/users/userRepository.js";
 
@@ -42,19 +44,100 @@ test("builds user password update query without plaintext password", () => {
   });
 });
 
+test("createUser writes an account creation activity log without the plaintext password", async () => {
+  const calls = [];
+  const db = {
+    execute: async (sql, params = {}) => {
+      calls.push({ sql, params });
+
+      if (sql.includes("SELECT user_id")) {
+        return [[]];
+      }
+
+      if (sql.includes("INSERT INTO users")) {
+        return [{ insertId: 7 }];
+      }
+
+      if (sql.includes("INSERT INTO activity_logs")) {
+        return [{ affectedRows: 1 }];
+      }
+
+      throw new Error(`Unexpected SQL: ${sql}`);
+    }
+  };
+
+  const user = await createUser(db, {
+    fullName: "Maria Santos",
+    username: "maria",
+    password: "plain-password",
+    role: "STAFF"
+  }, { createdByUserId: 1 });
+  const logCall = calls.find((call) => call.sql.includes("INSERT INTO activity_logs"));
+
+  assert.equal(user.userId, 7);
+  assert.equal(logCall.params.reservationId, null);
+  assert.equal(logCall.params.userId, 1);
+  assert.equal(logCall.params.action, "CREATE_ACCOUNT");
+  assert.match(logCall.params.details, /Maria Santos/);
+  assert.match(logCall.params.details, /maria/);
+  assert.doesNotMatch(logCall.params.details, /plain-password/);
+});
+
+test("updateUserAccountStatus writes activation and deactivation activity logs", async () => {
+  const logParams = [];
+  const db = {
+    execute: async (sql, params = {}) => {
+      if (sql.includes("UPDATE users")) {
+        return [{ affectedRows: 1 }];
+      }
+
+      if (sql.includes("INSERT INTO activity_logs")) {
+        logParams.push(params);
+        return [{ affectedRows: 1 }];
+      }
+
+      throw new Error(`Unexpected SQL: ${sql}`);
+    }
+  };
+
+  await updateUserAccountStatus(db, 8, "INACTIVE", { userId: 1 });
+  await updateUserAccountStatus(db, 8, "ACTIVE", { userId: 1 });
+
+  assert.deepEqual(logParams.map((params) => params.action), ["DEACTIVATE_ACCOUNT", "ACTIVATE_ACCOUNT"]);
+  assert.equal(logParams[0].reservationId, null);
+  assert.equal(logParams[0].userId, 1);
+  assert.match(logParams[0].details, /account #8/i);
+  assert.match(logParams[1].details, /ACTIVE/);
+});
+
 test("updateUserPassword stores a bcrypt hash", async () => {
   let savedParams = null;
+  let logParams = null;
   const db = {
-    execute: async (_sql, params) => {
-      savedParams = params;
+    execute: async (sql, params) => {
+      if (sql.includes("UPDATE users")) {
+        savedParams = params;
+        return [{ affectedRows: 1 }];
+      }
+
+      if (sql.includes("INSERT INTO activity_logs")) {
+        logParams = params;
+        return [{ affectedRows: 1 }];
+      }
+
       return [{ affectedRows: 1 }];
     }
   };
 
-  await updateUserPassword(db, 1, "new-local-password");
+  await updateUserPassword(db, 1, "new-local-password", { userId: 1 });
 
   assert.notEqual(savedParams.passwordHash, "new-local-password");
   assert.equal(await bcrypt.compare("new-local-password", savedParams.passwordHash), true);
+  assert.equal(logParams.reservationId, null);
+  assert.equal(logParams.userId, 1);
+  assert.equal(logParams.action, "CHANGE_PASSWORD");
+  assert.match(logParams.details, /account #1/i);
+  assert.doesNotMatch(logParams.details, /new-local-password/);
 });
 
 test("maps account user rows for the account management view", () => {

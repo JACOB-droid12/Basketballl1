@@ -102,15 +102,18 @@ test("reports logs and accounts replacement surfaces use backend APIs without mo
 
   assert.match(logsPage, /apiRequest\(buildLogsPath\(appliedFilters\)\)/);
   assert.match(logsPage, /new URLSearchParams/);
-  assert.match(logsPage, /<select value=\{filters\.action\}/);
+  assert.match(logsPage, /<select[^>]+value=\{filters\.action\}/);
   assert.match(logsPage, /"CREATE_RESERVATION"/);
   assert.match(logsPage, /"UPDATE_RESERVATION"/);
   assert.match(logsPage, /"MARK_MISSED"/);
   assert.match(logsPage, /"MARK_CANCELLED"/);
   assert.match(logsPage, /"MARK_COMPLETED"/);
+  assert.match(logsPage, /"CREATE_ACCOUNT"/);
+  assert.match(logsPage, /"ACTIVATE_ACCOUNT"/);
+  assert.match(logsPage, /"DEACTIVATE_ACCOUNT"/);
+  assert.match(logsPage, /"CHANGE_PASSWORD"/);
   assert.doesNotMatch(logsPage, /\bCANCEL_RESERVATION\b/);
   assert.doesNotMatch(logsPage, /\bCOMPLETE_RESERVATION\b/);
-  assert.doesNotMatch(logsPage, /\bCREATE_ACCOUNT\b/);
   assert.doesNotMatch(logsPage, /\bUPDATE_ACCOUNT_STATUS\b/);
 
   assert.match(accountsPage, /apiRequest\("\/api\/accounts"\)/);
@@ -120,6 +123,32 @@ test("reports logs and accounts replacement surfaces use backend APIs without mo
 
   assert.doesNotMatch(combined, /\bPENDING\b|\bAPPROVED\b|\bDECLINED\b/);
   assert.doesNotMatch(combined, /mock trend|sample chart|pending approval/i);
+});
+
+test("account password route uses a dedicated React page and JSON account API", () => {
+  const app = readFileSync(path.join(projectRoot, "client", "src", "App.jsx"), "utf8");
+  const shell = readFileSync(path.join(projectRoot, "client", "src", "components", "AppShell.jsx"), "utf8");
+  const icon = readFileSync(path.join(projectRoot, "client", "src", "components", "Icon.jsx"), "utf8");
+  const passwordPage = readFileSync(path.join(projectRoot, "client", "src", "pages", "AccountPasswordPage.jsx"), "utf8");
+
+  assert.match(app, /import \{ AccountPasswordPage \} from "\.\/pages\/AccountPasswordPage\.jsx"/);
+  assert.match(app, /if \(path === "\/account\/password"\) return <AccountPasswordPage user=\{user\} \/>;/);
+  assert.match(app, /if \(path\.startsWith\("\/account"\)\) return <AccountsPage user=\{user\} \/>;/);
+  assert.ok(app.indexOf('path === "/account/password"') < app.indexOf('path.startsWith("/account")'));
+
+  assert.match(shell, /\{ path: "\/account\/password", label: "Password", helper: "Change login", icon: "lock" \}/);
+  assert.match(icon, /lock:\s*\(/);
+
+  assert.match(passwordPage, /apiRequest\("\/api\/account\/password"/);
+  assert.match(passwordPage, /currentPassword/);
+  assert.match(passwordPage, /newPassword/);
+  assert.match(passwordPage, /confirmPassword/);
+  assert.match(passwordPage, /Password updated/);
+  assert.match(passwordPage, /fieldErrors\.currentPassword/);
+  assert.match(passwordPage, /fieldErrors\.newPassword/);
+  assert.match(passwordPage, /fieldErrors\.confirmPassword/);
+  assert.doesNotMatch(passwordPage, /apiRequest\("\/api\/accounts"\)/);
+  assert.doesNotMatch(passwordPage, /\bPENDING\b|\bAPPROVED\b|\bDECLINED\b/);
 });
 
 function assertNoUnsupportedApprovalWorkflow(source) {

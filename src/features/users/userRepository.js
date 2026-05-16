@@ -35,34 +35,43 @@ export async function findUserByUsername(db, username) {
   return rows[0] ? mapUserRow(rows[0]) : null;
 }
 
-export async function createUser(db, user) {
+export async function createUser(db, user, options = {}) {
   const username = String(user.username || "").trim().toLowerCase();
-  const existing = await findAnyUserByUsername(db, username);
 
-  if (existing) {
-    throw new DuplicateUsernameError();
-  }
+  return runUserMutation(db, async (connection) => {
+    const existing = await findAnyUserByUsername(connection, username);
 
-  const passwordHash = await bcrypt.hash(user.password, 12);
-  const [result] = await db.execute(
-    `
-      INSERT INTO users (full_name, username, password_hash, role, account_status)
-      VALUES (:fullName, :username, :passwordHash, :role, 'ACTIVE')
-    `,
-    {
+    if (existing) {
+      throw new DuplicateUsernameError();
+    }
+
+    const passwordHash = await bcrypt.hash(user.password, 12);
+    const [result] = await connection.execute(
+      `
+        INSERT INTO users (full_name, username, password_hash, role, account_status)
+        VALUES (:fullName, :username, :passwordHash, :role, 'ACTIVE')
+      `,
+      {
+        fullName: user.fullName,
+        username,
+        passwordHash,
+        role: user.role
+      }
+    );
+
+    await writeAccountActivityLog(connection, {
+      actorUserId: options.createdByUserId || options.userId,
+      action: "CREATE_ACCOUNT",
+      details: `Created ${user.role} account for ${user.fullName} (${username}).`
+    });
+
+    return {
+      userId: Number(result.insertId),
       fullName: user.fullName,
       username,
-      passwordHash,
       role: user.role
-    }
-  );
-
-  return {
-    userId: Number(result.insertId),
-    fullName: user.fullName,
-    username,
-    role: user.role
-  };
+    };
+  });
 }
 
 export function buildUserListQuery() {
@@ -117,23 +126,39 @@ export function buildUpdateUserPasswordQuery(userId, passwordHash) {
   };
 }
 
-export async function updateUserAccountStatus(db, userId, accountStatus) {
+export async function updateUserAccountStatus(db, userId, accountStatus, options = {}) {
   const query = buildUpdateUserStatusQuery(userId, accountStatus);
-  const [result] = await db.execute(query.sql, query.params);
+  await runUserMutation(db, async (connection) => {
+    const [result] = await connection.execute(query.sql, query.params);
 
-  if (result.affectedRows === 0) {
-    throw new UserNotFoundError();
-  }
+    if (result.affectedRows === 0) {
+      throw new UserNotFoundError();
+    }
+
+    await writeAccountActivityLog(connection, {
+      actorUserId: options.userId || options.updatedByUserId,
+      action: accountStatus === "ACTIVE" ? "ACTIVATE_ACCOUNT" : "DEACTIVATE_ACCOUNT",
+      details: `Set account #${Number(userId)} to ${accountStatus}.`
+    });
+  });
 }
 
-export async function updateUserPassword(db, userId, newPassword) {
+export async function updateUserPassword(db, userId, newPassword, options = {}) {
   const passwordHash = await bcrypt.hash(newPassword, 12);
   const query = buildUpdateUserPasswordQuery(userId, passwordHash);
-  const [result] = await db.execute(query.sql, query.params);
+  await runUserMutation(db, async (connection) => {
+    const [result] = await connection.execute(query.sql, query.params);
 
-  if (result.affectedRows === 0) {
-    throw new UserNotFoundError();
-  }
+    if (result.affectedRows === 0) {
+      throw new UserNotFoundError();
+    }
+
+    await writeAccountActivityLog(connection, {
+      actorUserId: options.userId || userId,
+      action: "CHANGE_PASSWORD",
+      details: `Changed password for account #${Number(userId)}.`
+    });
+  });
 }
 
 async function findAnyUserByUsername(db, username) {
@@ -148,6 +173,41 @@ async function findAnyUserByUsername(db, username) {
   );
 
   return rows[0] || null;
+}
+
+async function runUserMutation(db, callback) {
+  if (typeof db.getConnection !== "function") {
+    return callback(db);
+  }
+
+  const connection = await db.getConnection();
+
+  try {
+    await connection.beginTransaction();
+    const result = await callback(connection);
+    await connection.commit();
+    return result;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+async function writeAccountActivityLog(connection, { actorUserId, action, details }) {
+  await connection.execute(
+    `
+      INSERT INTO activity_logs (reservation_id, user_id, action, details)
+      VALUES (:reservationId, :userId, :action, :details)
+    `,
+    {
+      reservationId: null,
+      userId: actorUserId ? Number(actorUserId) : null,
+      action,
+      details
+    }
+  );
 }
 
 function mapUserRow(row) {
