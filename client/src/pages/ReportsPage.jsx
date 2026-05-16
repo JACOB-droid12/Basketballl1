@@ -5,6 +5,13 @@ import { EmptyState } from "../components/EmptyState.jsx";
 import { LoadingState } from "../components/LoadingState.jsx";
 import { StatusBadge } from "../components/StatusBadge.jsx";
 
+const STATUS_SUMMARY = [
+  { code: "RESERVED", label: "Reserved", helper: "Still booked on the court calendar." },
+  { code: "MISSED", label: "Did not show", helper: "Needs follow-up if the resident asks." },
+  { code: "COMPLETED", label: "Completed", helper: "Finished court use." },
+  { code: "CANCELLED", label: "Cancelled", helper: "Kept for office reference." }
+];
+
 export function ReportsPage() {
   const [state, setState] = useState({ loading: true, report: null, error: "" });
 
@@ -28,10 +35,12 @@ export function ReportsPage() {
 
   const summary = state.report?.summary || {};
   const statusRows = useMemo(() => {
-    return Object.entries(state.report?.statusCounts || {});
+    const counts = state.report?.statusCounts || {};
+    return STATUS_SUMMARY.map((status) => [status.code, Number(counts[status.code] || 0)]);
   }, [state.report]);
   const topRequesters = Array.isArray(state.report?.topRequesters) ? state.report.topRequesters : [];
   const totalStatusCount = statusRows.reduce((sum, [, count]) => sum + Number(count || 0), 0);
+  const busiestRequester = topRequesters[0];
 
   if (state.loading) return <LoadingState label="Loading reports..." />;
 
@@ -40,8 +49,8 @@ export function ReportsPage() {
       <div className="page-header print-hidden">
         <div>
           <p className="page-kicker">Reports</p>
-          <h1>Local summary</h1>
-          <p className="page-subtitle">Print a current reservation summary from records stored on this local system.</p>
+          <h1>Office report</h1>
+          <p className="page-subtitle">Current reservation totals from the local database. Ulat para sa mabilis na review ng staff.</p>
         </div>
         <button className="btn btn-primary" type="button" onClick={() => window.print()}>Print</button>
       </div>
@@ -59,16 +68,27 @@ export function ReportsPage() {
             </div>
 
             <div className="stats-grid report-summary">
-              <SummaryCard label="Total reservations" value={summary.totalReservations ?? 0} />
-              <SummaryCard label="Court hours booked" value={formatHours(summary.courtHoursBooked)} />
-              <SummaryCard label="Missed reservations" value={summary.missedCount ?? 0} />
+              <SummaryCard label="Total reservations" value={summary.totalReservations ?? 0} helper="All records included in this local report." />
+              <SummaryCard label="Court-hours booked" value={formatHours(summary.courtHoursBooked)} helper="Cancelled reservations are excluded from booked hours." />
+              <SummaryCard label="Top requester" value={busiestRequester?.name || "None yet"} helper={busiestRequester ? `${formatHours(busiestRequester.hours)} booked` : "Appears once active bookings exist."} />
+            </div>
+
+            <div className="status-summary-grid">
+              {STATUS_SUMMARY.map((status) => (
+                <SummaryCard
+                  key={status.code}
+                  label={status.label}
+                  value={getSummaryCount(summary, status.code)}
+                  helper={status.helper}
+                />
+              ))}
             </div>
 
             <div className="report-grid">
               <div className="card padded-card">
                 <div className="card-section-head">
                   <h2>Status breakdown</h2>
-                  <span>{totalStatusCount} total status row{totalStatusCount === 1 ? "" : "s"}</span>
+                  <span>{totalStatusCount} reservation{totalStatusCount === 1 ? "" : "s"} counted</span>
                 </div>
 
                 {totalStatusCount === 0 ? (
@@ -90,7 +110,7 @@ export function ReportsPage() {
               <div className="card padded-card">
                 <div className="card-section-head">
                   <h2>Top requesters</h2>
-                  <span>Booked hours excluding cancelled reservations</span>
+                  <span>Booked hours, cancelled rows excluded</span>
                 </div>
 
                 {topRequesters.length === 0 ? (
@@ -114,11 +134,12 @@ export function ReportsPage() {
   );
 }
 
-function SummaryCard({ label, value }) {
+function SummaryCard({ label, value, helper }) {
   return (
     <div className="stat-card">
       <span>{label}</span>
       <strong>{value}</strong>
+      {helper && <small>{helper}</small>}
     </div>
   );
 }
@@ -142,4 +163,9 @@ function BarRow({ label, value, max }) {
 function formatHours(value) {
   const number = Number(value || 0);
   return `${number.toLocaleString(undefined, { maximumFractionDigits: 2 })} hr${number === 1 ? "" : "s"}`;
+}
+
+function getSummaryCount(summary, statusCode) {
+  const key = `${statusCode.toLowerCase()}Count`;
+  return summary[key] ?? 0;
 }

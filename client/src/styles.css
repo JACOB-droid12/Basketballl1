@@ -1056,7 +1056,7 @@ p {
 }
 
 .admin-table {
-  min-width: 760px;
+  min-width: 860px;
 }
 
 .logs-table {
@@ -1084,6 +1084,55 @@ p {
   white-space: nowrap;
 }
 
+.staff-filter-card {
+  overflow: hidden;
+}
+
+.staff-filter-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.staff-filter-head h2 {
+  color: var(--primary-dark);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 28px;
+  font-weight: 400;
+}
+
+.staff-filter-head p {
+  margin-top: 4px;
+  max-width: 720px;
+  font-size: 15px;
+}
+
+.staff-filter-head strong {
+  flex: 0 0 auto;
+  min-width: 94px;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--primary-softer);
+  color: var(--primary-dark);
+  text-align: center;
+}
+
+.staff-filter-toolbar {
+  border-bottom: 0;
+}
+
+.activity-log-card .empty {
+  border: 0;
+}
+
+.error-state {
+  border-color: #e7b4ad;
+  background: #fff8f7;
+}
+
 .account-status {
   min-width: 82px;
   justify-content: center;
@@ -1101,12 +1150,56 @@ p {
   color: var(--danger);
 }
 
+.accounts-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.compact-stat {
+  min-height: 118px;
+}
+
+.compact-stat strong {
+  font-size: 34px;
+}
+
+.current-account-note strong {
+  color: inherit;
+}
+
+.form-copy {
+  margin-top: 8px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.current-account-lock {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  border-radius: 8px;
+  padding: 0 10px;
+  background: var(--surface-2);
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 900;
+}
+
 .print-title {
   display: none;
 }
 
 .report-summary .stat-card {
   min-height: 132px;
+}
+
+.status-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.status-summary-grid .stat-card strong {
+  font-size: 34px;
 }
 
 .report-grid {
@@ -2278,6 +2371,11 @@ p {
     flex-basis: auto;
     min-height: 96px;
   }
+
+  .accounts-summary,
+  .status-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 560px) {
@@ -2317,6 +2415,11 @@ p {
     grid-template-columns: 1fr;
   }
 
+  .accounts-summary,
+  .status-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
   .quick-action {
     min-height: 96px;
   }
@@ -2352,6 +2455,10 @@ p {
 
   .toolbar {
     align-items: stretch;
+    flex-direction: column;
+  }
+
+  .staff-filter-head {
     flex-direction: column;
   }
 

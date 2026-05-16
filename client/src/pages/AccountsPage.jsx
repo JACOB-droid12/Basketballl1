@@ -38,6 +38,19 @@ export function AccountsPage({ user }) {
       return String(a.fullName).localeCompare(String(b.fullName));
     });
   }, [state.accounts]);
+  const accountTotals = useMemo(() => {
+    return state.accounts.reduce((totals, account) => {
+      const status = String(account.accountStatus || "ACTIVE").toUpperCase();
+      const role = String(account.role || "STAFF").toUpperCase();
+      return {
+        ...totals,
+        active: totals.active + (status === "ACTIVE" ? 1 : 0),
+        inactive: totals.inactive + (status === "INACTIVE" ? 1 : 0),
+        admins: totals.admins + (role === "ADMIN" ? 1 : 0),
+        staff: totals.staff + (role === "STAFF" ? 1 : 0)
+      };
+    }, { active: 0, inactive: 0, admins: 0, staff: 0 });
+  }, [state.accounts]);
 
   async function loadAccounts() {
     setState((current) => ({ ...current, loading: true, error: "" }));
@@ -132,18 +145,30 @@ export function AccountsPage({ user }) {
         <div>
           <p className="page-kicker">Admin</p>
           <h1>Accounts</h1>
-          <p className="page-subtitle">Create local staff accounts and activate or deactivate users for this office device.</p>
+          <p className="page-subtitle">Create local logins and control who can use this office device. Para sa admin lang.</p>
         </div>
       </div>
 
       {state.error && <div className="alert error" role="alert">{state.error}</div>}
       {statusError && <div className="alert error" role="alert">{statusError}</div>}
 
+      <div className="stats-grid accounts-summary">
+        <SummaryCard label="Active" value={accountTotals.active} />
+        <SummaryCard label="Inactive" value={accountTotals.inactive} />
+        <SummaryCard label="Admins" value={accountTotals.admins} />
+        <SummaryCard label="Staff" value={accountTotals.staff} />
+      </div>
+
+      <div className="alert info current-account-note" role="status">
+        Signed in as <strong>{user.fullName || user.username}</strong>. The current account cannot be deactivated from this screen.
+      </div>
+
       <div className="admin-grid">
         <form className="form-card" onSubmit={handleCreateAccount} noValidate>
           <div>
             <p className="page-kicker">New account</p>
             <h2>Create local login</h2>
+            <p className="form-copy">Use names staff recognize at the desk. Passwords stay local to this installation.</p>
           </div>
 
           {formError && <div className="alert error" role="alert">{formError}</div>}
@@ -201,7 +226,7 @@ export function AccountsPage({ user }) {
           <div className="card-head">
             <div>
               <h2>Local users</h2>
-              <span>{sortedAccounts.length} account{sortedAccounts.length === 1 ? "" : "s"}</span>
+              <span>{sortedAccounts.length} account{sortedAccounts.length === 1 ? "" : "s"} saved on this system</span>
             </div>
           </div>
 
@@ -217,6 +242,7 @@ export function AccountsPage({ user }) {
                       <th>Username</th>
                       <th>Role</th>
                       <th>Status</th>
+                      <th>Created</th>
                       <th>Action</th>
                     </tr>
                   </thead>
@@ -248,9 +274,10 @@ function AccountRow({ account, currentUserId, isUpdating, onStatusChange }) {
       <td>{account.username}</td>
       <td>{formatRole(account.role)}</td>
       <td><AccountStatus status={account.accountStatus} /></td>
+      <td>{formatDateTime(account.createdAt)}</td>
       <td>
         {Number(account.userId) === Number(currentUserId) ? (
-          <span className="muted">Current account</span>
+          <span className="current-account-lock">Current account</span>
         ) : (
           <button
             className={account.accountStatus === "ACTIVE" ? "btn btn-danger" : "btn btn-primary"}
@@ -273,4 +300,19 @@ function AccountStatus({ status }) {
 
 function formatRole(role) {
   return String(role || "").toUpperCase() === "ADMIN" ? "Admin" : "Staff";
+}
+
+function SummaryCard({ label, value }) {
+  return (
+    <div className="stat-card compact-stat">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function formatDateTime(value) {
+  if (!value) return "Not recorded";
+  const [date = "", time = ""] = String(value).split(" ");
+  return `${date}${time ? ` ${time.slice(0, 5)}` : ""}`;
 }

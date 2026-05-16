@@ -60,6 +60,44 @@ test("attention date key uses Manila calendar date and refreshes after reloads",
   assert.doesNotMatch(reservationsPage, /date\.getFullYear\(\)|date\.getMonth\(\)|date\.getDate\(\)/);
 });
 
+test("reports logs and accounts replacement surfaces use backend APIs without mock workflows", () => {
+  const reportsPage = readFileSync(path.join(projectRoot, "client", "src", "pages", "ReportsPage.jsx"), "utf8");
+  const logsPage = readFileSync(path.join(projectRoot, "client", "src", "pages", "ActivityLogsPage.jsx"), "utf8");
+  const accountsPage = readFileSync(path.join(projectRoot, "client", "src", "pages", "AccountsPage.jsx"), "utf8");
+  const combined = [reportsPage, logsPage, accountsPage].join("\n");
+
+  assert.match(reportsPage, /apiRequest\("\/api\/reports"\)/);
+  assert.match(reportsPage, /courtHoursBooked/);
+  assert.match(reportsPage, /topRequesters/);
+  assert.match(reportsPage, /code: "RESERVED"/);
+  assert.match(reportsPage, /code: "MISSED"/);
+  assert.match(reportsPage, /code: "COMPLETED"/);
+  assert.match(reportsPage, /code: "CANCELLED"/);
+  assert.match(reportsPage, /getSummaryCount\(summary, status\.code\)/);
+  assert.match(reportsPage, /\$\{statusCode\.toLowerCase\(\)\}Count/);
+
+  assert.match(logsPage, /apiRequest\(buildLogsPath\(appliedFilters\)\)/);
+  assert.match(logsPage, /new URLSearchParams/);
+  assert.match(logsPage, /<select value=\{filters\.action\}/);
+  assert.match(logsPage, /"CREATE_RESERVATION"/);
+  assert.match(logsPage, /"UPDATE_RESERVATION"/);
+  assert.match(logsPage, /"MARK_MISSED"/);
+  assert.match(logsPage, /"MARK_CANCELLED"/);
+  assert.match(logsPage, /"MARK_COMPLETED"/);
+  assert.doesNotMatch(logsPage, /\bCANCEL_RESERVATION\b/);
+  assert.doesNotMatch(logsPage, /\bCOMPLETE_RESERVATION\b/);
+  assert.doesNotMatch(logsPage, /\bCREATE_ACCOUNT\b/);
+  assert.doesNotMatch(logsPage, /\bUPDATE_ACCOUNT_STATUS\b/);
+
+  assert.match(accountsPage, /apiRequest\("\/api\/accounts"\)/);
+  assert.match(accountsPage, /apiRequest\(`\/api\/accounts\/\$\{account\.userId\}\/status`/);
+  assert.match(accountsPage, /Current account/);
+  assert.match(accountsPage, /isAdmin/);
+
+  assert.doesNotMatch(combined, /\bPENDING\b|\bAPPROVED\b|\bDECLINED\b/);
+  assert.doesNotMatch(combined, /mock trend|sample chart|pending approval/i);
+});
+
 function assertNoUnsupportedApprovalWorkflow(source) {
   assert.doesNotMatch(source, /\bPENDING\b/);
   assert.doesNotMatch(source, /\b(?:APPROVED|DECLINED)\b/);

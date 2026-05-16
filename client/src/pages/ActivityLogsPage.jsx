@@ -4,6 +4,14 @@ import { apiRequest } from "../api/client.js";
 import { EmptyState } from "../components/EmptyState.jsx";
 import { LoadingState } from "../components/LoadingState.jsx";
 
+const COMMON_ACTIONS = [
+  "CREATE_RESERVATION",
+  "UPDATE_RESERVATION",
+  "MARK_MISSED",
+  "MARK_CANCELLED",
+  "MARK_COMPLETED"
+];
+
 export function ActivityLogsPage() {
   const [state, setState] = useState({ loading: true, logs: [], error: "" });
   const [filters, setFilters] = useState({ search: "", action: "", date: "" });
@@ -36,6 +44,10 @@ export function ActivityLogsPage() {
   const hasFilters = useMemo(() => {
     return Boolean(appliedFilters.search || appliedFilters.action || appliedFilters.date);
   }, [appliedFilters]);
+  const actionOptions = useMemo(() => {
+    const loadedActions = state.logs.map((log) => String(log.action || "").toUpperCase()).filter(Boolean);
+    return [...new Set([...COMMON_ACTIONS, ...loadedActions])].sort();
+  }, [state.logs]);
 
   function updateFilter(field, value) {
     setFilters((current) => ({ ...current, [field]: value }));
@@ -58,22 +70,34 @@ export function ActivityLogsPage() {
         <div>
           <p className="page-kicker">Audit trail</p>
           <h1>Activity logs</h1>
-          <p className="page-subtitle">Review staff actions recorded by the local scheduling system.</p>
+          <p className="page-subtitle">Search staff actions recorded by the local system. Tala ng ginawa sa opisina.</p>
         </div>
       </div>
 
-      <form className="card filter-card" onSubmit={applyFilters}>
-        <div className="toolbar">
+      <form className="card filter-card staff-filter-card" onSubmit={applyFilters}>
+        <div className="staff-filter-head">
+          <div>
+            <h2>Find a recorded action</h2>
+            <p>Use this when a resident asks what changed, who changed it, or when it happened.</p>
+          </div>
+          <strong>{state.logs.length} shown</strong>
+        </div>
+        <div className="toolbar staff-filter-toolbar">
           <label className="field compact">
-            <span>Search</span>
+            <span>Search name, action, or details</span>
             <input value={filters.search} onChange={(event) => updateFilter("search", event.target.value)} placeholder="User, action, or details" />
           </label>
           <label className="field compact">
             <span>Action</span>
-            <input value={filters.action} onChange={(event) => updateFilter("action", event.target.value)} placeholder="Example: MARK_MISSED" />
+            <select value={filters.action} onChange={(event) => updateFilter("action", event.target.value)}>
+              <option value="">All actions</option>
+              {actionOptions.map((action) => (
+                <option key={action} value={action}>{formatAction(action)}</option>
+              ))}
+            </select>
           </label>
           <label className="field compact">
-            <span>Date</span>
+            <span>Date recorded</span>
             <input type="date" value={filters.date} onChange={(event) => updateFilter("date", event.target.value)} />
           </label>
           <div className="button-row filter-actions">
@@ -83,17 +107,23 @@ export function ActivityLogsPage() {
         </div>
       </form>
 
-      {state.error && <div className="alert error" role="alert">{state.error}</div>}
+      {state.error && (
+        <div className="state-card error-state" role="alert">
+          <span className="state-mark empty-mark">!</span>
+          <h2>Could not load activity logs</h2>
+          <p>{state.error}</p>
+        </div>
+      )}
 
       {state.loading ? (
         <LoadingState label="Loading activity logs..." />
       ) : (
         !state.error && (
-          <div className="card">
+          <div className="card activity-log-card">
             <div className="card-head">
               <div>
                 <h2>Recorded actions</h2>
-                <span>{state.logs.length} log row{state.logs.length === 1 ? "" : "s"}</span>
+                <span>{state.logs.length} log row{state.logs.length === 1 ? "" : "s"} from the local audit table</span>
               </div>
             </div>
 
