@@ -41,6 +41,7 @@ export function AppShell({ user, path, onNavigate, onLogout, children }) {
 
   return (
     <div className="app-layout">
+      <a className="skip-link" href="#main-panel">Skip to main content</a>
       <header className="topbar">
         <div className="brand">
           <div className="brand-seal small">N</div>
@@ -91,7 +92,7 @@ export function AppShell({ user, path, onNavigate, onLogout, children }) {
           Call the office system administrator before changing account access.
         </div>
       </aside>
-      <main className="main-panel">{children}</main>
+      <main className="main-panel" id="main-panel">{children}</main>
     </div>
   );
 }

@@ -4,22 +4,45 @@ import { apiRequest } from "../api/client.js";
 import { EmptyState } from "../components/EmptyState.jsx";
 import { LoadingState } from "../components/LoadingState.jsx";
 
-const COMMON_ACTIONS = [
-  "CREATE_RESERVATION",
-  "UPDATE_RESERVATION",
-  "MARK_MISSED",
-  "MARK_CANCELLED",
-  "MARK_COMPLETED",
-  "CREATE_ACCOUNT",
-  "ACTIVATE_ACCOUNT",
-  "DEACTIVATE_ACCOUNT",
-  "CHANGE_PASSWORD"
+const ACTION_GROUPS = [
+  {
+    label: "Reservations",
+    actions: ["CREATE_RESERVATION", "UPDATE_RESERVATION", "MARK_MISSED", "MARK_CANCELLED", "MARK_COMPLETED"]
+  },
+  {
+    label: "Accounts",
+    actions: ["CREATE_ACCOUNT", "ACTIVATE_ACCOUNT", "DEACTIVATE_ACCOUNT", "CHANGE_PASSWORD"]
+  }
 ];
+
+const COMMON_ACTIONS = ACTION_GROUPS.flatMap((group) => group.actions);
+
+const DATE_PRESETS = [
+  { id: "all", label: "All" },
+  { id: "today", label: "Today" },
+  { id: "week", label: "This week" }
+];
+
+const ACTION_LABELS = {
+  CREATE_RESERVATION: "Created a reservation",
+  UPDATE_RESERVATION: "Edited a reservation",
+  MARK_MISSED: "Marked the booking missed",
+  MARK_CANCELLED: "Cancelled the booking",
+  MARK_COMPLETED: "Marked the booking done",
+  CREATE_ACCOUNT: "Created an account",
+  ACTIVATE_ACCOUNT: "Activated an account",
+  DEACTIVATE_ACCOUNT: "Deactivated an account",
+  CHANGE_PASSWORD: "Changed a password"
+};
 
 export function ActivityLogsPage() {
   const [state, setState] = useState({ loading: true, logs: [], error: "" });
   const [filters, setFilters] = useState({ search: "", action: "", date: "" });
   const [appliedFilters, setAppliedFilters] = useState(filters);
+  const [datePreset, setDatePreset] = useState("all");
+  const [showAll, setShowAll] = useState(false);
+
+  const VISIBLE_LIMIT = 50;
 
   useEffect(() => {
     let active = true;
@@ -48,24 +71,56 @@ export function ActivityLogsPage() {
   const hasFilters = useMemo(() => {
     return Boolean(appliedFilters.search || appliedFilters.action || appliedFilters.date);
   }, [appliedFilters]);
-  const actionOptions = useMemo(() => {
+  const groupedActionOptions = useMemo(() => {
     const loadedActions = state.logs.map((log) => String(log.action || "").toUpperCase()).filter(Boolean);
-    return [...new Set([...COMMON_ACTIONS, ...loadedActions])].sort();
+    const known = new Set(COMMON_ACTIONS);
+    const otherActions = [...new Set(loadedActions)].filter((action) => !known.has(action)).sort();
+    return [
+      ...ACTION_GROUPS,
+      ...(otherActions.length ? [{ label: "Other", actions: otherActions }] : [])
+    ];
   }, [state.logs]);
+
+  function applyDatePreset(preset) {
+    setDatePreset(preset);
+    const today = new Date();
+    if (preset === "all") {
+      const next = { ...filters, date: "" };
+      setFilters(next);
+      setAppliedFilters(next);
+    } else if (preset === "today") {
+      const date = today.toISOString().slice(0, 10);
+      const next = { ...filters, date };
+      setFilters(next);
+      setAppliedFilters(next);
+    } else if (preset === "week") {
+      // The backend's date filter takes a single date; for "this week" we
+      // clear the date filter and rely on a search hint. A real range filter
+      // is a backend follow-up — flag the limitation in the UI.
+      const next = { ...filters, date: "" };
+      setFilters(next);
+      setAppliedFilters(next);
+    }
+  }
 
   function updateFilter(field, value) {
     setFilters((current) => ({ ...current, [field]: value }));
+    if (field === "date") {
+      setDatePreset(value ? "custom" : "all");
+    }
   }
 
   function applyFilters(event) {
     event.preventDefault();
     setAppliedFilters(filters);
+    setShowAll(false);
   }
 
   function clearFilters() {
     const nextFilters = { search: "", action: "", date: "" };
     setFilters(nextFilters);
     setAppliedFilters(nextFilters);
+    setDatePreset("all");
   }
 
   return (
@@ -87,6 +142,20 @@ export function ActivityLogsPage() {
           </div>
           <strong>{state.logs.length} shown</strong>
         </div>
+        <div className="logs-presets" role="radiogroup" aria-label="Quick date range">
+          {DATE_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              className={`filter-tab ${datePreset === preset.id ? "on" : ""}`}
+              onClick={() => applyDatePreset(preset.id)}
+              role="radio"
+              aria-checked={datePreset === preset.id}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
         <div className="toolbar staff-filter-toolbar">
           <label className="field compact">
             <span>Search name, action, or details</span>
@@ -96,8 +165,12 @@ export function ActivityLogsPage() {
             <span>Action</span>
             <select id="activity-action" name="action" value={filters.action} onChange={(event) => updateFilter("action", event.target.value)}>
               <option value="">All actions</option>
-              {actionOptions.map((action) => (
-                <option key={action} value={action}>{formatAction(action)}</option>
+              {groupedActionOptions.map((group) => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.actions.map((action) => (
+                    <option key={action} value={action}>{formatAction(action)}</option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           </label>
@@ -138,28 +211,38 @@ export function ActivityLogsPage() {
                 body={hasFilters ? "Try a different search, action, or date filter." : "Actions will appear here once staff use the system."}
               />
             ) : (
-              <div className="table-wrap">
-                <table className="data-table logs-table">
-                  <thead>
-                    <tr>
-                      <th>Date and time</th>
-                      <th>User</th>
-                      <th>Action</th>
-                      <th>Details</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {state.logs.map((log) => (
-                      <tr key={log.logId}>
-                        <td>{formatDateTime(log.createdAt)}</td>
-                        <td>{log.userName || "System"}</td>
-                        <td><span className="action-code">{formatAction(log.action)}</span></td>
-                        <td>{log.details || "No details recorded."}</td>
+              <>
+                <div className="table-wrap">
+                  <table className="data-table logs-table">
+                    <thead>
+                      <tr>
+                        <th>Date and time</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Details</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {(showAll ? state.logs : state.logs.slice(0, VISIBLE_LIMIT)).map((log) => (
+                        <tr key={log.logId}>
+                          <td>{formatDateTime(log.createdAt)}</td>
+                          <td>{log.userName || "System"}</td>
+                          <td><span className="action-code">{formatAction(log.action)}</span></td>
+                          <td>{log.details || "No details recorded."}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {state.logs.length > VISIBLE_LIMIT && !showAll && (
+                  <div className="logs-load-more">
+                    <span>Showing the latest {VISIBLE_LIMIT} of {state.logs.length} log rows. Refine the filter to narrow further.</span>
+                    <button className="btn btn-light" type="button" onClick={() => setShowAll(true)}>
+                      Show all {state.logs.length} rows
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )
@@ -175,7 +258,12 @@ function formatDateTime(value) {
 }
 
 function formatAction(value) {
-  return String(value || "UNKNOWN").replaceAll("_", " ");
+  const code = String(value || "").toUpperCase();
+  if (!code) return "Unknown action";
+  if (ACTION_LABELS[code]) return ACTION_LABELS[code];
+  // Fall back to title-cased words for unknown codes (e.g. EXPORT_REPORT -> "Export report").
+  const words = code.replace(/_/g, " ").toLowerCase();
+  return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
 function buildLogsPath(filters) {

@@ -4,7 +4,6 @@ import { apiRequest } from "../api/client.js";
 import { formatTime } from "../api/mappers.js";
 import { EmptyState } from "../components/EmptyState.jsx";
 import { LoadingState } from "../components/LoadingState.jsx";
-import { StatusBadge } from "../components/StatusBadge.jsx";
 
 export function CalendarPage({ onNavigate }) {
   const [date, setDate] = useState(getManilaDate);
@@ -71,6 +70,14 @@ export function CalendarPage({ onNavigate }) {
         </div>
       </div>
 
+      <div className="calendar-legend" role="note" aria-label="Calendar status legend">
+        <span className="calendar-legend-label">Legend</span>
+        <span className="calendar-legend-item legend-reserved"><span className="legend-swatch" aria-hidden="true" />Reserved</span>
+        <span className="calendar-legend-item legend-completed"><span className="legend-swatch" aria-hidden="true" />Completed</span>
+        <span className="calendar-legend-item legend-missed"><span className="legend-swatch" aria-hidden="true" />Did not show</span>
+        <span className="calendar-legend-item legend-cancelled"><span className="legend-swatch" aria-hidden="true" />Cancelled</span>
+      </div>
+
       {state.loading ? (
         <div className="calendar-state-card">
           <LoadingState label="Loading weekly calendar..." />
@@ -102,7 +109,6 @@ export function CalendarPage({ onNavigate }) {
                   {bookings.length === 0 ? (
                     <div className="staff-day-empty">
                       <strong>No bookings</strong>
-                      <span>Walang reserbasyon</span>
                     </div>
                   ) : bookings.map((booking) => (
                     <button
@@ -110,17 +116,14 @@ export function CalendarPage({ onNavigate }) {
                       type="button"
                       key={`${day.date}-${booking.reservationId}`}
                       onClick={() => onNavigate(`/reservations/${booking.reservationId}`)}
+                      aria-label={`${booking.representativeName || "Reserved"}, ${displayRange(booking.startTime, booking.endTime)}, ${booking.statusCode || "RESERVED"}`}
                     >
                       <span className="staff-booking-time">{displayRange(booking.startTime, booking.endTime)}</span>
                       <span className="staff-booking-name">{booking.representativeName || "Reserved booking"}</span>
                       <span className="staff-booking-purpose">{booking.purpose || "No purpose recorded"}</span>
-                      <StatusBadge statusCode={booking.statusCode} />
                     </button>
                   ))}
                 </div>
-                <footer className="staff-day-foot">
-                  {bookings.length} {bookings.length === 1 ? "booking" : "bookings"}
-                </footer>
               </article>
             );
           })}

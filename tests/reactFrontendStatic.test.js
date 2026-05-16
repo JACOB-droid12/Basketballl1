@@ -67,7 +67,11 @@ test("attention surface is backend-backed and uses only supported reservation st
   const reservationsPage = readFileSync(path.join(projectRoot, "client", "src", "pages", "ReservationsPage.jsx"), "utf8");
 
   assert.match(reservationsPage, /apiRequest\("\/api\/reservations"\)/);
-  assert.match(reservationsPage, /const STATUS_OPTIONS = \["all", "attention", "RESERVED", "MISSED", "CANCELLED", "COMPLETED"\]/);
+  assert.match(reservationsPage, /const SCOPE_OPTIONS = \["all", "attention", "past"\]/);
+  assert.match(reservationsPage, /value: "RESERVED"/);
+  assert.match(reservationsPage, /value: "MISSED"/);
+  assert.match(reservationsPage, /value: "CANCELLED"/);
+  assert.match(reservationsPage, /value: "COMPLETED"/);
   assert.match(reservationsPage, /reservation\.statusCode === "MISSED" \|\| reservation\.statusCode === "CANCELLED"/);
   assert.match(reservationsPage, /reservation\.statusCode === "RESERVED" && reservation\.reservationDate === todayKey/);
   assert.doesNotMatch(reservationsPage, /\bPENDING\b|\bAPPROVED\b|\bDECLINED\b/);
@@ -90,15 +94,14 @@ test("reports logs and accounts replacement surfaces use backend APIs without mo
   const accountsPage = readFileSync(path.join(projectRoot, "client", "src", "pages", "AccountsPage.jsx"), "utf8");
   const combined = [reportsPage, logsPage, accountsPage].join("\n");
 
-  assert.match(reportsPage, /apiRequest\("\/api\/reports"\)/);
+  assert.match(reportsPage, /apiRequest\(buildReportsPath\(range, customRange\)\)/);
   assert.match(reportsPage, /courtHoursBooked/);
   assert.match(reportsPage, /topRequesters/);
   assert.match(reportsPage, /code: "RESERVED"/);
   assert.match(reportsPage, /code: "MISSED"/);
   assert.match(reportsPage, /code: "COMPLETED"/);
   assert.match(reportsPage, /code: "CANCELLED"/);
-  assert.match(reportsPage, /getSummaryCount\(summary, status\.code\)/);
-  assert.match(reportsPage, /\$\{statusCode\.toLowerCase\(\)\}Count/);
+  assert.match(reportsPage, /statusCounts/);
 
   assert.match(logsPage, /apiRequest\(buildLogsPath\(appliedFilters\)\)/);
   assert.match(logsPage, /new URLSearchParams/);

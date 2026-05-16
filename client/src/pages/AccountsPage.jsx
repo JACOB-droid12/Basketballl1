@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { apiRequest } from "../api/client.js";
 import { EmptyState } from "../components/EmptyState.jsx";
+import { Field } from "../components/Field.jsx";
 import { LoadingState } from "../components/LoadingState.jsx";
 
 const INITIAL_FORM = {
@@ -147,18 +148,15 @@ export function AccountsPage({ user }) {
           <p className="page-kicker">Admin</p>
           <h1 className="page-title">Accounts</h1>
           <div className="page-sub">Create local logins and control who can use this office device.</div>
-          <div className="page-sub-fil">Para sa admin lang.</div>
         </div>
       </div>
 
       {state.error && <div className="alert error" role="alert">{state.error}</div>}
       {statusError && <div className="alert error" role="alert">{statusError}</div>}
 
-      <div className="stats-grid accounts-summary">
-        <SummaryCard label="Active" value={accountTotals.active} />
-        <SummaryCard label="Inactive" value={accountTotals.inactive} />
-        <SummaryCard label="Admins" value={accountTotals.admins} />
-        <SummaryCard label="Staff" value={accountTotals.staff} />
+      <div className="account-totals">
+        {accountTotals.active} active staff{accountTotals.admins > 0 ? `, ${accountTotals.admins} admin${accountTotals.admins === 1 ? "" : "s"}` : ""}
+        {accountTotals.inactive > 0 && ` · ${accountTotals.inactive} inactive`}
       </div>
 
       <div className="alert info current-account-note" role="status">
@@ -176,55 +174,24 @@ export function AccountsPage({ user }) {
           {formError && <div className="alert error" role="alert">{formError}</div>}
           {formSuccess && <div className="alert success" role="alert">{formSuccess}</div>}
 
-          <label className="field">
-            <span>Full name</span>
-            <input
-              id="account-fullName"
-              name="fullName"
-              autoComplete="name"
-              value={form.fullName}
-              onChange={(event) => updateField("fullName", event.target.value)}
-              aria-invalid={Boolean(fieldErrors.fullName)}
-            />
-            {fieldErrors.fullName && <span className="field-error">{fieldErrors.fullName}</span>}
-          </label>
+          <Field id="account-fullName" label="Full name" filipino="Buong pangalan" error={fieldErrors.fullName} wide>
+            <input name="fullName" autoComplete="name" value={form.fullName} onChange={(event) => updateField("fullName", event.target.value)} />
+          </Field>
 
-          <label className="field">
-            <span>Username</span>
-            <input
-              id="account-username"
-              name="username"
-              autoComplete="username"
-              value={form.username}
-              onChange={(event) => updateField("username", event.target.value)}
-              aria-invalid={Boolean(fieldErrors.username)}
-              autoCapitalize="none"
-            />
-            {fieldErrors.username && <span className="field-error">{fieldErrors.username}</span>}
-          </label>
+          <Field id="account-username" label="Username" filipino="Pangalan ng user" error={fieldErrors.username} wide>
+            <input name="username" autoComplete="username" autoCapitalize="none" value={form.username} onChange={(event) => updateField("username", event.target.value)} />
+          </Field>
 
-          <label className="field">
-            <span>Password</span>
-            <input
-              id="account-password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              value={form.password}
-              onChange={(event) => updateField("password", event.target.value)}
-              aria-invalid={Boolean(fieldErrors.password)}
-            />
-            {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
-          </label>
+          <Field id="account-password" label="Password" filipino="Password" hint="At least 8 characters, mixing letters and numbers." error={fieldErrors.password} wide>
+            <input name="password" type="password" autoComplete="new-password" minLength={8} value={form.password} onChange={(event) => updateField("password", event.target.value)} />
+          </Field>
 
-          <label className="field">
-            <span>Role</span>
-            <select id="account-role" name="role" value={form.role} onChange={(event) => updateField("role", event.target.value)} aria-invalid={Boolean(fieldErrors.role)}>
+          <Field id="account-role" label="Role" filipino="Tungkulin" error={fieldErrors.role} wide>
+            <select name="role" value={form.role} onChange={(event) => updateField("role", event.target.value)}>
               <option value="STAFF">Staff</option>
               <option value="ADMIN">Admin</option>
             </select>
-            {fieldErrors.role && <span className="field-error">{fieldErrors.role}</span>}
-          </label>
+          </Field>
 
           <div className="button-row form-actions">
             <button className="btn btn-primary" type="submit" disabled={saving}>
@@ -311,15 +278,6 @@ function AccountStatus({ status }) {
 
 function formatRole(role) {
   return String(role || "").toUpperCase() === "ADMIN" ? "Admin" : "Staff";
-}
-
-function SummaryCard({ label, value }) {
-  return (
-    <div className="stat-card compact-stat">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
 }
 
 function formatDateTime(value) {

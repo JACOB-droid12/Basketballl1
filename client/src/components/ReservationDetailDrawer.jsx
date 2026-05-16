@@ -25,6 +25,7 @@ const STATUS_ACTIONS = [
 ];
 
 export function ReservationDetailDrawer({ reservation, busy, onClose, onEdit, onRequestStatus, suspendEscape = false }) {
+  const drawerRef = useRef(null);
   const closeButtonRef = useRef(null);
   const headingRef = useRef(null);
   const onCloseRef = useRef(onClose);
@@ -52,6 +53,24 @@ export function ReservationDetailDrawer({ reservation, busy, onClose, onEdit, on
       if (event.key === "Escape" && !suspendEscapeRef.current) {
         event.preventDefault();
         onCloseRef.current();
+        return;
+      }
+
+      if (event.key !== "Tab" || !drawerRef.current) return;
+
+      const focusable = getFocusableElements(drawerRef.current);
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+
+      if (event.shiftKey && (active === first || !drawerRef.current.contains(active))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (active === last || !drawerRef.current.contains(active))) {
+        event.preventDefault();
+        first.focus();
       }
     };
 
@@ -78,6 +97,7 @@ export function ReservationDetailDrawer({ reservation, busy, onClose, onEdit, on
         aria-modal="true"
         aria-labelledby="reservation-detail-title"
         onClick={(event) => event.stopPropagation()}
+        ref={drawerRef}
       >
         <div className="dialog-head">
           <div>
@@ -141,6 +161,25 @@ function DetailRow({ label, value }) {
       <dd>{value}</dd>
     </div>
   );
+}
+
+const FOCUSABLE_SELECTORS = [
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  '[tabindex]:not([tabindex="-1"])'
+].join(", ");
+
+function getFocusableElements(container) {
+  if (!container) return [];
+  return Array.from(container.querySelectorAll(FOCUSABLE_SELECTORS)).filter((element) => {
+    if (element.hasAttribute("disabled")) return false;
+    if (element.getAttribute("aria-hidden") === "true") return false;
+    if (element.tabIndex === -1 && !element.hasAttribute("tabindex")) return false;
+    return element.offsetParent !== null || element === document.activeElement;
+  });
 }
 
 function displayRange(startTime, endTime) {

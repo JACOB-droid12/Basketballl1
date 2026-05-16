@@ -29,7 +29,11 @@ export function LoginPage({ onLogin }) {
       window.history.replaceState({}, "", "/dashboard");
     } catch (loginError) {
       if (mountedRef.current) {
-        setError(loginError.status === 401 ? "Invalid username or password. Please check the staff credentials and try again." : loginError.message);
+        setError(
+          loginError.status === 401
+            ? "We could not sign you in with that username and password. If you forgot your password, ask the administrator to reset your account."
+            : loginError.message
+        );
       }
     } finally {
       inFlightRef.current = false;
@@ -51,8 +55,7 @@ export function LoginPage({ onLogin }) {
         </div>
         <div>
           <h1>Welcome.<br /><em>Maligayang pagdating.</em></h1>
-          <p>This is the basketball court reservation system. Please sign in to start.</p>
-          <p className="welcome-fil">Ito ang sistema para sa reserbasyon ng basketball court. Mag-sign in upang magsimula.</p>
+          <p>Sign in to start the basketball court reservation system. <span className="welcome-fil">Mag-sign in upang magsimula.</span></p>
         </div>
         <div className="login-install-note">Installed at the Barangay Office · Version 1.0</div>
       </section>
@@ -94,7 +97,11 @@ export function LoginPage({ onLogin }) {
           </button>
           <div className="login-hint">
             <Icon name="info" />
-            <span>Only barangay personnel can use this system. If you forgot your password, please see the Kapitan.</span>
+            <span>
+              <strong>Forgot password?</strong> Ask the administrator to reset your account at the barangay office.
+              <br />
+              <span className="login-hint-sub">Only barangay personnel can use this system.</span>
+            </span>
           </div>
         </form>
       </section>

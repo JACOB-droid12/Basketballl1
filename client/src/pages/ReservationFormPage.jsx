@@ -42,6 +42,8 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
   const [originalSlot, setOriginalSlot] = useState(null);
   const [state, setState] = useState({ loading: isEdit, saving: false, error: "", fieldErrors: {} });
   const [availability, setAvailability] = useState({ loading: false, data: null, error: "", errors: {} });
+  const [timeTouched, setTimeTouched] = useState(false);
+  const [endTimeOverride, setEndTimeOverride] = useState(false);
 
   useEffect(() => {
     if (!isEdit) return;
@@ -70,6 +72,7 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
           startTime: nextForm.startTime,
           endTime: nextForm.endTime
         });
+        setTimeTouched(false);
         setState({ loading: false, saving: false, error: "", fieldErrors: {} });
       })
       .catch((error) => {
@@ -92,8 +95,14 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
   }, [form.endTime, form.reservationDate, form.startTime, isEdit, originalSlot]);
 
   const canCheckAvailability = useMemo(() => {
+    // In create mode, hold the availability check until the user has touched a
+    // time field. Otherwise the success banner pops on page load for the
+    // default 7-8am slot — pre-emptive helper text that creates anxiety.
+    if (!isEdit && !timeTouched) return false;
     return hasEditedTimeChanged && isValidDate(form.reservationDate) && isValidTimeRange(form.startTime, form.endTime);
-  }, [form.endTime, form.reservationDate, form.startTime, hasEditedTimeChanged]);
+  }, [form.endTime, form.reservationDate, form.startTime, hasEditedTimeChanged, isEdit, timeTouched]);
+
+  const hasKnownConflict = Boolean(availability.data && availability.data.available === false);
 
   useEffect(() => {
     if (!canCheckAvailability) {
@@ -142,6 +151,9 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
       fieldErrors: { ...current.fieldErrors, [field]: "" },
       error: ""
     }));
+    if (field === "reservationDate" || field === "startTime" || field === "endTime") {
+      setTimeTouched(true);
+    }
   }
 
   function applyDuration(hours) {
@@ -162,6 +174,7 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
       fieldErrors: { ...current.fieldErrors, startTime: "", endTime: "", timeRange: "" },
       error: ""
     }));
+    setTimeTouched(true);
   }
 
   function applySuggestion(slot) {
@@ -172,6 +185,7 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
       endTime: normalizeTime(slot.endTime) || current.endTime
     }));
     setState((current) => ({ ...current, error: "", fieldErrors: {} }));
+    setTimeTouched(true);
   }
 
   async function handleSubmit(event) {
@@ -208,14 +222,6 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
         <button className="btn btn-light btn-big" type="button" onClick={() => onNavigate("/reservations")}>
           Back to Bookings
         </button>
-      </div>
-
-      <div className="banner banner-info reservation-instruction">
-        <div className="b-ic"><Icon name="info" /></div>
-        <div>
-          <h4>How this works</h4>
-          <p>1. Ask for the details below. 2. Pick a free court time. 3. Save the record. New bookings are saved as reserved.</p>
-        </div>
       </div>
 
       {state.error && <div className="alert error" role="alert">{state.error}</div>}
@@ -257,35 +263,23 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
         <section className="form-section">
           <h3><span className="section-num">2</span>When will they use the court?</h3>
           <div className="section-hint">Kailan nila gustong gamitin?</div>
-          <div className="form-grid time-control-grid">
-            <Field id="reservationDate" label="Date" filipino="Petsa" error={state.fieldErrors.reservationDate}>
-              <input type="date" autoComplete="off" value={form.reservationDate} onChange={(event) => updateField("reservationDate", event.target.value)} required />
-            </Field>
-            <Field id="endTime" label="End time" filipino="Tapos" error={state.fieldErrors.endTime || state.fieldErrors.timeRange}>
-              <select value={form.endTime} onChange={(event) => updateField("endTime", event.target.value)} required>
-                {TIME_OPTIONS.slice(1).map((time) => <option key={time} value={time}>{formatTime(time)}</option>)}
-              </select>
-            </Field>
-          </div>
 
-          <div className="slot-picker" aria-label="Quick duration controls">
-            <span className="field-label">Quick duration <span className="fil">· Gaano katagal</span></span>
-            <div className="duration-pick">
-              {[1, 2, 3, 4].map((hours) => (
-                <button key={hours} type="button" className={durationHours(form.startTime, form.endTime) === hours ? "on" : ""} onClick={() => applyDuration(hours)}>
-                  {hours}h
-                </button>
-              ))}
-            </div>
-          </div>
+          <Field id="reservationDate" label="Date" filipino="Petsa" error={state.fieldErrors.reservationDate}>
+            <input type="date" autoComplete="off" value={form.reservationDate} onChange={(event) => updateField("reservationDate", event.target.value)} required />
+          </Field>
 
           <div className="slot-picker time-chip-picker" aria-label="Start time picker">
             <span className="field-label">
               Start time <span className="fil">· Anong oras magsisimula</span>
               <span className="req"> *</span>
             </span>
-            <span className="field-hint">Pick a start time. Saving will confirm availability against the schedule.</span>
-            <div className="time-grid" role="radiogroup" aria-label="Start time">
+            <span className="field-hint">Tap when the court time begins. The end time is calculated from the duration below.</span>
+            <div
+              className="time-grid"
+              role="radiogroup"
+              aria-label="Start time"
+              onKeyDown={(event) => handleTimeChipKeyDown(event, form.startTime, applyStartTime)}
+            >
               {TIME_OPTIONS.slice(0, -1).map((time) => {
                 const selected = form.startTime === time;
                 return (
@@ -295,6 +289,8 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
                     role="radio"
                     aria-checked={selected}
                     aria-pressed={selected}
+                    tabIndex={selected ? 0 : -1}
+                    data-time={time}
                     className={`time-chip ${selected ? "selected" : ""}`}
                     onClick={() => applyStartTime(time)}
                   >
@@ -306,11 +302,49 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
             {state.fieldErrors.startTime && <span className="field-error">{state.fieldErrors.startTime}</span>}
           </div>
 
+          <div className="slot-picker" aria-label="Quick duration controls">
+            <span className="field-label">Duration <span className="fil">· Gaano katagal</span></span>
+            <div className="duration-pick">
+              {[1, 2, 3, 4].map((hours) => (
+                <button key={hours} type="button" className={durationHours(form.startTime, form.endTime) === hours ? "on" : ""} onClick={() => applyDuration(hours)}>
+                  {hours}h
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="end-time-summary" aria-live="polite">
+            <div className="end-time-summary-main">
+              <span>Will end at</span>
+              <strong>{formatTime(form.endTime)}</strong>
+            </div>
+            <button
+              type="button"
+              className="btn btn-light end-time-override-toggle"
+              onClick={() => setEndTimeOverride((current) => !current)}
+              aria-expanded={endTimeOverride}
+              aria-controls="end-time-override-panel"
+            >
+              <Icon name={endTimeOverride ? "x" : "clock"} size={16} />
+              <span>{endTimeOverride ? "Use auto end time" : "Adjust end time manually"}</span>
+            </button>
+            {endTimeOverride && (
+              <div id="end-time-override-panel" className="end-time-override-panel">
+                <Field id="endTime" label="End time" filipino="Tapos" error={state.fieldErrors.endTime || state.fieldErrors.timeRange}>
+                  <select value={form.endTime} onChange={(event) => updateField("endTime", event.target.value)} required>
+                    {TIME_OPTIONS.slice(1).map((time) => <option key={time} value={time}>{formatTime(time)}</option>)}
+                  </select>
+                </Field>
+              </div>
+            )}
+          </div>
+
           <AvailabilityNotice
             availability={availability}
             canCheck={canCheckAvailability}
             isEdit={isEdit}
             hasEditedTimeChanged={hasEditedTimeChanged}
+            timeTouched={timeTouched}
             onApplySuggestion={applySuggestion}
           />
         </section>
@@ -327,7 +361,12 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
           <button className="btn btn-light btn-big" type="button" onClick={() => onNavigate("/reservations")} disabled={state.saving}>
             Cancel
           </button>
-          <button className="btn btn-primary btn-big" type="submit" disabled={state.saving}>
+          <button
+            className="btn btn-primary btn-big"
+            type="submit"
+            disabled={state.saving || hasKnownConflict}
+            title={hasKnownConflict ? "Pick a different time before saving" : undefined}
+          >
             {state.saving ? "Saving..." : isEdit ? "Save Changes" : "Save Reservation"}
           </button>
         </div>
@@ -336,7 +375,14 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
   );
 }
 
-function AvailabilityNotice({ availability, canCheck, isEdit, hasEditedTimeChanged, onApplySuggestion }) {
+function AvailabilityNotice({ availability, canCheck, isEdit, hasEditedTimeChanged, timeTouched, onApplySuggestion }) {
+  // Don't show the idle "pick a valid date and time" panel until the user has
+  // touched a time field. On a fresh form it would be pre-emptive helper text
+  // that creates anxiety where there shouldn't be any.
+  if (!timeTouched && !canCheck && !availability.loading && !availability.data && !availability.error) {
+    return null;
+  }
+
   if (!canCheck) {
     const unchangedEditSlot = isEdit && !hasEditedTimeChanged;
 
@@ -461,6 +507,43 @@ function durationHours(startTime, endTime) {
   const end = TIME_OPTIONS.indexOf(endTime);
   if (start < 0 || end < 0 || end <= start) return 0;
   return end - start;
+}
+
+function handleTimeChipKeyDown(event, currentStart, applyStart) {
+  // ARIA radiogroup: arrows cycle, Home/End jump to ends.
+  // Only the available start times (TIME_OPTIONS minus the last slot) participate.
+  const choices = TIME_OPTIONS.slice(0, -1);
+  const currentIndex = choices.indexOf(currentStart);
+  if (currentIndex < 0) return;
+
+  let nextIndex = null;
+  switch (event.key) {
+    case "ArrowRight":
+    case "ArrowDown":
+      nextIndex = (currentIndex + 1) % choices.length;
+      break;
+    case "ArrowLeft":
+    case "ArrowUp":
+      nextIndex = (currentIndex - 1 + choices.length) % choices.length;
+      break;
+    case "Home":
+      nextIndex = 0;
+      break;
+    case "End":
+      nextIndex = choices.length - 1;
+      break;
+    default:
+      return;
+  }
+
+  event.preventDefault();
+  const nextTime = choices[nextIndex];
+  applyStart(nextTime);
+
+  // Move keyboard focus to the newly-selected chip so the next arrow press
+  // continues from the right anchor.
+  const target = event.currentTarget.querySelector(`[data-time="${nextTime}"]`);
+  if (target instanceof HTMLElement) target.focus();
 }
 
 function getManilaDate() {

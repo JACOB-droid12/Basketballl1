@@ -9,13 +9,21 @@ import { LoadingState } from "../components/LoadingState.jsx";
 import { buildStatusDialog, ReservationDetailDrawer } from "../components/ReservationDetailDrawer.jsx";
 import { StatusBadge } from "../components/StatusBadge.jsx";
 
-const STATUS_OPTIONS = ["all", "attention", "RESERVED", "MISSED", "CANCELLED", "COMPLETED"];
+const SCOPE_OPTIONS = ["all", "attention", "past"];
+const STATUS_FILTER_OPTIONS = [
+  { value: "any", label: "Any status" },
+  { value: "RESERVED", label: "Reserved" },
+  { value: "MISSED", label: "Did not show up" },
+  { value: "CANCELLED", label: "Cancelled" },
+  { value: "COMPLETED", label: "Done" }
+];
 
 export function ReservationsPage({ onNavigate, initialReservationId = null }) {
   const initialSelectedId = parseReservationId(initialReservationId);
   const [state, setState] = useState({ loading: true, reservations: [], error: "" });
   const [query, setQuery] = useState("");
-  const [status, setStatus] = useState("all");
+  const [scope, setScope] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("any");
   const [selectedId, setSelectedId] = useState(initialSelectedId);
   const [dialog, setDialog] = useState(null);
   const [actionError, setActionError] = useState("");
@@ -35,10 +43,10 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
   const attentionReservations = useMemo(() => {
     return reservations.filter((reservation) => isAttentionReservation(reservation, todayKey));
   }, [reservations, todayKey]);
-  const counts = useMemo(() => buildStatusCounts(reservations, todayKey), [reservations, todayKey]);
+  const counts = useMemo(() => buildScopeCounts(reservations, todayKey), [reservations, todayKey]);
   const filteredReservations = useMemo(() => {
-    return filterReservations(reservations, query, status, todayKey);
-  }, [query, reservations, status, todayKey]);
+    return filterReservations(reservations, query, scope, statusFilter, todayKey);
+  }, [query, reservations, scope, statusFilter, todayKey]);
 
   const selectedReservation = useMemo(() => {
     if (!selectedId) return null;
@@ -77,7 +85,20 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
         method: "POST",
         body: JSON.stringify({ statusCode: action.statusCode })
       });
-      await loadReservations(data.reservation?.reservationId || action.reservation.reservationId);
+
+      const updated = data.reservation;
+      if (updated?.reservationId) {
+        setState((current) => ({
+          ...current,
+          reservations: current.reservations.map((reservation) =>
+            reservation.reservationId === updated.reservationId ? updated : reservation
+          )
+        }));
+        setSelectedId(updated.reservationId);
+        setTodayKey(getManilaDateKey());
+      } else {
+        await loadReservations(action.reservation.reservationId);
+      }
     } catch (error) {
       setActionError(error.message);
     } finally {
@@ -107,9 +128,6 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
         </div>
         <div className="button-row bookings-actions">
           <a className="btn btn-light btn-big" href="/reservations/export.csv">Export CSV</a>
-          <button className="btn btn-light btn-big print-hidden" type="button" onClick={() => window.print()}>
-            Print
-          </button>
           <button className="btn btn-primary btn-big" type="button" onClick={() => onNavigate("/reservations/new")}>
             New Reservation
           </button>
@@ -139,7 +157,7 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
               <button
                 className="attention-count"
                 type="button"
-                onClick={() => setStatus("attention")}
+                onClick={() => { setScope("attention"); setStatusFilter("any"); }}
                 aria-label={`${attentionReservations.length} reservation records need staff attention`}
               >
                 <strong>{attentionReservations.length}</strong>
@@ -152,32 +170,44 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
                 <span className="search-mark"><Icon name="search" size={20} /></span>
                 <input id="reservation-search" name="search" className="input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by name, purpose, phone, or ID" />
               </label>
-              <div className="filter-tabs" role="tablist" aria-label="Reservation status filter">
-                {STATUS_OPTIONS.map((option) => (
+              <div className="filter-tabs" role="radiogroup" aria-label="Reservation scope">
+                {SCOPE_OPTIONS.map((option) => (
                   <button
                     key={option}
                     type="button"
-                    className={`filter-tab ${status === option ? "on" : ""}`}
-                    onClick={() => setStatus(option)}
-                    role="tab"
-                    aria-selected={status === option}
+                    className={`filter-tab ${scope === option ? "on" : ""}`}
+                    onClick={() => setScope(option)}
+                    role="radio"
+                    aria-checked={scope === option}
                   >
-                    {getFilterLabel(option)}
+                    {getScopeLabel(option)}
                     <span>({counts[option] || 0})</span>
                   </button>
                 ))}
               </div>
+              <label className="status-filter-select">
+                <span className="status-filter-label">Status</span>
+                <select
+                  value={statusFilter}
+                  onChange={(event) => setStatusFilter(event.target.value)}
+                  aria-label="Filter by status"
+                >
+                  {STATUS_FILTER_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </label>
             </div>
 
             {filteredReservations.length === 0 ? (
-              <EmptyState title="No matching bookings" body={getEmptyMessage(status)} />
+              <EmptyState title="No matching bookings" body={getEmptyMessage(scope)} />
             ) : (
               <div className="booking-card-list">
                 {filteredReservations.map((reservation) => (
                   <ReservationCard
                     key={reservation.reservationId}
                     reservation={reservation}
-                    attentionReason={status === "attention" ? getAttentionReason(reservation, todayKey) : ""}
+                    attentionReason={scope === "attention" ? getAttentionReason(reservation, todayKey) : ""}
                     selected={reservation.reservationId === selectedId}
                     onOpen={() => openReservation(reservation)}
                   />
@@ -215,10 +245,11 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
 function ReservationCard({ reservation, selected, onOpen, attentionReason = "" }) {
   return (
     <button
-      className={`booking-card ${selected ? "selected" : ""}`}
+      className={`booking-card ${selected ? "selected" : ""} ${attentionReason ? "needs-attention" : ""}`}
       type="button"
       onClick={onOpen}
       aria-pressed={selected}
+      title={attentionReason || undefined}
     >
       <div className="booking-card-time">
         <strong>{displayRange(reservation.startTime, reservation.endTime)}</strong>
@@ -228,9 +259,11 @@ function ReservationCard({ reservation, selected, onOpen, attentionReason = "" }
         <strong>{reservation.representativeName}</strong>
         <span>{reservation.purpose}</span>
         <small>{reservation.contactNo} · #{reservation.reservationId}</small>
-        {attentionReason && <em className="attention-reason">{attentionReason}</em>}
       </div>
-      <StatusBadge statusCode={reservation.statusCode} />
+      <div className="booking-card-meta">
+        <StatusBadge statusCode={reservation.statusCode} />
+        {attentionReason && <span className="attention-reason">{attentionReason}</span>}
+      </div>
     </button>
   );
 }
@@ -245,14 +278,15 @@ function parseReservationId(value) {
   return /^[1-9]\d*$/.test(text) ? Number(text) : null;
 }
 
-function filterReservations(reservations, query, status, todayKey) {
+function filterReservations(reservations, query, scope, statusFilter, todayKey) {
   const needle = query.trim().toLowerCase();
 
   return reservations
     .filter((reservation) => {
-      const matchesStatus = status === "all"
-        || (status === "attention" && isAttentionReservation(reservation, todayKey))
-        || reservation.statusCode === status;
+      const matchesScope = scope === "all"
+        || (scope === "attention" && isAttentionReservation(reservation, todayKey))
+        || (scope === "past" && isPastReservation(reservation, todayKey));
+      const matchesStatus = statusFilter === "any" || reservation.statusCode === statusFilter;
       const searchable = [
         reservation.reservationId,
         reservation.representativeName,
@@ -265,7 +299,7 @@ function filterReservations(reservations, query, status, todayKey) {
         STATUS_LABELS[reservation.statusCode] || reservation.statusCode
       ].join(" ").toLowerCase();
 
-      return matchesStatus && (!needle || searchable.includes(needle));
+      return matchesScope && matchesStatus && (!needle || searchable.includes(needle));
     })
     .sort((left, right) => {
       const dateCompare = String(right.reservationDate || "").localeCompare(String(left.reservationDate || ""));
@@ -274,29 +308,36 @@ function filterReservations(reservations, query, status, todayKey) {
     });
 }
 
-function buildStatusCounts(reservations, todayKey) {
+function buildScopeCounts(reservations, todayKey) {
   return reservations.reduce((counts, reservation) => {
     counts.all += 1;
-    if (isAttentionReservation(reservation, todayKey)) {
-      counts.attention += 1;
-    }
-    counts[reservation.statusCode] = (counts[reservation.statusCode] || 0) + 1;
+    if (isAttentionReservation(reservation, todayKey)) counts.attention += 1;
+    if (isPastReservation(reservation, todayKey)) counts.past += 1;
     return counts;
-  }, { all: 0, attention: 0 });
+  }, { all: 0, attention: 0, past: 0 });
 }
 
-function getFilterLabel(option) {
+function getScopeLabel(option) {
   if (option === "all") return "All";
   if (option === "attention") return "Needs attention";
-  return STATUS_LABELS[option];
+  if (option === "past") return "Past";
+  return option;
 }
 
-function getEmptyMessage(status) {
-  if (status === "attention") {
+function getEmptyMessage(scope) {
+  if (scope === "attention") {
     return "No missed, cancelled, or today's reserved bookings match this search.";
+  }
+  if (scope === "past") {
+    return "No past bookings match this search. Try widening the date or status filter.";
   }
 
   return "Try a different search term or status filter.";
+}
+
+function isPastReservation(reservation, todayKey) {
+  if (!reservation || !reservation.reservationDate) return false;
+  return String(reservation.reservationDate) < todayKey;
 }
 
 function isAttentionReservation(reservation, todayKey) {

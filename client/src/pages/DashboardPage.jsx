@@ -119,18 +119,11 @@ export function DashboardPage({ onNavigate, user }) {
               const slotKey = slot.slotId ?? `${slot.startTime ?? "slot"}-${slot.endTime ?? index}`;
 
               return (
-                <div
+                <button
                   key={slotKey}
                   className={`booking-row ${String(slot.statusCode || reservation?.statusCode || "").toLowerCase()}`}
-                  role="button"
-                  tabIndex={0}
+                  type="button"
                   onClick={() => onNavigate(`/reservations/${reservation.reservationId}`)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      onNavigate(`/reservations/${reservation.reservationId}`);
-                    }
-                  }}
                 >
                   <div className="b-time">
                     {displayCompactRange(slot.startTime, slot.endTime)}
@@ -142,7 +135,7 @@ export function DashboardPage({ onNavigate, user }) {
                     <div className="b-meta">Contact: {reservation.contactNo || "Not listed"}</div>
                   </div>
                   <StatusBadge statusCode={slot.statusCode || reservation?.statusCode || "RESERVED"} />
-                </div>
+                </button>
               );
             })}
           </div>
