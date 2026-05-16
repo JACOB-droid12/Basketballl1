@@ -58,7 +58,7 @@ if errorlevel 1 (
   exit /b 1
 )
 
-set "OFFICE_URL=http://localhost:3000/prototype"
+set "OFFICE_URL=http://localhost:3000/dashboard"
 for /f "usebackq delims=" %%U in (`node scripts\print-office-url.mjs 2^>nul`) do set "OFFICE_URL=%%U"
 
 echo Keep this window open while the system is being used.

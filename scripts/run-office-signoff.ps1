@@ -48,7 +48,7 @@ function Invoke-SignoffCommand {
 }
 
 function Get-OfficeUrl {
-  $DefaultOfficeUrl = "http://localhost:3000/prototype"
+  $DefaultOfficeUrl = "http://localhost:3000/dashboard"
   $UrlScript = Join-Path $ProjectRoot "scripts\print-office-url.mjs"
 
   try {

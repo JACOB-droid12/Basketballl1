@@ -148,7 +148,12 @@ export function createAuthRoutes({
   }
 
   router.get("/account/create", requireAdmin, (_request, response) => {
-    renderCreateAccount(response);
+    if (enableLegacyAccountUi) {
+      renderCreateAccount(response);
+      return;
+    }
+
+    response.redirect("/account");
   });
 
   router.post("/account/create", requireAdmin, async (request, response) => {

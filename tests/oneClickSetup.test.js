@@ -235,7 +235,7 @@ test("one-click PowerShell setup applies schema, seed, diagnostics, and live ver
   assert.doesNotMatch(script, /npm ci/);
 });
 
-test("one-click start batch opens the local prototype URL and starts npm", () => {
+test("one-click start batch opens the local React dashboard URL and starts npm", () => {
   const script = readFileSync("start-barangay-office.bat", "utf8");
 
   assert.match(script, /load-runtime-env\.bat/i);
@@ -248,7 +248,7 @@ test("one-click start batch opens the local prototype URL and starts npm", () =>
   assert.match(script, /START-HERE\.bat/i);
   assert.match(script, /exit \/b 1/i);
   assert.match(script, /The browser will open after the local app is ready/i);
-  assert.match(script, /set "OFFICE_URL=http:\/\/localhost:3000\/prototype"/);
+  assert.match(script, /set "OFFICE_URL=http:\/\/localhost:3000\/dashboard"/);
   assert.match(script, /node scripts\\print-office-url\.mjs/);
   assert.match(script, /echo %OFFICE_URL%/);
   assert.match(script, /set "OPEN_BROWSER=1"/i);
@@ -373,7 +373,7 @@ test("office sign-off script can write a report to a supplied reports folder", (
       join(binDir, "node.cmd"),
       [
         "@echo off",
-        "echo http://localhost:3456/prototype",
+        "echo http://localhost:3456/dashboard",
         "exit /b 0"
       ].join("\r\n")
     );
@@ -411,7 +411,7 @@ test("office sign-off script can write a report to a supplied reports folder", (
     const report = readFileSync(join(reportsDir, reportFiles[0]), "utf8");
     assert.match(report, /Verify offline prototype runtime/);
     assert.match(report, /Command: npm run verify:offline-runtime/);
-    assert.match(report, /Open http:\/\/localhost:3456\/prototype from the barangay office browser/);
+    assert.match(report, /Open http:\/\/localhost:3456\/dashboard from the barangay office browser/);
     assert.doesNotMatch(report, /Open http:\/\/localhost:3000\/prototype from the barangay office browser/);
     assert.match(report, /Automated sign-off checks passed/);
   } finally {
