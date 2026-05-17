@@ -4,7 +4,8 @@ import express from "express";
 import test from "node:test";
 
 import { createApiRoutes } from "../src/features/api/apiRoutes.js";
-import { ReservationConflictError, ReservationNotFoundError } from "../src/features/reservations/reservationRepository.js";
+import { ReservationConflictError, ReservationNotFoundError, ReservationPolicyError, ReservationUnavailableError } from "../src/features/reservations/reservationRepository.js";
+import { DuplicateResidentError } from "../src/features/residents/residentRepository.js";
 import { DuplicateUsernameError } from "../src/features/users/userRepository.js";
 
 test("GET /api/session returns signed-out state", async () => {
@@ -28,6 +29,7 @@ test("POST /api/login verifies a hashed password, normalizes username, stores se
   const session = {};
   const passwordHash = await bcrypt.hash("admin123", 4);
   let receivedUsername = null;
+  let loginLog = null;
   const app = buildApiTestApp({
     session,
     repositories: {
@@ -40,6 +42,9 @@ test("POST /api/login verifies a hashed password, normalizes username, stores se
           passwordHash,
           role: "admin"
         };
+      },
+      writeUserActivityLog: async (_db, entry) => {
+        loginLog = entry;
       }
     }
   });
@@ -66,6 +71,39 @@ test("POST /api/login verifies a hashed password, normalizes username, stores se
         username: "admin",
         role: "ADMIN"
       }
+    });
+    assert.deepEqual(loginLog, {
+      userId: 12,
+      action: "LOGIN",
+      details: "User logged in."
+    });
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("POST /api/logout records logout activity for the signed-in account", async () => {
+  const session = buildSession({ userId: 12, role: "ADMIN" });
+  let logoutLog = null;
+  const app = buildApiTestApp({
+    session,
+    repositories: {
+      writeUserActivityLog: async (_db, entry) => {
+        logoutLog = entry;
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await postJson(server, "/api/logout", {});
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(response.body, { ok: true });
+    assert.deepEqual(logoutLog, {
+      userId: 12,
+      action: "LOGOUT",
+      details: "User logged out."
     });
   } finally {
     await closeServer(server);
@@ -250,6 +288,7 @@ test("GET /api/reservations passes cleaned filters and maps reservation rows", a
     assert.deepEqual(response.body.reservations, [
       {
         reservationId: 7,
+        referenceNo: "",
         reservationDate: "2026-05-14",
         startTime: "08:00",
         endTime: "09:00",
@@ -263,6 +302,27 @@ test("GET /api/reservations passes cleaned filters and maps reservation rows", a
         createdByName: "Admin User"
       }
     ]);
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/reservations includes reservation reference numbers", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      listReservations: async () => [
+        buildReservation({ referenceNo: "BCS-2026-000001" })
+      ]
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/reservations");
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.reservations[0].referenceNo, "BCS-2026-000001");
   } finally {
     await closeServer(server);
   }
@@ -344,6 +404,511 @@ test("POST /api/reservations maps conflict errors to 409 with overlap", async ()
     assert.equal(response.body.error, "Reservation overlaps an existing active reservation.");
     assert.equal(response.body.overlap.reservationId, 9);
     assert.equal(response.body.overlap.representativeName, "Existing Team");
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("POST /api/reservations maps unavailable schedule blocks to 409 with block overlap", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      createReservation: async () => {
+        throw new ReservationUnavailableError("Reservation overlaps an unavailable court range.", {
+          blockId: 5,
+          date: "2026-05-14",
+          startTime: "08:00",
+          endTime: "09:00",
+          category: "PUBLIC_USE",
+          type: "CLEARED_PUBLIC_USE",
+          statusCode: "CLEARED_PUBLIC_USE",
+          reason: "Cleared by admin"
+        });
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await postJson(server, "/api/reservations", buildReservationInput());
+
+    assert.equal(response.status, 409);
+    assert.equal(response.body.error, "Reservation overlaps an unavailable court range.");
+    assert.equal(response.body.overlap.statusCode, "CLEARED_PUBLIC_USE");
+    assert.equal(response.body.overlap.reason, "Cleared by admin");
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/reservations/:reservationId/slip returns database-backed printable slip data", async () => {
+  let receivedReservationId = null;
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      getReservationSlipData: async (_db, reservationId, options) => {
+        receivedReservationId = reservationId;
+        return {
+          reservationId,
+          referenceNo: "BCS-2026-000077",
+          representativeName: "Team Alpha",
+          contactNo: "09171234567",
+          address: "Purok 3",
+          reservationDate: "2026-05-14",
+          startTime: "08:00",
+          endTime: "09:00",
+          purpose: "Practice",
+          statusCode: "CANCELLED",
+          statusName: "Cancelled",
+          staffEncoder: "Admin User",
+          issuedAt: options.issuedAt,
+          barangayName: "Barangay Sto. Niño, Parañaque City",
+          courtName: "Barangay Basketball Court",
+          notes: "Bring valid ID."
+        };
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/reservations/77/slip");
+
+    assert.equal(response.status, 200);
+    assert.equal(receivedReservationId, 77);
+    assert.equal(response.body.slip.referenceNo, "BCS-2026-000077");
+    assert.equal(response.body.slip.statusCode, "CANCELLED");
+    assert.equal(response.body.slip.statusName, "Cancelled");
+    assert.equal(response.body.slip.issuedAt, "2026-05-13 06:00:00");
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/schedule/daily-print returns reservation references and print-ready slot data", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      getTimeSlots: async () => buildTimeSlots(),
+      listReservations: async () => [
+        buildReservation({
+          reservationId: 8,
+          referenceNo: "BCS-2026-000008",
+          reservationDate: "2026-05-14",
+          startTime: "08:00",
+          endTime: "09:00"
+        }),
+        buildReservation({
+          reservationId: 9,
+          referenceNo: "BCS-2026-000009",
+          reservationDate: "2026-05-14",
+          startTime: "09:00",
+          endTime: "10:00",
+          statusCode: "CANCELLED"
+        })
+      ],
+      listScheduleBlocks: async () => []
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/schedule/daily-print?date=2026-05-14");
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.date, "2026-05-14");
+    assert.equal(response.body.slots[0].reservation.referenceNo, "BCS-2026-000008");
+    assert.equal(response.body.slots[0].statusCode, "RESERVED");
+    assert.equal(response.body.slots[1].statusCode, "CANCELLED");
+    assert.equal(response.body.totals.reserved, 1);
+    assert.equal(response.body.totals.cancelled, 1);
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/dashboard/alerts returns reservation, backup, public-use, and maintenance alert data", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    todayProvider: () => "2026-05-14",
+    currentTimeProvider: () => "07:30",
+    repositories: {
+      listReservations: async (_db, filters) => {
+        if (filters.reservationDate !== "2026-05-14") {
+          return [];
+        }
+
+        return [
+          buildReservation({ reservationId: 20, reservationDate: "2026-05-14", startTime: "08:00", endTime: "09:00" }),
+          buildReservation({ reservationId: 21, reservationDate: "2026-05-14", startTime: "10:00", endTime: "11:00", statusCode: "MISSED" })
+        ];
+      },
+      listScheduleBlocks: async () => [
+        {
+          blockId: 3,
+          date: "2026-05-14",
+          startTime: "12:00",
+          endTime: "13:00",
+          category: "PUBLIC_USE",
+          type: "CLEARED_PUBLIC_USE",
+          statusCode: "CLEARED_PUBLIC_USE",
+          reason: "Barangay public use"
+        },
+        {
+          blockId: 4,
+          date: "2026-05-14",
+          startTime: "14:00",
+          endTime: "15:00",
+          category: "MAINTENANCE",
+          type: "REPAIRS",
+          statusCode: "MAINTENANCE",
+          reason: "Ring repair"
+        }
+      ],
+      getBackupStatus: async () => ({
+        lastBackupAt: "2026-05-05 12:00:00",
+        daysSinceBackup: 9,
+        reminderThresholdDays: 7,
+        backupDue: true
+      })
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/dashboard/alerts");
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.metrics.todayReservationCount, 1);
+    assert.equal(response.body.metrics.missedPendingCount, 1);
+    assert.equal(response.body.metrics.nextReservation.startsInMinutes, 30);
+    assert.equal(response.body.metrics.backupStatus.backupDue, true);
+    assert.equal(response.body.metrics.publicUseActiveToday, true);
+    assert.equal(response.body.metrics.maintenanceActiveToday, true);
+    assert.ok(response.body.alerts.some((alert) => alert.type === "BACKUP_DUE"));
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/maintenance/backup-status exposes last successful backup metadata", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      getBackupStatus: async () => ({
+        lastBackupAt: "2026-05-16 22:00:00",
+        daysSinceBackup: 1,
+        reminderThresholdDays: 7,
+        backupDue: false
+      })
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/maintenance/backup-status");
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(response.body.backupStatus, {
+      lastBackupAt: "2026-05-16 22:00:00",
+      daysSinceBackup: 1,
+      reminderThresholdDays: 7,
+      backupDue: false
+    });
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("court policy APIs allow staff read and admin updates", async () => {
+  const staffApp = buildApiTestApp({
+    session: buildSession({ role: "STAFF" }),
+    repositories: {
+      getCourtPolicySettings: async () => ({
+        openingTime: "07:00",
+        closingTime: "21:00",
+        minimumReservationMinutes: 30,
+        maximumReservationMinutes: 240,
+        allowedDays: [0, 1, 2, 3, 4, 5, 6],
+        blockedDays: [],
+        gracePeriodBeforeMissedMinutes: 15,
+        defaultSlotMinutes: 60
+      })
+    }
+  });
+  const staffServer = staffApp.listen(0);
+
+  try {
+    const readResponse = await getJson(staffServer, "/api/settings/court-policy");
+    const updateResponse = await putJson(staffServer, "/api/settings/court-policy", { maximumReservationMinutes: 180 });
+
+    assert.equal(readResponse.status, 200);
+    assert.equal(readResponse.body.policy.maximumReservationMinutes, 240);
+    assert.equal(updateResponse.status, 403);
+  } finally {
+    await closeServer(staffServer);
+  }
+
+  let receivedPatch = null;
+  let receivedOptions = null;
+  const adminApp = buildApiTestApp({
+    session: buildSession({ userId: 10, role: "ADMIN" }),
+    repositories: {
+      updateCourtPolicySettings: async (_db, patch, options) => {
+        receivedPatch = patch;
+        receivedOptions = options;
+        return {
+          openingTime: "07:00",
+          closingTime: "21:00",
+          minimumReservationMinutes: 30,
+          maximumReservationMinutes: 180,
+          allowedDays: [1, 2, 3, 4, 5],
+          blockedDays: ["2026-05-20"],
+          gracePeriodBeforeMissedMinutes: 20,
+          defaultSlotMinutes: 60
+        };
+      }
+    }
+  });
+  const adminServer = adminApp.listen(0);
+
+  try {
+    const response = await putJson(adminServer, "/api/settings/court-policy", {
+      maximumReservationMinutes: 180,
+      allowedDays: [1, 2, 3, 4, 5],
+      blockedDays: ["2026-05-20"],
+      gracePeriodBeforeMissedMinutes: 20
+    });
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(receivedPatch.allowedDays, [1, 2, 3, 4, 5]);
+    assert.deepEqual(receivedOptions, { userId: 10 });
+    assert.equal(response.body.policy.maximumReservationMinutes, 180);
+  } finally {
+    await closeServer(adminServer);
+  }
+});
+
+test("reservation APIs map court policy violations to validation errors", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      createReservation: async () => {
+        throw new ReservationPolicyError({
+          duration: "Reservation duration must be no more than 120 minutes."
+        });
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await postJson(server, "/api/reservations", buildReservationInput({
+      startTime: "08:00",
+      endTime: "12:00"
+    }));
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(response.body, {
+      errors: {
+        duration: "Reservation duration must be no more than 120 minutes."
+      }
+    });
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("POST /api/schedule/blocks is admin-only and creates a maintenance block", async () => {
+  let receivedPayload = null;
+  let receivedOptions = null;
+  const staffApp = buildApiTestApp({ session: buildSession({ role: "STAFF" }) });
+  const adminApp = buildApiTestApp({
+    session: buildSession({ userId: 10, role: "ADMIN" }),
+    repositories: {
+      createScheduleBlock: async (_db, payload, options) => {
+        receivedPayload = payload;
+        receivedOptions = options;
+        return {
+          blockId: 9,
+          ...payload,
+          category: "MAINTENANCE",
+          statusCode: "MAINTENANCE",
+          createdByName: "Admin User",
+          createdAt: "2026-05-13 06:00:00",
+          isActive: true
+        };
+      }
+    }
+  });
+  const staffServer = staffApp.listen(0);
+  const adminServer = adminApp.listen(0);
+
+  try {
+    const forbidden = await postJson(staffServer, "/api/schedule/blocks", {
+      date: "2026-05-14",
+      startTime: "08:00",
+      endTime: "09:00",
+      blockType: "REPAIRS",
+      reason: "Ring repair"
+    });
+    const created = await postJson(adminServer, "/api/schedule/blocks", {
+      date: "2026-05-14",
+      startTime: "08:00",
+      endTime: "09:00",
+      blockType: "REPAIRS",
+      reason: "Ring repair"
+    });
+
+    assert.equal(forbidden.status, 403);
+    assert.equal(created.status, 201);
+    assert.deepEqual(receivedPayload, {
+      date: "2026-05-14",
+      startTime: "08:00",
+      endTime: "09:00",
+      category: "MAINTENANCE",
+      type: "REPAIRS",
+      mode: "TIME_RANGE",
+      reason: "Ring repair"
+    });
+    assert.deepEqual(receivedOptions, { userId: 10 });
+    assert.equal(created.body.block.statusCode, "MAINTENANCE");
+  } finally {
+    await closeServer(staffServer);
+    await closeServer(adminServer);
+  }
+});
+
+test("DELETE /api/schedule/blocks/:blockId deactivates a block as admin", async () => {
+  let received = null;
+  const app = buildApiTestApp({
+    session: buildSession({ userId: 10, role: "ADMIN" }),
+    repositories: {
+      deactivateScheduleBlock: async (_db, blockId, options) => {
+        received = { blockId, options };
+        return {
+          blockId,
+          date: "2026-05-14",
+          startTime: "08:00",
+          endTime: "09:00",
+          category: "MAINTENANCE",
+          type: "REPAIRS",
+          statusCode: "MAINTENANCE",
+          reason: "Ring repair",
+          isActive: false
+        };
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await deleteJson(server, "/api/schedule/blocks/9");
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(received, { blockId: 9, options: { userId: 10 } });
+    assert.equal(response.body.block.isActive, false);
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("POST /api/schedule/clear-public-use persists a clear range and returns cancelled reservations", async () => {
+  let receivedPayload = null;
+  const app = buildApiTestApp({
+    session: buildSession({ userId: 10, role: "ADMIN" }),
+    repositories: {
+      clearPublicUseRange: async (_db, payload, options) => {
+        receivedPayload = { payload, options };
+        return {
+          block: {
+            blockId: 12,
+            date: payload.date,
+            startTime: payload.startTime,
+            endTime: payload.endTime,
+            mode: payload.mode,
+            category: "PUBLIC_USE",
+            type: "CLEARED_PUBLIC_USE",
+            statusCode: "CLEARED_PUBLIC_USE",
+            reason: payload.reason,
+            isActive: true
+          },
+          cancelledReservations: [
+            buildReservation({ reservationId: 1, referenceNo: "BCS-2026-000001", statusCode: "CANCELLED" })
+          ]
+        };
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await postJson(server, "/api/schedule/clear-public-use", {
+      date: "2026-05-14",
+      mode: "TIME_RANGE",
+      startTime: "08:00",
+      endTime: "10:00",
+      reason: "Open public play"
+    });
+
+    assert.equal(response.status, 201);
+    assert.deepEqual(receivedPayload.payload, {
+      date: "2026-05-14",
+      mode: "TIME_RANGE",
+      startTime: "08:00",
+      endTime: "10:00",
+      reason: "Open public play"
+    });
+    assert.deepEqual(receivedPayload.options, { userId: 10 });
+    assert.equal(response.body.block.statusCode, "CLEARED_PUBLIC_USE");
+    assert.equal(response.body.cancelledReservations[0].referenceNo, "BCS-2026-000001");
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/schedule includes maintenance and cleared public-use blocks in week cells", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      getTimeSlots: async () => buildTimeSlots(),
+      listReservations: async () => [],
+      listScheduleBlocks: async () => [
+        {
+          blockId: 1,
+          date: "2026-05-11",
+          startTime: "08:00",
+          endTime: "09:00",
+          category: "PUBLIC_USE",
+          type: "CLEARED_PUBLIC_USE",
+          statusCode: "CLEARED_PUBLIC_USE",
+          reason: "Public play",
+          isActive: true
+        },
+        {
+          blockId: 2,
+          date: "2026-05-12",
+          startTime: "09:00",
+          endTime: "10:00",
+          category: "MAINTENANCE",
+          type: "REPAIRS",
+          statusCode: "MAINTENANCE",
+          reason: "Ring repair",
+          isActive: true
+        }
+      ]
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/schedule?date=2026-05-11");
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.rows[0].cells[1].statusCode, "CLEARED_PUBLIC_USE");
+    assert.equal(response.body.rows[0].cells[1].block.reason, "Public play");
+    assert.equal(response.body.rows[1].cells[2].statusCode, "MAINTENANCE");
+    assert.equal(response.body.rows[1].cells[2].block.reason, "Ring repair");
   } finally {
     await closeServer(server);
   }
@@ -628,6 +1193,54 @@ test("GET /api/availability reports conflicts and same-day suggestions", async (
     assert.equal(response.status, 200);
     assert.equal(response.body.available, false);
     assert.equal(response.body.conflict.reservationId, 8);
+    assert.deepEqual(response.body.suggestions, [
+      {
+        date: "2026-05-14",
+        slotId: 3,
+        name: "10:00 AM - 11:00 AM",
+        startTime: "10:00",
+        endTime: "11:00"
+      }
+    ]);
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/availability treats schedule blocks as conflicts and excludes them from suggestions", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      getTimeSlots: async () => buildTimeSlots([
+        { slotId: 1, name: "8:00 AM - 9:00 AM", startTime: "08:00", endTime: "09:00" },
+        { slotId: 2, name: "9:00 AM - 10:00 AM", startTime: "09:00", endTime: "10:00" },
+        { slotId: 3, name: "10:00 AM - 11:00 AM", startTime: "10:00", endTime: "11:00" }
+      ]),
+      listReservations: async () => [],
+      listScheduleBlocks: async () => [
+        {
+          blockId: 6,
+          date: "2026-05-14",
+          startTime: "08:00",
+          endTime: "10:00",
+          category: "PUBLIC_USE",
+          type: "CLEARED_PUBLIC_USE",
+          statusCode: "CLEARED_PUBLIC_USE",
+          reason: "Open public play",
+          isActive: true
+        }
+      ]
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/availability?date=2026-05-14&startTime=08:00&endTime=09:00");
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.available, false);
+    assert.equal(response.body.conflict, null);
+    assert.equal(response.body.block.statusCode, "CLEARED_PUBLIC_USE");
     assert.deepEqual(response.body.suggestions, [
       {
         date: "2026-05-14",
@@ -946,6 +1559,108 @@ test("POST /api/accounts/:userId/status passes the signed-in admin user to accou
   }
 });
 
+test("resident directory APIs search, create, and update local resident records", async () => {
+  let searchFilters = null;
+  let createdPayload = null;
+  let updatedPayload = null;
+  const app = buildApiTestApp({
+    session: buildSession({ userId: 10, role: "STAFF" }),
+    repositories: {
+      listResidents: async (_db, filters) => {
+        searchFilters = filters;
+        return [
+          {
+            residentId: 5,
+            name: "Team Alpha",
+            contactNumber: "09171234567",
+            address: "Purok 3",
+            group: "Youth",
+            notes: "",
+            createdAt: "2026-05-14 08:00:00",
+            updatedAt: "2026-05-14 08:00:00"
+          }
+        ];
+      },
+      createResidentDirectoryEntry: async (_db, payload, options) => {
+        createdPayload = { payload, options };
+        return { residentId: 6, ...payload, createdAt: "2026-05-14 08:00:00", updatedAt: "2026-05-14 08:00:00" };
+      },
+      updateResidentDirectoryEntry: async (_db, residentId, payload, options) => {
+        updatedPayload = { residentId, payload, options };
+        return { residentId, ...payload, createdAt: "2026-05-14 08:00:00", updatedAt: "2026-05-15 09:00:00" };
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const search = await getJson(server, "/api/residents?search=Team&contactNumber=09171234567");
+    const create = await postJson(server, "/api/residents", {
+      name: "Team Beta",
+      contactNumber: "09170000000",
+      address: "Purok 4",
+      group: "Seniors",
+      notes: "Prefers evening"
+    });
+    const update = await putJson(server, "/api/residents/6", {
+      name: "Team Beta Updated",
+      contactNumber: "09170000000",
+      address: "Purok 4",
+      group: "Seniors",
+      notes: ""
+    });
+
+    assert.equal(search.status, 200);
+    assert.deepEqual(searchFilters, { search: "Team", contactNumber: "09171234567" });
+    assert.equal(search.body.residents[0].residentId, 5);
+    assert.equal(create.status, 201);
+    assert.equal(createdPayload.payload.name, "Team Beta");
+    assert.deepEqual(createdPayload.options, { userId: 10 });
+    assert.equal(update.status, 200);
+    assert.equal(updatedPayload.residentId, 6);
+    assert.equal(updatedPayload.payload.name, "Team Beta Updated");
+    assert.deepEqual(updatedPayload.options, { userId: 10 });
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("resident directory API validates duplicate and malformed records", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      createResidentDirectoryEntry: async () => {
+        throw new DuplicateResidentError();
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const invalid = await postJson(server, "/api/residents", {
+      name: "",
+      contactNumber: "<script>",
+      address: "",
+      notes: "x".repeat(1001)
+    });
+    const duplicate = await postJson(server, "/api/residents", {
+      name: "Team Alpha",
+      contactNumber: "09171234567",
+      address: "Purok 3"
+    });
+
+    assert.equal(invalid.status, 400);
+    assert.equal(invalid.body.errors.name, "Name is required.");
+    assert.equal(invalid.body.errors.contactNumber, "Contact number must use digits or common phone symbols only.");
+    assert.equal(invalid.body.errors.address, "Address is required.");
+    assert.equal(invalid.body.errors.notes, "Notes must be 1000 characters or fewer.");
+    assert.equal(duplicate.status, 409);
+    assert.deepEqual(duplicate.body, { errors: { contactNumber: "A resident or group with this contact number already exists." } });
+  } finally {
+    await closeServer(server);
+  }
+});
+
 test("GET /api/activity-logs passes normalized filters and returns log rows", async () => {
   let receivedFilters = null;
   const app = buildApiTestApp({
@@ -1020,6 +1735,91 @@ test("GET /api/reports computes summary from reservation objects", async () => {
   }
 });
 
+test("GET /api/reports returns post-deployment report sections from reservations and schedule blocks", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      listReservations: async () => [
+        buildReservation({
+          reservationId: 1,
+          referenceNo: "BCS-2026-000001",
+          reservationDate: "2026-05-11",
+          startTime: "08:00",
+          endTime: "09:00",
+          purpose: "Practice",
+          statusCode: "COMPLETED",
+          createdByName: "Admin One"
+        }),
+        buildReservation({
+          reservationId: 2,
+          referenceNo: "BCS-2026-000002",
+          reservationDate: "2026-05-18",
+          startTime: "08:00",
+          endTime: "10:00",
+          purpose: "Tournament",
+          statusCode: "MISSED",
+          createdByName: "Staff Two"
+        }),
+        buildReservation({
+          reservationId: 3,
+          referenceNo: "BCS-2026-000003",
+          reservationDate: "2026-06-01",
+          startTime: "11:00",
+          endTime: "12:00",
+          purpose: "Practice",
+          statusCode: "CANCELLED",
+          createdByName: "Staff Two"
+        })
+      ],
+      listScheduleBlocks: async () => [
+        {
+          blockId: 20,
+          date: "2026-05-14",
+          startTime: "07:00",
+          endTime: "21:00",
+          category: "PUBLIC_USE",
+          type: "CLEARED_PUBLIC_USE",
+          statusCode: "CLEARED_PUBLIC_USE",
+          reason: "Public league day",
+          isActive: true
+        },
+        {
+          blockId: 21,
+          date: "2026-05-15",
+          startTime: "13:00",
+          endTime: "15:00",
+          category: "MAINTENANCE",
+          type: "REPAIRS",
+          statusCode: "MAINTENANCE",
+          reason: "Backboard repair",
+          isActive: true
+        }
+      ]
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/reports");
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(response.body.mostUsedDays[0], { day: "Monday", count: 2, hours: 3 });
+    assert.deepEqual(response.body.mostUsedTimeSlots[0], { startTime: "08:00", endTime: "09:00", label: "08:00-09:00", count: 2, hours: 2 });
+    assert.deepEqual(response.body.monthlyReservationCount, [
+      { month: "2026-05", count: 2 },
+      { month: "2026-06", count: 1 }
+    ]);
+    assert.equal(response.body.missedReservations[0].referenceNo, "BCS-2026-000002");
+    assert.equal(response.body.cancelledReservations[0].referenceNo, "BCS-2026-000003");
+    assert.deepEqual(response.body.reservationsByPurpose[0], { purpose: "Practice", count: 2, hours: 1 });
+    assert.deepEqual(response.body.reservationsEncodedByStaff[0], { staffName: "Staff Two", count: 2 });
+    assert.equal(response.body.clearedPublicUseRanges[0].reason, "Public league day");
+    assert.equal(response.body.maintenanceBlocks[0].reason, "Backboard repair");
+  } finally {
+    await closeServer(server);
+  }
+});
+
 test("GET /api/reports excludes cancelled hours and returns stable zero status keys", async () => {
   const app = buildApiTestApp({
     session: buildSession(),
@@ -1055,8 +1855,136 @@ test("GET /api/reports excludes cancelled hours and returns stable zero status k
   }
 });
 
+test("GET /api/reservations/history returns scoped reservation history by contact number", async () => {
+  let receivedFilters = null;
+  const app = buildApiTestApp({
+    session: buildSession(),
+    todayProvider: () => "2026-05-14",
+    repositories: {
+      listReservations: async (_db, filters) => {
+        receivedFilters = filters;
+        return [
+          buildReservation({ reservationId: 1, reservationDate: "2026-05-10", statusCode: "COMPLETED" }),
+          buildReservation({ reservationId: 2, reservationDate: "2026-05-14", statusCode: "RESERVED" }),
+          buildReservation({ reservationId: 3, reservationDate: "2026-05-20", statusCode: "RESERVED" }),
+          buildReservation({ reservationId: 4, reservationDate: "2026-05-08", statusCode: "MISSED" }),
+          buildReservation({ reservationId: 5, reservationDate: "2026-05-09", statusCode: "CANCELLED" })
+        ];
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/reservations/history?contactNumber=09171234567");
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(receivedFilters, { contactNumber: "09171234567" });
+    assert.equal(response.body.summary.completedCount, 1);
+    assert.equal(response.body.summary.activeReservationCount, 2);
+    assert.equal(response.body.summary.missedCount, 1);
+    assert.equal(response.body.summary.cancelledCount, 1);
+    assert.equal(response.body.summary.lastReservationDate, "2026-05-20");
+    assert.deepEqual(response.body.pastReservations.map((reservation) => reservation.reservationId), [1, 5, 4]);
+    assert.deepEqual(response.body.upcomingReservations.map((reservation) => reservation.reservationId), [2, 3]);
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/reservations/history requires a contact number or name", async () => {
+  const app = buildApiTestApp({ session: buildSession() });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/reservations/history");
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(response.body, {
+      errors: {
+        lookup: "Provide contactNumber or name."
+      }
+    });
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/exports/daily-schedule.csv downloads a timestamped CSV with schedule blocks", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    todayProvider: () => "2026-05-14",
+    currentTimeProvider: () => "06:30",
+    repositories: {
+      getTimeSlots: async () => buildTimeSlots(),
+      listReservations: async () => [
+        buildReservation({ referenceNo: "BCS-2026-000008", reservationDate: "2026-05-14", startTime: "08:00", endTime: "09:00" })
+      ],
+      listScheduleBlocks: async () => [
+        {
+          blockId: 5,
+          date: "2026-05-14",
+          startTime: "09:00",
+          endTime: "10:00",
+          category: "MAINTENANCE",
+          type: "REPAIRS",
+          statusCode: "MAINTENANCE",
+          reason: "Ring repair",
+          isActive: true
+        }
+      ]
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getText(server, "/api/exports/daily-schedule.csv?date=2026-05-14");
+
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("content-type"), "text/csv; charset=utf-8");
+    assert.match(response.headers.get("content-disposition"), /daily-schedule-2026-05-14-20260514-063000\.csv/);
+    assert.match(response.body, /BCS-2026-000008/);
+    assert.match(response.body, /Ring repair/);
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/exports/monthly-reservations.csv validates month and exports references", async () => {
+  let receivedFilters = null;
+  const app = buildApiTestApp({
+    session: buildSession(),
+    todayProvider: () => "2026-05-14",
+    currentTimeProvider: () => "06:30",
+    repositories: {
+      listReservations: async (_db, filters) => {
+        receivedFilters = filters;
+        return [
+          buildReservation({ referenceNo: "BCS-2026-000008", reservationDate: "2026-05-20" })
+        ];
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const valid = await getText(server, "/api/exports/monthly-reservations.csv?month=2026-05");
+    const invalid = await getJson(server, "/api/exports/monthly-reservations.csv?month=2026-13");
+
+    assert.equal(valid.status, 200);
+    assert.deepEqual(receivedFilters, { fromDate: "2026-05-01", toDate: "2026-05-31" });
+    assert.match(valid.body, /Reference No/);
+    assert.match(valid.body, /BCS-2026-000008/);
+    assert.equal(invalid.status, 400);
+    assert.deepEqual(invalid.body, { errors: { month: "Month must use YYYY-MM format." } });
+  } finally {
+    await closeServer(server);
+  }
+});
+
 test("GET /api/reports passes inclusive from and to date filters to reservation storage", async () => {
   let receivedFilters = null;
+  let receivedBlockFilters = null;
   const app = buildApiTestApp({
     session: buildSession(),
     repositories: {
@@ -1070,6 +1998,10 @@ test("GET /api/reports passes inclusive from and to date filters to reservation 
           buildReservation({ reservationId: 10, reservationDate: "2026-05-10", representativeName: "Range Start" }),
           buildReservation({ reservationId: 11, reservationDate: "2026-05-12", representativeName: "Range End" })
         ];
+      },
+      listScheduleBlocks: async (_db, filters) => {
+        receivedBlockFilters = filters;
+        return [];
       }
     }
   });
@@ -1082,6 +2014,11 @@ test("GET /api/reports passes inclusive from and to date filters to reservation 
     assert.deepEqual(receivedFilters, {
       fromDate: "2026-05-10",
       toDate: "2026-05-12"
+    });
+    assert.deepEqual(receivedBlockFilters, {
+      fromDate: "2026-05-10",
+      toDate: "2026-05-12",
+      activeOnly: false
     });
     assert.equal(response.body.summary.totalReservations, 2);
     assert.deepEqual(response.body.topRequesters.map((requester) => requester.name), ["Range End", "Range Start"]);
@@ -1194,6 +2131,19 @@ function buildApiTestApp({
     db: {},
     repositories: {
       findUserByUsername: async () => null,
+      writeUserActivityLog: async () => {},
+      getCourtPolicySettings: async () => ({
+        openingTime: "07:00",
+        closingTime: "21:00",
+        minimumReservationMinutes: 30,
+        maximumReservationMinutes: 240,
+        allowedDays: [0, 1, 2, 3, 4, 5, 6],
+        blockedDays: [],
+        gracePeriodBeforeMissedMinutes: 15,
+        defaultSlotMinutes: 60
+      }),
+      listScheduleBlocks: async () => [],
+      listResidents: async () => [],
       ...repositories
     },
     todayProvider,
@@ -1208,6 +2158,16 @@ async function getJson(server, pathName) {
   return {
     status: response.status,
     body: await response.json()
+  };
+}
+
+async function getText(server, pathName) {
+  const response = await fetch(`http://127.0.0.1:${server.address().port}${pathName}`);
+
+  return {
+    status: response.status,
+    headers: response.headers,
+    body: await response.text()
   };
 }
 

@@ -42,14 +42,34 @@ export async function buildPrereqReport(options = {}) {
     detail: npmResult.ok ? `found ${cleanOutput(npmResult.stdout || npmResult.stderr)}` : missingDetail("npm", npmResult)
   });
 
-  const mysqlResult = await runCommand("mysql", ["--version"]);
+  const mysqlCommand = await resolveRuntimeCommand(
+    cwd,
+    [
+      "runtime/mariadb/bin/mysql.exe",
+      "runtime/mariadb/bin/mariadb.exe",
+      "runtime/mysql/bin/mysql.exe"
+    ],
+    "mysql",
+    fileExists
+  );
+  const mysqlResult = await runCommand(mysqlCommand, ["--version"]);
   checks.push({
     name: "mysql client",
     ok: mysqlResult.ok,
     detail: mysqlResult.ok ? `found ${cleanOutput(mysqlResult.stdout || mysqlResult.stderr)}` : missingDetail("mysql", mysqlResult)
   });
 
-  const mysqldumpResult = await runCommand("mysqldump", ["--version"]);
+  const mysqldumpCommand = await resolveRuntimeCommand(
+    cwd,
+    [
+      "runtime/mariadb/bin/mysqldump.exe",
+      "runtime/mariadb/bin/mariadb-dump.exe",
+      "runtime/mysql/bin/mysqldump.exe"
+    ],
+    "mysqldump",
+    fileExists
+  );
+  const mysqldumpResult = await runCommand(mysqldumpCommand, ["--version"]);
   checks.push({
     name: "mysqldump",
     ok: mysqldumpResult.ok,
@@ -92,6 +112,18 @@ export async function buildPrereqReport(options = {}) {
   };
 }
 
+export async function resolveRuntimeCommand(cwd, relativeCandidates, fallbackCommand, fileExists = exists) {
+  for (const relativeCandidate of relativeCandidates) {
+    const candidate = path.join(cwd, relativeCandidate);
+
+    if (await fileExists(candidate)) {
+      return candidate;
+    }
+  }
+
+  return fallbackCommand;
+}
+
 export function formatPrereqReport(report) {
   return report.checks
     .map((check) => `[${check.ok ? "OK" : "FAIL"}] ${check.name} - ${check.detail}`)
@@ -121,7 +153,7 @@ function runVersionCommand(command, args) {
 
     try {
       child = spawn(command, args, {
-        shell: process.platform === "win32",
+        shell: process.platform === "win32" && !path.isAbsolute(command),
         windowsHide: true
       });
     } catch (error) {

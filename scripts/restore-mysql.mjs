@@ -4,6 +4,7 @@ import { spawn } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import dotenv from "dotenv";
+import mysql from "mysql2/promise";
 
 dotenv.config();
 
@@ -48,9 +49,25 @@ export function buildMysqlRestoreArgs(config) {
     `--port=${config.port}`,
     `--user=${config.user}`,
     "--protocol=TCP",
-    "--ssl=0",
-    config.database
+    "--ssl=0"
   ];
+}
+
+export async function resolveMysqlCommand(cwd = PROJECT_ROOT, options = {}) {
+  const fileExists = options.fileExists || exists;
+  const candidates = [
+    path.join(cwd, "runtime", "mariadb", "bin", "mysql.exe"),
+    path.join(cwd, "runtime", "mariadb", "bin", "mariadb.exe"),
+    path.join(cwd, "runtime", "mysql", "bin", "mysql.exe")
+  ];
+
+  for (const candidate of candidates) {
+    if (await fileExists(candidate)) {
+      return candidate;
+    }
+  }
+
+  return "mysql";
 }
 
 export function buildMysqlRestoreEnv(config, baseEnv = process.env) {
@@ -70,18 +87,29 @@ export async function runMysqlRestore(options = {}) {
   const processArgs = options.processArgs || process.argv;
   const spawnCommand = options.spawnCommand || spawn;
   const createReadStream = options.createReadStream || defaultCreateReadStream;
+  const fileExists = options.fileExists || exists;
   const backupFile = await resolveBackupFile(processArgs.slice(2), {
     cwd,
-    fileExists: options.fileExists
+    fileExists
   });
   const config = buildMysqlRestoreConfig(env, cwd);
+  const command = options.command || await resolveMysqlCommand(cwd, { fileExists });
 
   await runMysql({
+    command,
     args: buildMysqlRestoreArgs(config),
     backupFile,
     createReadStream,
     env: buildMysqlRestoreEnv(config, env),
     spawnCommand
+  });
+
+  await logMaintenanceAction({
+    config,
+    action: "RESTORE_DATABASE",
+    details: `Restored database backup ${path.basename(backupFile)}.`,
+    output,
+    writeMaintenanceActivityLog: options.writeMaintenanceActivityLog
   });
 
   output.log(`MySQL restore completed from: ${backupFile}`);
@@ -92,9 +120,9 @@ export async function runMysqlRestore(options = {}) {
   };
 }
 
-function runMysql({ args, backupFile, createReadStream, env, spawnCommand }) {
+function runMysql({ command, args, backupFile, createReadStream, env, spawnCommand }) {
   return new Promise((resolve, reject) => {
-    const child = spawnCommand("mysql", args, {
+    const child = spawnCommand(command, args, {
       env,
       stdio: ["pipe", "ignore", "pipe"],
       windowsHide: true
@@ -120,6 +148,46 @@ function runMysql({ args, backupFile, createReadStream, env, spawnCommand }) {
 
     createReadStream(backupFile).on("error", reject).pipe(child.stdin);
   });
+}
+
+export async function writeMaintenanceActivityLog(config, entry, options = {}) {
+  const mysqlClient = options.mysqlClient || mysql;
+  const connection = await mysqlClient.createConnection({
+    host: config.host,
+    port: config.port,
+    user: config.user,
+    password: config.password,
+    database: config.database,
+    namedPlaceholders: true
+  });
+
+  try {
+    await connection.execute(
+      `
+        INSERT INTO activity_logs (reservation_id, user_id, action, details)
+        VALUES (NULL, NULL, :action, :details)
+      `,
+      {
+        action: entry.action,
+        details: entry.details
+      }
+    );
+  } finally {
+    await connection.end();
+  }
+}
+
+async function logMaintenanceAction({ config, action, details, output, writeMaintenanceActivityLog: writer = writeMaintenanceActivityLog }) {
+  try {
+    await writer(config, { action, details });
+  } catch (error) {
+    const message = `Restore completed, but the activity log could not be updated: ${error.message}`;
+    if (typeof output.warn === "function") {
+      output.warn(message);
+    } else {
+      output.log(message);
+    }
+  }
 }
 
 function exists(filePath) {

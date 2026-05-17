@@ -1,3 +1,9 @@
+import { findActiveScheduleBlockOverlap } from "../schedule/scheduleBlockRepository.js";
+import {
+  getCourtPolicySettings,
+  validateReservationAgainstCourtPolicy
+} from "../settings/courtPolicyRepository.js";
+
 export class ReservationConflictError extends Error {
   constructor(message, overlap = null) {
     super(message);
@@ -6,10 +12,33 @@ export class ReservationConflictError extends Error {
   }
 }
 
+export class ReservationUnavailableError extends Error {
+  constructor(message = "Reservation overlaps an unavailable court range.", overlap = null) {
+    super(message);
+    this.name = "ReservationUnavailableError";
+    this.overlap = overlap;
+  }
+}
+
+export class ReservationPolicyError extends Error {
+  constructor(errors) {
+    super("Reservation violates court policy settings.");
+    this.name = "ReservationPolicyError";
+    this.errors = errors;
+  }
+}
+
 export class ReservationNotFoundError extends Error {
   constructor(message = "Reservation record was not found.") {
     super(message);
     this.name = "ReservationNotFoundError";
+  }
+}
+
+export class ReservationLockError extends Error {
+  constructor(message = "The reservation schedule is busy. Please try again.") {
+    super(message);
+    this.name = "ReservationLockError";
   }
 }
 
@@ -42,6 +71,16 @@ export function buildReservationListQuery(filters = {}) {
     params.searchLike = `%${filters.search}%`;
   }
 
+  if (filters.contactNumber) {
+    where.push("resident.contact_no = :contactNumber");
+    params.contactNumber = filters.contactNumber;
+  }
+
+  if (filters.representativeName) {
+    where.push("resident.full_name LIKE :representativeNameLike");
+    params.representativeNameLike = `%${filters.representativeName}%`;
+  }
+
   if (filters.purpose) {
     where.push("r.purpose LIKE :purposeLike");
     params.purposeLike = `%${filters.purpose}%`;
@@ -53,6 +92,7 @@ export function buildReservationListQuery(filters = {}) {
     sql: `
       SELECT
         r.reservation_id,
+        r.reference_no,
         DATE_FORMAT(r.reservation_date, '%Y-%m-%d') AS reservation_date,
         TIME_FORMAT(r.start_time, '%H:%i:%s') AS start_time,
         TIME_FORMAT(r.end_time, '%H:%i:%s') AS end_time,
@@ -83,6 +123,7 @@ export function buildReservationDetailQuery(reservationId) {
     sql: `
       SELECT
         r.reservation_id,
+        r.reference_no,
         DATE_FORMAT(r.reservation_date, '%Y-%m-%d') AS reservation_date,
         TIME_FORMAT(r.start_time, '%H:%i:%s') AS start_time,
         TIME_FORMAT(r.end_time, '%H:%i:%s') AS end_time,
@@ -165,6 +206,7 @@ export function buildReservationOverlapQuery(candidate) {
     sql: `
       SELECT
         existing.reservation_id,
+        existing.reference_no,
         DATE_FORMAT(existing.reservation_date, '%Y-%m-%d') AS reservation_date,
         TIME_FORMAT(existing.start_time, '%H:%i:%s') AS start_time,
         TIME_FORMAT(existing.end_time, '%H:%i:%s') AS end_time,
@@ -185,6 +227,7 @@ export function buildReservationOverlapQuery(candidate) {
 export function mapReservationRow(row) {
   return {
     reservationId: Number(row.reservation_id),
+    referenceNo: row.reference_no || "",
     reservationDate: formatDateValue(row.reservation_date),
     startTime: formatTimeValue(row.start_time),
     endTime: formatTimeValue(row.end_time),
@@ -243,26 +286,36 @@ export async function getReservationStatuses(db) {
 export async function createReservation(db, reservation, options = {}) {
   const createdByUserId = requireAuthenticatedUserId(options.createdByUserId);
   const connection = await db.getConnection();
+  let lockName = "";
 
   try {
     await connection.beginTransaction();
+    lockName = await acquireReservationDateLock(connection, reservation.reservationDate);
 
     const overlap = await findOverlap(connection, reservation);
     if (overlap) {
       throw new ReservationConflictError("Reservation overlaps an existing active reservation.", mapReservationRow(overlap));
     }
 
+    await enforceCourtPolicy(connection, reservation);
+    const blockOverlap = await findActiveScheduleBlockOverlap(connection, reservation);
+    if (blockOverlap) {
+      throw new ReservationUnavailableError("Reservation overlaps an unavailable court range.", blockOverlap);
+    }
+
     const residentId = await findOrCreateResident(connection, reservation);
     const statusId = await findStatusIdByCode(connection, reservation.statusCode);
+    const referenceNo = await reserveNextReservationReference(connection, reservation.reservationDate);
 
     const [result] = await connection.execute(
       `
         INSERT INTO reservations
-          (resident_id, status_id, approved_by_user_id, created_by_user_id, reservation_date, start_time, end_time, purpose, remarks)
+          (reference_no, resident_id, status_id, approved_by_user_id, created_by_user_id, reservation_date, start_time, end_time, purpose, remarks)
         VALUES
-          (:residentId, :statusId, :approvedByUserId, :createdByUserId, :reservationDate, :startTime, :endTime, :purpose, :remarks)
+          (:referenceNo, :residentId, :statusId, :approvedByUserId, :createdByUserId, :reservationDate, :startTime, :endTime, :purpose, :remarks)
       `,
       {
+        referenceNo,
         residentId,
         statusId,
         approvedByUserId: createdByUserId,
@@ -279,7 +332,7 @@ export async function createReservation(db, reservation, options = {}) {
       reservationId: result.insertId,
       userId: createdByUserId,
       action: "CREATE_RESERVATION",
-      details: `Created reservation for ${reservation.representativeName} on ${reservation.reservationDate} ${reservation.startTime}-${reservation.endTime}.`
+      details: `Created reservation ${referenceNo} for ${reservation.representativeName} on ${reservation.reservationDate} ${reservation.startTime}-${reservation.endTime}.`
     });
 
     await connection.commit();
@@ -288,8 +341,91 @@ export async function createReservation(db, reservation, options = {}) {
     await connection.rollback();
     throw error;
   } finally {
+    await releaseReservationDateLock(connection, lockName);
     connection.release();
   }
+}
+
+export async function getReservationSlipData(db, reservationId, options = {}) {
+  const reservation = await getReservationById(db, reservationId);
+
+  if (!reservation) {
+    throw new ReservationNotFoundError();
+  }
+
+  const settings = await getCourtDisplaySettings(db);
+
+  return {
+    reservationId: reservation.reservationId,
+    referenceNo: reservation.referenceNo,
+    representativeName: reservation.representativeName,
+    contactNo: reservation.contactNo,
+    address: reservation.address,
+    reservationDate: reservation.reservationDate,
+    startTime: reservation.startTime,
+    endTime: reservation.endTime,
+    purpose: reservation.purpose,
+    statusCode: reservation.statusCode,
+    statusName: reservation.statusName,
+    staffEncoder: reservation.createdByName,
+    issuedAt: options.issuedAt || "",
+    barangayName: settings.barangayName,
+    courtName: settings.courtName,
+    notes: reservation.remarks || ""
+  };
+}
+
+export async function reserveNextReservationReference(connection, reservationDate) {
+  const referenceYear = Number(String(reservationDate || "").slice(0, 4));
+
+  if (!Number.isInteger(referenceYear) || referenceYear < 1900 || referenceYear > 9999) {
+    throw new Error("Reservation date is required before generating a reference number.");
+  }
+
+  await connection.execute(
+    `
+      INSERT INTO reservation_reference_sequences (reference_year, next_sequence)
+      VALUES (:referenceYear, 1)
+      ON DUPLICATE KEY UPDATE next_sequence = next_sequence
+    `,
+    { referenceYear }
+  );
+
+  const [[sequenceRow]] = await connection.execute(
+    `
+      SELECT next_sequence
+      FROM reservation_reference_sequences
+      WHERE reference_year = :referenceYear
+      FOR UPDATE
+    `,
+    { referenceYear }
+  );
+  const [[existingMaxRow]] = await connection.execute(
+    `
+      SELECT COALESCE(MAX(CAST(SUBSTRING(reference_no, 10) AS UNSIGNED)), 0) AS max_sequence
+      FROM reservations
+      WHERE reference_no LIKE :referencePrefix
+    `,
+    { referencePrefix: `BCS-${referenceYear}-%` }
+  );
+  const nextSequence = Math.max(
+    Number(sequenceRow?.next_sequence || 1),
+    Number(existingMaxRow?.max_sequence || 0) + 1
+  );
+
+  await connection.execute(
+    `
+      UPDATE reservation_reference_sequences
+      SET next_sequence = :nextSequence
+      WHERE reference_year = :referenceYear
+    `,
+    {
+      referenceYear,
+      nextSequence: nextSequence + 1
+    }
+  );
+
+  return `BCS-${referenceYear}-${String(nextSequence).padStart(6, "0")}`;
 }
 
 export async function updateReservation(db, reservationId, reservation, options = {}) {
@@ -297,9 +433,11 @@ export async function updateReservation(db, reservationId, reservation, options 
   const connection = await db.getConnection();
   const numericReservationId = Number(reservationId);
   const candidate = { ...reservation, reservationId: numericReservationId };
+  let lockName = "";
 
   try {
     await connection.beginTransaction();
+    lockName = await acquireReservationDateLock(connection, reservation.reservationDate);
     const reservationExists = await reservationRowExists(connection, numericReservationId);
 
     if (!reservationExists) {
@@ -309,6 +447,12 @@ export async function updateReservation(db, reservationId, reservation, options 
     const overlap = await findOverlap(connection, candidate);
     if (overlap) {
       throw new ReservationConflictError("Reservation overlaps an existing active reservation.", mapReservationRow(overlap));
+    }
+
+    await enforceCourtPolicy(connection, reservation);
+    const blockOverlap = await findActiveScheduleBlockOverlap(connection, candidate);
+    if (blockOverlap) {
+      throw new ReservationUnavailableError("Reservation overlaps an unavailable court range.", blockOverlap);
     }
 
     const residentId = await findOrCreateResident(connection, reservation);
@@ -333,6 +477,7 @@ export async function updateReservation(db, reservationId, reservation, options 
     await connection.rollback();
     throw error;
   } finally {
+    await releaseReservationDateLock(connection, lockName);
     connection.release();
   }
 }
@@ -451,6 +596,15 @@ async function reservationRowExists(connection, reservationId) {
   return Boolean(rows[0]);
 }
 
+async function enforceCourtPolicy(connection, reservation) {
+  const policy = await getCourtPolicySettings(connection);
+  const policyErrors = validateReservationAgainstCourtPolicy(reservation, policy);
+
+  if (Object.keys(policyErrors).length > 0) {
+    throw new ReservationPolicyError(policyErrors);
+  }
+}
+
 async function writeActivityLog(connection, { reservationId, userId, action, details }) {
   await connection.execute(
     `
@@ -459,6 +613,55 @@ async function writeActivityLog(connection, { reservationId, userId, action, det
     `,
     { reservationId, userId, action, details }
   );
+}
+
+async function getCourtDisplaySettings(db) {
+  const [rows] = await db.execute(
+    `
+      SELECT setting_key, setting_value
+      FROM court_settings
+      WHERE setting_key IN ('barangay_name', 'court_name')
+    `
+  );
+  const values = Object.fromEntries(rows.map((row) => [row.setting_key, row.setting_value]));
+
+  return {
+    barangayName: values.barangay_name || "Barangay Sto. Niño, Parañaque City",
+    courtName: values.court_name || "Barangay Basketball Court"
+  };
+}
+
+async function acquireReservationDateLock(connection, reservationDate) {
+  const lockName = buildReservationDateLockName(reservationDate);
+  const [[row]] = await connection.execute(
+    "SELECT GET_LOCK(:lockName, 10) AS lock_result",
+    { lockName }
+  );
+
+  if (Number(row?.lock_result) !== 1) {
+    throw new ReservationLockError();
+  }
+
+  return lockName;
+}
+
+async function releaseReservationDateLock(connection, lockName) {
+  if (!lockName) {
+    return;
+  }
+
+  await connection.execute(
+    "SELECT RELEASE_LOCK(:lockName) AS release_result",
+    { lockName }
+  ).catch(() => {});
+}
+
+function buildReservationDateLockName(reservationDate) {
+  const safeDate = String(reservationDate || "")
+    .replace(/[^0-9-]/g, "")
+    .slice(0, 10);
+
+  return `barangay_reservation_${safeDate || "unknown"}`;
 }
 
 function requireAuthenticatedUserId(value) {

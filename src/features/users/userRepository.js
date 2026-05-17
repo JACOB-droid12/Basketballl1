@@ -164,6 +164,21 @@ export async function updateUserPassword(db, userId, newPassword, options = {}) 
   });
 }
 
+export async function writeUserActivityLog(db, { userId, action, details }) {
+  await db.execute(
+    `
+      INSERT INTO activity_logs (reservation_id, user_id, action, details)
+      VALUES (:reservationId, :userId, :action, :details)
+    `,
+    {
+      reservationId: null,
+      userId: userId ?? null,
+      action,
+      details
+    }
+  );
+}
+
 async function findAnyUserByUsername(db, username) {
   const [rows] = await db.execute(
     `
@@ -199,18 +214,11 @@ async function runUserMutation(db, callback) {
 }
 
 async function writeAccountActivityLog(connection, { actorUserId, action, details }) {
-  await connection.execute(
-    `
-      INSERT INTO activity_logs (reservation_id, user_id, action, details)
-      VALUES (:reservationId, :userId, :action, :details)
-    `,
-    {
-      reservationId: null,
-      userId: actorUserId,
-      action,
-      details
-    }
-  );
+  await writeUserActivityLog(connection, {
+    userId: actorUserId,
+    action,
+    details
+  });
 }
 
 function requireAuthenticatedUserId(value) {

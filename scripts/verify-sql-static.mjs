@@ -10,7 +10,9 @@ const REQUIRED_TABLES = [
   "reservation_statuses",
   "time_slots",
   "court_settings",
+  "reservation_reference_sequences",
   "reservations",
+  "schedule_blocks",
   "activity_logs"
 ];
 
@@ -84,6 +86,8 @@ export function analyzeSqlFiles({ schemaSql, seedSql, diagnosticsSql = "", setup
       "fk_reservations_status",
       "fk_reservations_approved_by_user",
       "fk_reservations_created_by_user",
+      "fk_schedule_blocks_created_by_user",
+      "fk_schedule_blocks_deactivated_by_user",
       "fk_activity_logs_reservation",
       "fk_activity_logs_user"
     ].every((constraintName) => schema.includes(constraintName.toLowerCase())),
@@ -91,9 +95,52 @@ export function analyzeSqlFiles({ schemaSql, seedSql, diagnosticsSql = "", setup
   });
 
   checks.push({
+    name: "reservation reference support",
+    ok: schema.includes("reservation_reference_sequences") &&
+      schema.includes("reference_no") &&
+      schema.includes("uq_reservations_reference_no") &&
+      schema.includes("row_number() over") &&
+      schema.includes("bcs-"),
+    detail: "reservations have unique BCS reference numbers with backfill and sequence support"
+  });
+
+  checks.push({
+    name: "schedule block support",
+    ok: tableDefinitions.has("schedule_blocks") &&
+      schema.includes("chk_schedule_blocks_time_order") &&
+      schema.includes("block_category in ('maintenance', 'public_use')") &&
+      schema.includes("mode in ('whole_day', 'time_range', 'from_time_onward')"),
+    detail: "schedule blocks persist maintenance and public-use unavailable ranges"
+  });
+
+  checks.push({
+    name: "resident directory support",
+    ok: tableDefinitions.has("residents") &&
+      schema.includes("group_name") &&
+      schema.includes("notes") &&
+      schema.includes("add column if not exists group_name") &&
+      schema.includes("add column if not exists notes"),
+    detail: "residents table stores lightweight directory group and notes fields"
+  });
+
+  checks.push({
+    name: "court policy settings support",
+    ok: [
+      "min_reservation_minutes",
+      "max_reservation_minutes",
+      "allowed_days",
+      "blocked_days",
+      "missed_grace_minutes",
+      "slot_minutes"
+    ].every((settingKey) => seed.includes(`'${settingKey}'`)),
+    detail: "seed includes configurable court policy settings"
+  });
+
+  checks.push({
     name: "date/time integrity checks",
     ok: schema.includes("chk_time_slots_time_order") &&
       schema.includes("chk_reservations_time_order") &&
+      schema.includes("chk_schedule_blocks_time_order") &&
       schema.includes("end_time > start_time"),
     detail: "slot and reservation end times must be after start times"
   });
@@ -147,7 +194,10 @@ export function analyzeSqlFiles({ schemaSql, seedSql, diagnosticsSql = "", setup
       diagnostics.includes("reservation_statuses") &&
       diagnostics.includes("time_slots") &&
       diagnostics.includes("password_hash") &&
-      diagnostics.includes("court_settings"),
+      diagnostics.includes("court_settings") &&
+      diagnostics.includes("schedule_blocks") &&
+      diagnostics.includes("resident directory columns") &&
+      diagnostics.includes("reference_no"),
     detail: "database/diagnostics.sql reports schema, trigger, seed, slot, password, and settings checks"
   });
 

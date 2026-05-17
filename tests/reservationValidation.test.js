@@ -145,6 +145,56 @@ test("accepts a complete reservation and normalizes trimmed values", () => {
   });
 });
 
+test("rejects overlong reservation fields before they reach MySQL column limits", () => {
+  const result = validateReservationInput({
+    reservationDate: "2026-05-14",
+    startTime: "08:00",
+    endTime: "09:00",
+    representativeName: "A".repeat(141),
+    contactNo: "9".repeat(31),
+    address: "B".repeat(256),
+    purpose: "C".repeat(121),
+    remarks: "D".repeat(1001),
+    statusCode: "RESERVED"
+  });
+
+  assert.equal(result.valid, false);
+  assert.deepEqual(result.errors, {
+    representativeName: "Resident or group representative name must be 140 characters or fewer.",
+    contactNo: "Contact number must be 30 characters or fewer.",
+    address: "Address must be 255 characters or fewer.",
+    purpose: "Purpose must be 120 characters or fewer.",
+    remarks: "Remarks must be 1000 characters or fewer."
+  });
+});
+
+test("rejects malformed contact numbers without blocking common phone symbols", () => {
+  const invalid = validateReservationInput({
+    reservationDate: "2026-05-14",
+    startTime: "08:00",
+    endTime: "09:00",
+    representativeName: "Team Alpha",
+    contactNo: "<script>alert(1)</script>",
+    address: "Purok 3",
+    purpose: "Practice",
+    statusCode: "RESERVED"
+  });
+  const valid = validateReservationInput({
+    reservationDate: "2026-05-14",
+    startTime: "08:00",
+    endTime: "09:00",
+    representativeName: "Team Alpha",
+    contactNo: "+63 917-123-4567",
+    address: "Purok 3",
+    purpose: "Practice",
+    statusCode: "RESERVED"
+  });
+
+  assert.equal(invalid.valid, false);
+  assert.equal(invalid.errors.contactNo, "Contact number must use digits or common phone symbols only.");
+  assert.equal(valid.valid, true);
+});
+
 function buildReservationInput(overrides = {}) {
   return {
     reservationDate: "2026-05-07",

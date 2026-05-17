@@ -75,6 +75,12 @@
     });
   }
 
+  function clearPrototypeClearedDays() {
+    Object.keys(clearedDays).forEach((key) => {
+      delete clearedDays[key];
+    });
+  }
+
   function applyReservationToPrototype(reservation) {
     if (!reservation || reservation.statusCode === "CANCELLED" || reservation.statusCode === "MISSED") {
       return;
@@ -107,10 +113,27 @@
     }
   }
 
+  function applyScheduleBlockToPrototype(block) {
+    if (!block || block.statusCode !== "CLEARED_PUBLIC_USE" || block.isActive === false) {
+      return;
+    }
+
+    const [year, month, day] = block.date.split("-").map(Number);
+    const date = new Date(year, month - 1, day);
+    const weekOffset = weekOffsetForDate(date);
+    const dayIdx = reservationDateToDayIndex(date);
+
+    if (block.mode === "WHOLE_DAY" || (block.startTime === "07:00" && block.endTime === "21:00")) {
+      clearedDays[`${weekOffset}-${dayIdx}`] = true;
+    }
+  }
+
   async function refreshPrototypeReservations() {
     const data = await api.request("/api/prototype/reservations");
     clearPrototypeReservations();
+    clearPrototypeClearedDays();
     data.reservations.forEach(applyReservationToPrototype);
+    (data.blocks || []).forEach(applyScheduleBlockToPrototype);
     renderHomeCalendar();
     renderSchedulePage();
   }
@@ -263,6 +286,32 @@
       await refreshPrototypeReservations();
       showPage("home-page");
       showToast("Slot cleared.", "yellow");
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  window.clearDay = async function bridgedClearDay(dayIdx, dayDate) {
+    if (!currentUser || currentUser.role !== "Admin") {
+      alert("Only admins can clear a day for public use.");
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to clear all reservations for ${fmtDate(dayDate)} (${DAYS[dayIdx]})? This will mark the entire day as cleared for public use.`)) {
+      return;
+    }
+
+    try {
+      await api.request("/api/prototype/clear-public-use", {
+        method: "POST",
+        body: JSON.stringify({
+          date: toIsoDate(dayDate),
+          mode: "WHOLE_DAY",
+          reason: "Cleared from prototype day header"
+        })
+      });
+      await refreshPrototypeReservations();
+      showToast("Day cleared for public use.", "yellow");
     } catch (error) {
       alert(error.message);
     }

@@ -164,7 +164,7 @@ function formatCompactTime(value) {
   const match = String(value).match(/^(\d{1,2}):(\d{2})/);
   if (!match) return formatTime(value);
   const hour = Number(match[1]);
-  const suffix = hour >= 12 ? "p" : "a";
+  const suffix = hour >= 12 ? "pm" : "am";
   const displayHour = hour % 12 || 12;
   return `${displayHour}${suffix}`;
 }

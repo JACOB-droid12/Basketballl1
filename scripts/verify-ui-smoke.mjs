@@ -79,6 +79,7 @@ export function buildOfficeSmokeApp() {
       createUser: repositories.createUser,
       findUserByUsername: repositories.findUserByUsername,
       getReservationById: repositories.getReservationById,
+      listScheduleBlocks: repositories.listScheduleBlocks,
       listReservations: repositories.listReservations,
       listUsers: repositories.listUsers,
       updateReservation: repositories.updateReservation,
@@ -263,6 +264,24 @@ function buildSmokeRepositories() {
 
       return reservations;
     },
+    listScheduleBlocks: async () => [],
+    getBackupStatus: async () => ({
+      lastBackupAt: "2026-05-08 08:00:00",
+      daysSinceBackup: 0,
+      reminderThresholdDays: 7,
+      backupDue: false
+    }),
+    getCourtPolicySettings: async () => ({
+      openingTime: "07:00",
+      closingTime: "21:00",
+      minimumReservationMinutes: 30,
+      maximumReservationMinutes: 240,
+      allowedDays: [0, 1, 2, 3, 4, 5, 6],
+      blockedDays: [],
+      gracePeriodBeforeMissedMinutes: 15,
+      defaultSlotMinutes: 60
+    }),
+    listResidents: async () => [],
     listUsers: async () => users,
     updateReservation: async () => {},
     updateReservationStatus: async () => {},

@@ -52,7 +52,13 @@ VALUES
   ('timezone', 'Asia/Manila', 'Local timezone for reservation dates and timestamps.'),
   ('opening_time', '07:00:00', 'Default daily opening time.'),
   ('closing_time', '21:00:00', 'Default daily closing time.'),
-  ('slot_minutes', '60', 'Default schedule slot size in minutes.')
+  ('min_reservation_minutes', '30', 'Minimum allowed reservation duration in minutes.'),
+  ('max_reservation_minutes', '240', 'Maximum allowed reservation duration in minutes.'),
+  ('allowed_days', '0,1,2,3,4,5,6', 'Allowed reservation days where 0 is Sunday.'),
+  ('blocked_days', '', 'Blocked reservation dates as comma-separated YYYY-MM-DD values.'),
+  ('missed_grace_minutes', '15', 'Grace period before marking a reservation missed.'),
+  ('slot_minutes', '60', 'Default schedule slot size in minutes.'),
+  ('backup_reminder_days', '7', 'Dashboard reminder threshold for successful database backups.')
 ON DUPLICATE KEY UPDATE
   setting_value = VALUES(setting_value),
   description = VALUES(description);

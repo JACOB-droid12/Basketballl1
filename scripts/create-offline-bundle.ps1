@@ -54,6 +54,7 @@ $ItemsToCopy = @(
   "package-lock.json",
   "START-HERE.bat",
   "STAFF-DAILY-USE.txt",
+  "DEPLOYMENT_READINESS_REPORT.md",
   "README.md",
   "README-FIRST-WINDOWS.txt",
   "TROUBLESHOOT-WINDOWS.txt",

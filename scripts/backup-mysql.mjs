@@ -1,9 +1,10 @@
-import { mkdir as defaultMkdir } from "node:fs/promises";
+import { access, mkdir as defaultMkdir } from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import dotenv from "dotenv";
+import mysql from "mysql2/promise";
 
 dotenv.config();
 
@@ -28,6 +29,50 @@ export function createBackupFilePath({ backupDir, database, now = new Date(), ti
   const timestamp = formatTimestamp(now, timezone);
 
   return path.join(backupDir, `${safeDatabaseName}_${timestamp}.sql`);
+}
+
+export async function createUniqueBackupFilePath({
+  backupDir,
+  database,
+  now = new Date(),
+  timezone = "Asia/Manila",
+  fileExists = exists
+}) {
+  const firstCandidate = createBackupFilePath({ backupDir, database, now, timezone });
+
+  if (!await fileExists(firstCandidate)) {
+    return firstCandidate;
+  }
+
+  const extension = path.extname(firstCandidate);
+  const baseName = firstCandidate.slice(0, -extension.length);
+
+  for (let suffix = 2; suffix < 1000; suffix += 1) {
+    const candidate = `${baseName}_${suffix}${extension}`;
+
+    if (!await fileExists(candidate)) {
+      return candidate;
+    }
+  }
+
+  throw new Error("Unable to create a unique backup filename.");
+}
+
+export async function resolveMysqlDumpCommand(cwd = PROJECT_ROOT, options = {}) {
+  const fileExists = options.fileExists || exists;
+  const candidates = [
+    path.join(cwd, "runtime", "mariadb", "bin", "mysqldump.exe"),
+    path.join(cwd, "runtime", "mariadb", "bin", "mariadb-dump.exe"),
+    path.join(cwd, "runtime", "mysql", "bin", "mysqldump.exe")
+  ];
+
+  for (const candidate of candidates) {
+    if (await fileExists(candidate)) {
+      return candidate;
+    }
+  }
+
+  return "mysqldump";
 }
 
 export function buildMysqldumpArgs(config, backupFilePath) {
@@ -64,20 +109,32 @@ export async function runMysqlBackup(options = {}) {
   const now = options.now || new Date();
   const output = options.output || console;
   const spawnCommand = options.spawnCommand || spawn;
+  const fileExists = options.fileExists || exists;
   const config = buildBackupConfig(env, cwd);
-  const backupFilePath = createBackupFilePath({
+  const backupFilePath = await createUniqueBackupFilePath({
     backupDir: config.backupDir,
     database: config.database,
     now,
-    timezone: config.timezone
+    timezone: config.timezone,
+    fileExists
   });
+  const command = options.command || await resolveMysqlDumpCommand(cwd, { fileExists });
 
   await mkdir(config.backupDir, { recursive: true });
 
   await runMysqldumpWithCompatibilityFallback({
+    command,
     args: buildMysqldumpArgs(config, backupFilePath),
     env: buildMysqldumpEnv(config, env),
     spawnCommand
+  });
+
+  await logMaintenanceAction({
+    config,
+    action: "BACKUP_DATABASE",
+    details: `Created database backup ${path.basename(backupFilePath)}.`,
+    output,
+    writeMaintenanceActivityLog: options.writeMaintenanceActivityLog
   });
 
   output.log(`MySQL backup created: ${backupFilePath}`);
@@ -96,16 +153,17 @@ function formatTimestamp(date, timezone) {
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
+    second: "2-digit",
     hour12: false
   }).formatToParts(date);
   const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
 
-  return `${values.year}-${values.month}-${values.day}_${values.hour}${values.minute}`;
+  return `${values.year}-${values.month}-${values.day}_${values.hour}${values.minute}${values.second}`;
 }
 
-function runMysqldump({ args, env, spawnCommand }) {
+function runMysqldump({ command, args, env, spawnCommand }) {
   return new Promise((resolve, reject) => {
-    const child = spawnCommand("mysqldump", args, {
+    const child = spawnCommand(command, args, {
       env,
       windowsHide: true
     });
@@ -130,19 +188,69 @@ function runMysqldump({ args, env, spawnCommand }) {
   });
 }
 
-async function runMysqldumpWithCompatibilityFallback({ args, env, spawnCommand }) {
+async function runMysqldumpWithCompatibilityFallback({ command, args, env, spawnCommand }) {
   try {
-    await runMysqldump({ args, env, spawnCommand });
+    await runMysqldump({ command, args, env, spawnCommand });
   } catch (error) {
     if (!String(error?.message || "").match(/(unknown variable|unknown option).*set-gtid-purged/i)) {
       throw error;
     }
 
     await runMysqldump({
+      command,
       args: args.filter((arg) => arg !== "--set-gtid-purged=OFF"),
       env,
       spawnCommand
     });
+  }
+}
+
+export async function writeMaintenanceActivityLog(config, entry, options = {}) {
+  const mysqlClient = options.mysqlClient || mysql;
+  const connection = await mysqlClient.createConnection({
+    host: config.host,
+    port: config.port,
+    user: config.user,
+    password: config.password,
+    database: config.database,
+    namedPlaceholders: true
+  });
+
+  try {
+    await connection.execute(
+      `
+        INSERT INTO activity_logs (reservation_id, user_id, action, details)
+        VALUES (NULL, NULL, :action, :details)
+      `,
+      {
+        action: entry.action,
+        details: entry.details
+      }
+    );
+  } finally {
+    await connection.end();
+  }
+}
+
+async function logMaintenanceAction({ config, action, details, output, writeMaintenanceActivityLog: writer = writeMaintenanceActivityLog }) {
+  try {
+    await writer(config, { action, details });
+  } catch (error) {
+    const message = `Backup was created, but the activity log could not be updated: ${error.message}`;
+    if (typeof output.warn === "function") {
+      output.warn(message);
+    } else {
+      output.log(message);
+    }
+  }
+}
+
+async function exists(filePath) {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
   }
 }
 

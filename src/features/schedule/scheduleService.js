@@ -5,11 +5,35 @@ const STATUS_NAMES = {
   RESERVED: "Reserved",
   MISSED: "Missed",
   CANCELLED: "Cancelled",
-  COMPLETED: "Completed"
+  COMPLETED: "Completed",
+  MAINTENANCE: "Maintenance",
+  BARANGAY_EVENT: "Barangay event",
+  CLEARED_PUBLIC_USE: "Cleared for public use"
 };
 
-export function buildDailySchedule({ date, timeSlots = [], reservations = [] }) {
+export function buildDailySchedule({ date, timeSlots = [], reservations = [], blocks = [] }) {
   return timeSlots.map((slot) => {
+    const block = blocks
+      .filter((item) => item.date === date && item.isActive !== false)
+      .filter((item) => timeRangesOverlap(slot.startTime, slot.endTime, item.startTime, item.endTime))
+      .sort(compareBlocksForSlot)[0] || null;
+
+    if (block) {
+      const statusCode = String(block.statusCode || block.type || block.category || "MAINTENANCE").toUpperCase();
+
+      return {
+        slotId: slot.slotId,
+        name: slot.name,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        statusCode,
+        statusName: STATUS_NAMES[statusCode] || statusCode,
+        reservation: null,
+        block,
+        isAvailableForBooking: false
+      };
+    }
+
     const overlapping = reservations
       .filter((reservation) => reservation.reservationDate === date)
       .filter((reservation) => timeRangesOverlap(slot.startTime, slot.endTime, reservation.startTime, reservation.endTime))
@@ -26,12 +50,13 @@ export function buildDailySchedule({ date, timeSlots = [], reservations = [] }) 
       statusCode,
       statusName: STATUS_NAMES[statusCode] || statusCode,
       reservation,
+      block: null,
       isAvailableForBooking: !isBlockingStatus(statusCode)
     };
   });
 }
 
-export function buildWeeklySchedule({ weekStartDate, timeSlots = [], reservations = [] }) {
+export function buildWeeklySchedule({ weekStartDate, timeSlots = [], reservations = [], blocks = [] }) {
   const days = Array.from({ length: 7 }, (_item, index) => {
     const date = addDays(weekStartDate, index);
     return {
@@ -46,7 +71,8 @@ export function buildWeeklySchedule({ weekStartDate, timeSlots = [], reservation
       buildDailySchedule({
         date: day.date,
         timeSlots,
-        reservations
+        reservations,
+        blocks
       })
     ])
   );
@@ -63,10 +89,10 @@ export function buildWeeklySchedule({ weekStartDate, timeSlots = [], reservation
   };
 }
 
-export function findNearestAvailableSlot({ startDate, timeSlots = [], reservations = [], searchDays = 14 }) {
+export function findNearestAvailableSlot({ startDate, timeSlots = [], reservations = [], blocks = [], searchDays = 14 }) {
   for (let offset = 0; offset < searchDays; offset += 1) {
     const date = addDays(startDate, offset);
-    const schedule = buildDailySchedule({ date, timeSlots, reservations });
+    const schedule = buildDailySchedule({ date, timeSlots, reservations, blocks });
     const availableSlot = schedule.find((slot) => slot.isAvailableForBooking);
 
     if (availableSlot) {
@@ -137,6 +163,21 @@ function compareReservationsForSlot(a, b) {
   }
 
   return Number(a.reservationId || 0) - Number(b.reservationId || 0);
+}
+
+function compareBlocksForSlot(a, b) {
+  const categoryOrder = {
+    PUBLIC_USE: 0,
+    MAINTENANCE: 1
+  };
+  const aOrder = categoryOrder[String(a.category || "").toUpperCase()] ?? 2;
+  const bOrder = categoryOrder[String(b.category || "").toUpperCase()] ?? 2;
+
+  if (aOrder !== bOrder) {
+    return aOrder - bOrder;
+  }
+
+  return Number(a.blockId || 0) - Number(b.blockId || 0);
 }
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];

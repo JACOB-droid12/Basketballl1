@@ -451,14 +451,16 @@ async function cleanupVerificationRows(pool, reservationId, representativeName) 
 }
 
 async function insertDirectReservation(connection, reservation) {
+  const referenceNo = await defaultRepository.reserveNextReservationReference(connection, reservation.reservationDate);
+
   await connection.execute(
     `
       INSERT INTO reservations
-        (resident_id, status_id, approved_by_user_id, created_by_user_id, reservation_date, start_time, end_time, purpose, remarks)
+        (reference_no, resident_id, status_id, approved_by_user_id, created_by_user_id, reservation_date, start_time, end_time, purpose, remarks)
       VALUES
-        (:residentId, 2, 1, 1, :reservationDate, :startTime, :endTime, :purpose, 'Temporary trigger verification record.')
+        (:referenceNo, :residentId, 2, 1, 1, :reservationDate, :startTime, :endTime, :purpose, 'Temporary trigger verification record.')
     `,
-    reservation
+    { ...reservation, referenceNo }
   );
 }
 

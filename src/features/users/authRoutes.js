@@ -8,7 +8,8 @@ import {
   listUsers,
   updateUserAccountStatus,
   updateUserPassword,
-  UserNotFoundError
+  UserNotFoundError,
+  writeUserActivityLog
 } from "./userRepository.js";
 import { validateChangePasswordInput, validateCreateUserInput } from "./userValidation.js";
 
@@ -17,7 +18,8 @@ const defaultRepositories = {
   findUserByUsername,
   listUsers,
   updateUserAccountStatus,
-  updateUserPassword
+  updateUserPassword,
+  writeUserActivityLog
 };
 
 export function createAuthRoutes({
@@ -62,6 +64,11 @@ export function createAuthRoutes({
         username: user.username,
         role: user.role
       };
+      await repo.writeUserActivityLog(db, {
+        userId: user.userId,
+        action: "LOGIN",
+        details: "User logged in."
+      });
       response.redirect("/dashboard");
     } catch (error) {
       renderLogin(response.status(503), {
@@ -71,7 +78,10 @@ export function createAuthRoutes({
     }
   });
 
-  router.post("/logout", (request, response) => {
+  router.post("/logout", async (request, response) => {
+    const user = request.session?.user || null;
+    await writeLogoutActivityLog({ repo, db, user });
+
     if (typeof request.session?.destroy === "function") {
       request.session.destroy(() => response.redirect("/login"));
       return;
@@ -219,6 +229,22 @@ export function createAuthRoutes({
   });
 
   return router;
+}
+
+async function writeLogoutActivityLog({ repo, db, user }) {
+  if (!user?.userId) {
+    return;
+  }
+
+  try {
+    await repo.writeUserActivityLog(db, {
+      userId: user.userId,
+      action: "LOGOUT",
+      details: "User logged out."
+    });
+  } catch (error) {
+    console.error("Unable to write logout activity log:", error.message);
+  }
 }
 
 function requireAdmin(request, response, next) {

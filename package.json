@@ -19,6 +19,7 @@
     "verify:bundle:strict": "node scripts/verify-offline-bundle.mjs --strict",
     "verify:offline-runtime": "node scripts/verify-offline-runtime.mjs",
     "verify:mysql": "node scripts/verify-mysql.mjs",
+    "verify:stress": "node scripts/verify-deployment-stress.mjs",
     "check:database": "node scripts/check-runtime-database.mjs",
     "verify:ui": "node scripts/verify-ui-smoke.mjs",
     "backup:mysql": "node scripts/backup-mysql.mjs",

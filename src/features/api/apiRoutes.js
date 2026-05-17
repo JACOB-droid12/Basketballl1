@@ -2,17 +2,29 @@ import bcrypt from "bcryptjs";
 import { Router } from "express";
 
 import { listActivityLogs } from "../activityLogs/activityLogRepository.js";
+import { getBackupStatus } from "../maintenance/maintenanceRepository.js";
 import {
   createReservation,
   getReservationById,
+  getReservationSlipData,
   getReservationStatuses,
   getTimeSlots,
   listReservations,
   ReservationConflictError,
   ReservationNotFoundError,
+  ReservationPolicyError,
+  ReservationUnavailableError,
   updateReservation,
   updateReservationStatus
 } from "../reservations/reservationRepository.js";
+import {
+  createResidentDirectoryEntry,
+  DuplicateResidentError,
+  listResidents,
+  ResidentNotFoundError,
+  updateResidentDirectoryEntry
+} from "../residents/residentRepository.js";
+import { validateResidentInput } from "../residents/residentValidation.js";
 import { findBlockingOverlap, timeRangesOverlap } from "../reservations/reservationOverlap.js";
 import { normalizeTime, timeToMinutes, validateReservationInput } from "../reservations/reservationValidation.js";
 import {
@@ -22,33 +34,66 @@ import {
   findNearestAvailableSlot
 } from "../schedule/scheduleService.js";
 import {
+  clearPublicUseRange,
+  createScheduleBlock,
+  deactivateScheduleBlock,
+  listScheduleBlocks,
+  ScheduleBlockConflictError,
+  ScheduleBlockNotFoundError
+} from "../schedule/scheduleBlockRepository.js";
+import {
+  CourtPolicyValidationError,
+  getCourtPolicySettings,
+  updateCourtPolicySettings
+} from "../settings/courtPolicyRepository.js";
+import {
   createUser,
   DuplicateUsernameError,
   findUserByUsername,
   listUsers,
   updateUserAccountStatus,
   updateUserPassword,
-  UserNotFoundError
+  UserNotFoundError,
+  writeUserActivityLog
 } from "../users/userRepository.js";
 import { validateChangePasswordInput, validateCreateUserInput } from "../users/userValidation.js";
 import { sendAdminRequired, sendDatabaseError, sendLoginRequired, sendValidationError } from "./apiErrors.js";
-import { toApiAccount, toApiReservation, toApiScheduleSlot, toApiUser } from "./apiMappers.js";
+import {
+  buildActivityLogsCsv,
+  buildDailyScheduleCsv,
+  buildReportsCsv,
+  buildReservationsCsv,
+  buildWeeklyScheduleCsv
+} from "./apiExports.js";
+import { toApiAccount, toApiReservation, toApiScheduleBlock, toApiScheduleSlot, toApiUser } from "./apiMappers.js";
 import { buildReportsPayload } from "./apiReports.js";
 
 const defaultRepositories = {
+  clearPublicUseRange,
   createReservation,
+  createResidentDirectoryEntry,
+  createScheduleBlock,
   createUser,
+  deactivateScheduleBlock,
   findUserByUsername,
+  getBackupStatus,
+  getCourtPolicySettings,
   getReservationById,
+  getReservationSlipData,
   getReservationStatuses,
   getTimeSlots,
   listActivityLogs,
+  listResidents,
+  listScheduleBlocks,
   listReservations,
   listUsers,
+  updateCourtPolicySettings,
   updateReservation,
+  updateResidentDirectoryEntry,
   updateReservationStatus,
   updateUserAccountStatus,
-  updateUserPassword
+  updateUserPassword,
+  writeUserActivityLog
 };
 const AVAILABILITY_SUGGESTION_SEARCH_DAYS = 14;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -88,13 +133,21 @@ export function createApiRoutes({
         username: user.username,
         role: user.role
       };
+      await repo.writeUserActivityLog(db, {
+        userId: user.userId,
+        action: "LOGIN",
+        details: "User logged in."
+      });
       response.json({ user: toApiUser(request.session.user) });
     } catch (error) {
       sendDatabaseError(response, error);
     }
   });
 
-  router.post("/api/logout", (request, response) => {
+  router.post("/api/logout", async (request, response) => {
+    const user = request.session?.user || null;
+    await writeLogoutActivityLog({ repo, db, user });
+
     if (typeof request.session?.destroy === "function") {
       request.session.destroy(() => response.json({ ok: true }));
       return;
@@ -134,12 +187,74 @@ export function createApiRoutes({
     }
   });
 
+  router.get("/api/settings/court-policy", async (_request, response) => {
+    try {
+      const policy = await repo.getCourtPolicySettings(db);
+      response.json({ policy });
+    } catch (error) {
+      sendDatabaseError(response, error);
+    }
+  });
+
+  router.put("/api/settings/court-policy", requireApiAdmin, async (request, response) => {
+    try {
+      const policy = await repo.updateCourtPolicySettings(db, request.body, {
+        userId: request.session.user.userId
+      });
+      response.json({ policy });
+    } catch (error) {
+      if (error instanceof CourtPolicyValidationError) {
+        sendValidationError(response, error.errors);
+        return;
+      }
+
+      sendDatabaseError(response, error);
+    }
+  });
+
   router.get("/api/reservations", async (request, response) => {
     try {
       const reservations = await repo.listReservations(db, cleanReservationFilters(request.query));
       response.json({ reservations: reservations.map(toApiReservation) });
     } catch (error) {
       sendDatabaseError(response, error);
+    }
+  });
+
+  router.get("/api/reservations/history", async (request, response) => {
+    const filters = cleanReservationHistoryFilters(request.query);
+
+    if (!filters.valid) {
+      sendValidationError(response, filters.errors);
+      return;
+    }
+
+    try {
+      const reservations = await repo.listReservations(db, filters.value);
+      response.json(buildReservationHistoryPayload({
+        today: todayProvider(),
+        reservations
+      }));
+    } catch (error) {
+      sendDatabaseError(response, error);
+    }
+  });
+
+  router.get("/api/reservations/:reservationId/slip", async (request, response) => {
+    const reservationId = parsePositiveIntegerParam(request.params.reservationId);
+
+    if (!reservationId) {
+      response.status(400).json({ error: "Reservation ID must be a positive integer." });
+      return;
+    }
+
+    try {
+      const slip = await repo.getReservationSlipData(db, reservationId, {
+        issuedAt: buildIssuedAt(todayProvider(), currentTimeProvider())
+      });
+      response.json({ slip });
+    } catch (error) {
+      sendReservationMutationError(response, error);
     }
   });
 
@@ -263,20 +378,54 @@ export function createApiRoutes({
     }
   });
 
+  router.get("/api/dashboard/alerts", async (_request, response) => {
+    const today = todayProvider();
+
+    try {
+      const [todayReservations, blocks, backupStatus] = await Promise.all([
+        repo.listReservations(db, { reservationDate: today }),
+        repo.listScheduleBlocks(db, { date: today }),
+        repo.getBackupStatus(db, { today })
+      ]);
+
+      response.json(buildDashboardAlertsPayload({
+        today,
+        currentTime: currentTimeProvider(),
+        reservations: todayReservations,
+        blocks,
+        backupStatus
+      }));
+    } catch (error) {
+      sendDatabaseError(response, error);
+    }
+  });
+
   router.get("/api/dashboard", async (_request, response) => {
     const today = todayProvider();
 
     try {
-      const timeSlots = await repo.getTimeSlots(db);
-      const todayReservations = await repo.listReservations(db, { reservationDate: today });
-      const upcomingReservations = await collectReservationsByDate({ db, repo, startDate: addDays(today, 1), days: 7 });
-      const suggestionReservations = await collectReservationsByDate({ db, repo, startDate: today, days: 14 });
-      const todaySchedule = buildDailySchedule({ date: today, timeSlots, reservations: todayReservations });
+      const [
+        timeSlots,
+        todayReservations,
+        upcomingReservations,
+        suggestionReservations,
+        todayBlocks,
+        suggestionBlocks
+      ] = await Promise.all([
+        repo.getTimeSlots(db),
+        repo.listReservations(db, { reservationDate: today }),
+        collectReservationsByDate({ db, repo, startDate: addDays(today, 1), days: 7 }),
+        collectReservationsByDate({ db, repo, startDate: today, days: 14 }),
+        repo.listScheduleBlocks(db, { date: today }),
+        repo.listScheduleBlocks(db, { fromDate: today, toDate: addDays(today, 13) })
+      ]);
+      const todaySchedule = buildDailySchedule({ date: today, timeSlots, reservations: todayReservations, blocks: todayBlocks });
       const summary = buildDashboardSummary({ today, todaySchedule, upcomingReservations });
       const nearestAvailableSlot = findNearestAvailableSlot({
         startDate: today,
         timeSlots,
         reservations: suggestionReservations,
+        blocks: suggestionBlocks,
         searchDays: 14
       });
 
@@ -287,6 +436,203 @@ export function createApiRoutes({
       });
     } catch (error) {
       sendDatabaseError(response, error);
+    }
+  });
+
+  router.get("/api/schedule/daily-print", async (request, response) => {
+    const date = clean(request.query.date) || todayProvider();
+
+    if (!isValidDateString(date)) {
+      sendValidationError(response, { date: "Date must use YYYY-MM-DD format." });
+      return;
+    }
+
+    try {
+      const [timeSlots, reservations, blocks] = await Promise.all([
+        repo.getTimeSlots(db),
+        repo.listReservations(db, { reservationDate: date }),
+        repo.listScheduleBlocks(db, { date })
+      ]);
+      const schedule = buildDailySchedule({ date, timeSlots, reservations, blocks });
+
+      response.json(buildDailyPrintPayload({
+        date,
+        generatedAt: buildIssuedAt(todayProvider(), currentTimeProvider()),
+        schedule,
+        blocks
+      }));
+    } catch (error) {
+      sendDatabaseError(response, error);
+    }
+  });
+
+  router.get("/api/exports/daily-schedule.csv", async (request, response) => {
+    const date = clean(request.query.date) || todayProvider();
+
+    if (!isValidDateString(date)) {
+      sendValidationError(response, { date: "Date must use YYYY-MM-DD format." });
+      return;
+    }
+
+    try {
+      const [timeSlots, reservations, blocks] = await Promise.all([
+        repo.getTimeSlots(db),
+        repo.listReservations(db, { reservationDate: date }),
+        repo.listScheduleBlocks(db, { date })
+      ]);
+      const slots = buildDailySchedule({ date, timeSlots, reservations, blocks })
+        .map(toApiScheduleSlot)
+        .map((slot) => ({ ...slot, date }));
+
+      sendCsv(response, `daily-schedule-${date}-${buildExportTimestamp(todayProvider(), currentTimeProvider())}.csv`, buildDailyScheduleCsv({ slots }));
+    } catch (error) {
+      sendDatabaseError(response, error);
+    }
+  });
+
+  router.get("/api/exports/weekly-schedule.csv", async (request, response) => {
+    const date = clean(request.query.date) || todayProvider();
+
+    if (!isValidDateString(date)) {
+      sendValidationError(response, { date: "Date must use YYYY-MM-DD format." });
+      return;
+    }
+
+    const weekStartDate = getWeekStartDate(date);
+
+    try {
+      const [timeSlots, reservations, blocks] = await Promise.all([
+        repo.getTimeSlots(db),
+        collectReservationsByDate({ db, repo, startDate: weekStartDate, days: 7 }),
+        repo.listScheduleBlocks(db, { fromDate: weekStartDate, toDate: addDays(weekStartDate, 6) })
+      ]);
+      const weeklySchedule = buildWeeklySchedule({ weekStartDate, timeSlots, reservations, blocks });
+      const rows = weeklySchedule.rows.map((row) => ({
+        ...row,
+        cells: row.cells.map((cell, index) => ({
+          ...toApiScheduleSlot(cell),
+          date: weeklySchedule.days[index].date
+        }))
+      }));
+
+      sendCsv(response, `weekly-schedule-${weekStartDate}-${buildExportTimestamp(todayProvider(), currentTimeProvider())}.csv`, buildWeeklyScheduleCsv({ rows }));
+    } catch (error) {
+      sendDatabaseError(response, error);
+    }
+  });
+
+  router.get("/api/exports/monthly-reservations.csv", async (request, response) => {
+    const month = clean(request.query.month) || todayProvider().slice(0, 7);
+    const monthRange = getMonthDateRange(month);
+
+    if (!monthRange) {
+      sendValidationError(response, { month: "Month must use YYYY-MM format." });
+      return;
+    }
+
+    try {
+      const reservations = await repo.listReservations(db, {
+        fromDate: monthRange.fromDate,
+        toDate: monthRange.toDate
+      });
+      sendCsv(response, `monthly-reservations-${month}-${buildExportTimestamp(todayProvider(), currentTimeProvider())}.csv`, buildReservationsCsv(reservations.map(toApiReservation)));
+    } catch (error) {
+      sendDatabaseError(response, error);
+    }
+  });
+
+  router.get("/api/exports/activity-logs.csv", async (request, response) => {
+    try {
+      const logs = await repo.listActivityLogs(db, cleanActivityLogFilters(request.query));
+      sendCsv(response, `activity-logs-${buildExportTimestamp(todayProvider(), currentTimeProvider())}.csv`, buildActivityLogsCsv(logs));
+    } catch (error) {
+      sendDatabaseError(response, error);
+    }
+  });
+
+  router.get("/api/exports/missed-reservations.csv", async (request, response) => {
+    await sendReservationStatusExport({ request, response, repo, db, statusCode: "MISSED", todayProvider, currentTimeProvider });
+  });
+
+  router.get("/api/exports/cancelled-reservations.csv", async (request, response) => {
+    await sendReservationStatusExport({ request, response, repo, db, statusCode: "CANCELLED", todayProvider, currentTimeProvider });
+  });
+
+  router.get("/api/exports/reports.csv", async (request, response) => {
+    const reportFilters = cleanReportFilters(request.query);
+
+    if (!reportFilters.valid) {
+      sendValidationError(response, reportFilters.errors);
+      return;
+    }
+
+    try {
+      const [reservations, blocks] = await Promise.all([
+        repo.listReservations(db, reportFilters.value),
+        repo.listScheduleBlocks(db, { ...reportFilters.value, activeOnly: false })
+      ]);
+      const report = buildReportsPayload(reservations, { blocks });
+
+      sendCsv(response, `reports-${buildExportTimestamp(todayProvider(), currentTimeProvider())}.csv`, buildReportsCsv(report));
+    } catch (error) {
+      sendDatabaseError(response, error);
+    }
+  });
+
+  router.post("/api/schedule/blocks", requireApiAdmin, async (request, response) => {
+    const result = validateScheduleBlockInput(request.body);
+
+    if (!result.valid) {
+      sendValidationError(response, result.errors);
+      return;
+    }
+
+    try {
+      const block = await repo.createScheduleBlock(db, result.value, {
+        userId: request.session.user.userId
+      });
+      response.status(201).json({ block: toApiScheduleBlock(block) });
+    } catch (error) {
+      sendScheduleBlockMutationError(response, error);
+    }
+  });
+
+  router.delete("/api/schedule/blocks/:blockId", requireApiAdmin, async (request, response) => {
+    const blockId = parsePositiveIntegerParam(request.params.blockId);
+
+    if (!blockId) {
+      response.status(400).json({ error: "Schedule block ID must be a positive integer." });
+      return;
+    }
+
+    try {
+      const block = await repo.deactivateScheduleBlock(db, blockId, {
+        userId: request.session.user.userId
+      });
+      response.json({ block: toApiScheduleBlock(block) });
+    } catch (error) {
+      sendScheduleBlockMutationError(response, error);
+    }
+  });
+
+  router.post("/api/schedule/clear-public-use", requireApiAdmin, async (request, response) => {
+    const result = validateClearPublicUseInput(request.body);
+
+    if (!result.valid) {
+      sendValidationError(response, result.errors);
+      return;
+    }
+
+    try {
+      const clearResult = await repo.clearPublicUseRange(db, result.value, {
+        userId: request.session.user.userId
+      });
+      response.status(201).json({
+        block: toApiScheduleBlock(clearResult.block),
+        cancelledReservations: clearResult.cancelledReservations.map(toApiReservation)
+      });
+    } catch (error) {
+      sendScheduleBlockMutationError(response, error);
     }
   });
 
@@ -303,7 +649,8 @@ export function createApiRoutes({
     try {
       const timeSlots = await repo.getTimeSlots(db);
       const reservations = await collectReservationsByDate({ db, repo, startDate: weekStartDate, days: 7 });
-      const weeklySchedule = buildWeeklySchedule({ weekStartDate, timeSlots, reservations });
+      const blocks = await repo.listScheduleBlocks(db, { fromDate: weekStartDate, toDate: addDays(weekStartDate, 6) });
+      const weeklySchedule = buildWeeklySchedule({ weekStartDate, timeSlots, reservations, blocks });
 
       response.json({
         weekStartDate,
@@ -356,6 +703,10 @@ export function createApiRoutes({
         startDate: date,
         days: AVAILABILITY_SUGGESTION_SEARCH_DAYS + 1
       });
+      const blocks = await repo.listScheduleBlocks(db, {
+        fromDate: date,
+        toDate: addDays(date, AVAILABILITY_SUGGESTION_SEARCH_DAYS)
+      });
       const activeReservations = reservations.filter((reservation) => String(reservation.statusCode).toUpperCase() === "RESERVED");
       const suggestionReservations = excludeReservationId ?
         activeReservations.filter((reservation) => Number(reservation.reservationId) !== excludeReservationId) :
@@ -364,14 +715,68 @@ export function createApiRoutes({
         { reservationId: excludeReservationId, reservationDate: date, startTime, endTime, statusCode: "RESERVED" },
         activeReservations
       );
+      const blockConflict = findScheduleBlockOverlap({ date, startTime, endTime, blocks });
 
       response.json({
-        available: !conflict,
+        available: !conflict && !blockConflict,
         conflict: toApiReservation(conflict),
-        suggestions: findAvailabilitySuggestions({ date, startTime, endTime, timeSlots, reservations: suggestionReservations })
+        block: toApiScheduleBlock(blockConflict),
+        suggestions: findAvailabilitySuggestions({ date, startTime, endTime, timeSlots, reservations: suggestionReservations, blocks })
       });
     } catch (error) {
       sendDatabaseError(response, error);
+    }
+  });
+
+  router.get("/api/residents", async (request, response) => {
+    try {
+      const residents = await repo.listResidents(db, cleanResidentFilters(request.query));
+      response.json({ residents });
+    } catch (error) {
+      sendDatabaseError(response, error);
+    }
+  });
+
+  router.post("/api/residents", async (request, response) => {
+    const result = validateResidentInput(request.body);
+
+    if (!result.valid) {
+      sendValidationError(response, result.errors);
+      return;
+    }
+
+    try {
+      const resident = await repo.createResidentDirectoryEntry(db, result.value, {
+        userId: request.session.user.userId
+      });
+      response.status(201).json({ resident });
+    } catch (error) {
+      sendResidentMutationError(response, error);
+    }
+  });
+
+  router.put("/api/residents/:residentId", async (request, response) => {
+    const residentId = parsePositiveIntegerParam(request.params.residentId);
+
+    if (!residentId) {
+      response.status(400).json({ error: "Resident ID must be a positive integer." });
+      return;
+    }
+
+    const result = validateResidentInput(request.body);
+
+    if (!result.valid) {
+      sendValidationError(response, result.errors);
+      return;
+    }
+
+    try {
+      const resident = await repo.updateResidentDirectoryEntry(db, residentId, result.value, {
+        userId: request.session.user.userId
+      });
+      response.json({ resident });
+    } catch (error) {
+      sendResidentMutationError(response, error);
     }
   });
 
@@ -451,6 +856,15 @@ export function createApiRoutes({
     }
   });
 
+  router.get("/api/maintenance/backup-status", async (_request, response) => {
+    try {
+      const backupStatus = await repo.getBackupStatus(db, { today: todayProvider() });
+      response.json({ backupStatus });
+    } catch (error) {
+      sendDatabaseError(response, error);
+    }
+  });
+
   router.get("/api/reports", async (request, response) => {
     const reportFilters = cleanReportFilters(request.query);
 
@@ -460,14 +874,33 @@ export function createApiRoutes({
     }
 
     try {
-      const reservations = await repo.listReservations(db, reportFilters.value);
-      response.json(buildReportsPayload(reservations));
+      const [reservations, blocks] = await Promise.all([
+        repo.listReservations(db, reportFilters.value),
+        repo.listScheduleBlocks(db, { ...reportFilters.value, activeOnly: false })
+      ]);
+      response.json(buildReportsPayload(reservations, { blocks }));
     } catch (error) {
       sendDatabaseError(response, error);
     }
   });
 
   return router;
+}
+
+async function writeLogoutActivityLog({ repo, db, user }) {
+  if (!user?.userId) {
+    return;
+  }
+
+  try {
+    await repo.writeUserActivityLog(db, {
+      userId: user.userId,
+      action: "LOGOUT",
+      details: "User logged out."
+    });
+  } catch (error) {
+    console.error("Unable to write logout activity log:", error.message);
+  }
 }
 
 function requireApiSignedIn(request, response, next) {
@@ -499,6 +932,38 @@ function cleanReservationFilters(query) {
     statusCode: clean(query.statusCode || query.status).toUpperCase(),
     search: clean(query.search),
     purpose: clean(query.purpose)
+  };
+}
+
+function cleanReservationHistoryFilters(query) {
+  const contactNumber = clean(query.contactNumber || query.contactNo);
+  const representativeName = clean(query.name || query.representativeName);
+  const errors = {};
+  const value = {};
+
+  if (!contactNumber && !representativeName) {
+    errors.lookup = "Provide contactNumber or name.";
+  }
+
+  if (contactNumber) {
+    value.contactNumber = contactNumber;
+  }
+
+  if (representativeName) {
+    value.representativeName = representativeName;
+  }
+
+  return {
+    valid: Object.keys(errors).length === 0,
+    errors,
+    value
+  };
+}
+
+function cleanResidentFilters(query) {
+  return {
+    search: clean(query.search),
+    contactNumber: clean(query.contactNumber || query.contactNo)
   };
 }
 
@@ -535,6 +1000,105 @@ function cleanReportFilters(query) {
   };
 }
 
+function validateScheduleBlockInput(input = {}) {
+  const errors = {};
+  const date = clean(input.date);
+  const mode = clean(input.mode || "TIME_RANGE").toUpperCase();
+  const type = clean(input.blockType || input.type).toUpperCase();
+  const reason = clean(input.reason);
+  const startTime = mode === "WHOLE_DAY" ? "07:00" : normalizeTime(input.startTime);
+  const endTime = mode === "WHOLE_DAY" ? "21:00" : normalizeTime(input.endTime);
+
+  if (!date || !isValidDateString(date)) {
+    errors.date = "Date must use YYYY-MM-DD format.";
+  }
+
+  if (!["WHOLE_DAY", "TIME_RANGE"].includes(mode)) {
+    errors.mode = "Maintenance block mode must be WHOLE_DAY or TIME_RANGE.";
+  }
+
+  if (!["CLEANING", "BARANGAY_EVENT", "REPAIRS", "TOURNAMENT", "MEETING", "EMERGENCY_USE", "MAINTENANCE"].includes(type)) {
+    errors.blockType = "Block type is invalid.";
+  }
+
+  if (!reason) {
+    errors.reason = "Reason is required.";
+  }
+
+  if (mode !== "WHOLE_DAY") {
+    if (!normalizeTime(input.startTime)) {
+      errors.startTime = "Start time must use HH:MM format.";
+    }
+
+    if (!normalizeTime(input.endTime)) {
+      errors.endTime = "End time must use HH:MM format.";
+    } else if (startTime && timeToMinutes(endTime) <= timeToMinutes(startTime)) {
+      errors.endTime = "End time must be after start time.";
+    }
+  }
+
+  return {
+    valid: Object.keys(errors).length === 0,
+    errors,
+    value: {
+      date,
+      startTime,
+      endTime,
+      category: "MAINTENANCE",
+      type,
+      mode,
+      reason
+    }
+  };
+}
+
+function validateClearPublicUseInput(input = {}) {
+  const errors = {};
+  const date = clean(input.date);
+  const mode = clean(input.mode || "WHOLE_DAY").toUpperCase();
+  const reason = clean(input.reason || "Cleared for public use");
+  const startTime = mode === "WHOLE_DAY" ? "07:00" : normalizeTime(input.startTime);
+  const endTime = mode === "WHOLE_DAY" ? "21:00" :
+    mode === "FROM_TIME_ONWARD" ? "21:00" :
+      normalizeTime(input.endTime);
+
+  if (!date || !isValidDateString(date)) {
+    errors.date = "Date must use YYYY-MM-DD format.";
+  }
+
+  if (!["WHOLE_DAY", "TIME_RANGE", "FROM_TIME_ONWARD"].includes(mode)) {
+    errors.mode = "Clear mode must be WHOLE_DAY, TIME_RANGE, or FROM_TIME_ONWARD.";
+  }
+
+  if (!reason) {
+    errors.reason = "Reason is required.";
+  }
+
+  if (mode !== "WHOLE_DAY" && !normalizeTime(input.startTime)) {
+    errors.startTime = "Start time must use HH:MM format.";
+  }
+
+  if (mode === "TIME_RANGE" && !normalizeTime(input.endTime)) {
+    errors.endTime = "End time must use HH:MM format.";
+  }
+
+  if (startTime && endTime && timeToMinutes(endTime) <= timeToMinutes(startTime)) {
+    errors.endTime = "End time must be after start time.";
+  }
+
+  return {
+    valid: Object.keys(errors).length === 0,
+    errors,
+    value: {
+      date,
+      mode,
+      startTime,
+      endTime,
+      reason
+    }
+  };
+}
+
 function clean(value) {
   return String(value ?? "").trim();
 }
@@ -548,7 +1112,55 @@ function sendReservationMutationError(response, error) {
     return;
   }
 
+  if (error instanceof ReservationUnavailableError) {
+    response.status(409).json({
+      error: error.message,
+      overlap: toApiScheduleBlock(error.overlap)
+    });
+    return;
+  }
+
+  if (error instanceof ReservationPolicyError) {
+    sendValidationError(response, error.errors);
+    return;
+  }
+
   if (error instanceof ReservationNotFoundError) {
+    response.status(404).json({ error: error.message });
+    return;
+  }
+
+  sendDatabaseError(response, error);
+}
+
+function sendScheduleBlockMutationError(response, error) {
+  if (error instanceof ScheduleBlockConflictError) {
+    response.status(409).json({
+      error: error.message,
+      overlap: toApiScheduleBlock(error.overlap)
+    });
+    return;
+  }
+
+  if (error instanceof ScheduleBlockNotFoundError) {
+    response.status(404).json({ error: error.message });
+    return;
+  }
+
+  sendDatabaseError(response, error);
+}
+
+function sendResidentMutationError(response, error) {
+  if (error instanceof DuplicateResidentError) {
+    response.status(409).json({
+      errors: {
+        contactNumber: error.message
+      }
+    });
+    return;
+  }
+
+  if (error instanceof ResidentNotFoundError) {
     response.status(404).json({ error: error.message });
     return;
   }
@@ -577,14 +1189,242 @@ function mapDashboardSummary(summary) {
   };
 }
 
-function findAvailabilitySuggestions({ date, startTime, endTime, timeSlots, reservations }) {
+function buildReservationHistoryPayload({ today, reservations = [] }) {
+  const sorted = [...reservations].sort((a, b) => (
+    `${a.reservationDate} ${a.startTime}`.localeCompare(`${b.reservationDate} ${b.startTime}`) ||
+    Number(a.reservationId || 0) - Number(b.reservationId || 0)
+  ));
+  const counts = {
+    missedCount: 0,
+    cancelledCount: 0,
+    completedCount: 0,
+    activeReservationCount: 0
+  };
+
+  for (const reservation of sorted) {
+    const statusCode = String(reservation.statusCode || "").toUpperCase();
+
+    if (statusCode === "MISSED") {
+      counts.missedCount += 1;
+    } else if (statusCode === "CANCELLED") {
+      counts.cancelledCount += 1;
+    } else if (statusCode === "COMPLETED") {
+      counts.completedCount += 1;
+    } else if (statusCode === "RESERVED") {
+      counts.activeReservationCount += 1;
+    }
+  }
+
+  const pastReservations = sorted
+    .filter((reservation) => reservation.reservationDate < today || String(reservation.statusCode).toUpperCase() !== "RESERVED")
+    .reverse();
+  const upcomingReservations = sorted.filter((reservation) => reservation.reservationDate >= today && String(reservation.statusCode).toUpperCase() === "RESERVED");
+  const lastReservation = sorted[sorted.length - 1] || null;
+
+  return {
+    lookup: {
+      representativeName: sorted[0]?.representativeName || "",
+      contactNo: sorted[0]?.contactNo || ""
+    },
+    summary: {
+      totalReservations: sorted.length,
+      ...counts,
+      lastReservationDate: lastReservation?.reservationDate || null
+    },
+    pastReservations: pastReservations.map(toApiReservation),
+    upcomingReservations: upcomingReservations.map(toApiReservation)
+  };
+}
+
+function buildDailyPrintPayload({ date, generatedAt, schedule, blocks }) {
+  const slots = schedule.map(toApiScheduleSlot);
+  const totals = slots.reduce((result, slot) => {
+    const key = statusTotalKey(slot.statusCode);
+    result[key] = (result[key] || 0) + 1;
+    return result;
+  }, {
+    available: 0,
+    reserved: 0,
+    missed: 0,
+    cancelled: 0,
+    completed: 0,
+    maintenance: 0,
+    clearedPublicUse: 0
+  });
+
+  return {
+    date,
+    generatedAt,
+    slots,
+    blocks: blocks.map(toApiScheduleBlock),
+    totals
+  };
+}
+
+function buildDashboardAlertsPayload({ today, currentTime, reservations = [], blocks = [], backupStatus = {} }) {
+  const activeReservations = reservations
+    .filter((reservation) => String(reservation.statusCode || "").toUpperCase() === "RESERVED")
+    .sort((a, b) => String(a.startTime).localeCompare(String(b.startTime)));
+  const missedReservations = reservations
+    .filter((reservation) => String(reservation.statusCode || "").toUpperCase() === "MISSED");
+  const currentMinutes = timeToMinutes(currentTime);
+  const nextReservation = activeReservations.find((reservation) => timeToMinutes(reservation.startTime) >= currentMinutes) || null;
+  const publicUseBlocks = blocks.filter((block) => String(block.statusCode || block.category || "").toUpperCase().includes("PUBLIC_USE"));
+  const maintenanceBlocks = blocks.filter((block) => String(block.category || "").toUpperCase() === "MAINTENANCE");
+  const alerts = [
+    {
+      type: "TODAY_RESERVATIONS",
+      severity: activeReservations.length > 0 ? "info" : "low",
+      message: `Today has ${activeReservations.length} active reservation${activeReservations.length === 1 ? "" : "s"}.`,
+      count: activeReservations.length
+    }
+  ];
+
+  if (nextReservation) {
+    alerts.push({
+      type: "NEXT_RESERVATION",
+      severity: "info",
+      message: `Next reservation starts in ${Math.max(0, timeToMinutes(nextReservation.startTime) - currentMinutes)} minutes.`,
+      reservation: toApiReservation(nextReservation)
+    });
+  }
+
+  if (missedReservations.length > 0) {
+    alerts.push({
+      type: "MISSED_PENDING",
+      severity: "warning",
+      message: `${missedReservations.length} missed reservation${missedReservations.length === 1 ? "" : "s"} need review.`,
+      count: missedReservations.length
+    });
+  }
+
+  if (backupStatus.backupDue) {
+    alerts.push({
+      type: "BACKUP_DUE",
+      severity: "warning",
+      message: backupStatus.lastBackupAt ?
+        `No backup has been made in ${backupStatus.daysSinceBackup} days.` :
+        "No successful backup has been recorded.",
+      backupStatus
+    });
+  }
+
+  if (publicUseBlocks.length > 0) {
+    alerts.push({
+      type: "PUBLIC_USE_ACTIVE",
+      severity: "info",
+      message: "A cleared public-use range is active today.",
+      count: publicUseBlocks.length
+    });
+  }
+
+  if (maintenanceBlocks.length > 0) {
+    alerts.push({
+      type: "MAINTENANCE_ACTIVE",
+      severity: "warning",
+      message: "The court has maintenance or unavailable blocks today.",
+      count: maintenanceBlocks.length
+    });
+  }
+
+  return {
+    date: today,
+    alerts,
+    metrics: {
+      todayReservationCount: activeReservations.length,
+      missedPendingCount: missedReservations.length,
+      nextReservation: nextReservation ? {
+        ...toApiReservation(nextReservation),
+        startsInMinutes: Math.max(0, timeToMinutes(nextReservation.startTime) - currentMinutes)
+      } : null,
+      backupStatus,
+      publicUseActiveToday: publicUseBlocks.length > 0,
+      maintenanceActiveToday: maintenanceBlocks.length > 0
+    }
+  };
+}
+
+function statusTotalKey(statusCode) {
+  const normalized = String(statusCode || "AVAILABLE").toUpperCase();
+  const keys = {
+    AVAILABLE: "available",
+    RESERVED: "reserved",
+    MISSED: "missed",
+    CANCELLED: "cancelled",
+    COMPLETED: "completed",
+    MAINTENANCE: "maintenance",
+    BARANGAY_EVENT: "maintenance",
+    CLEARED_PUBLIC_USE: "clearedPublicUse"
+  };
+
+  return keys[normalized] || "maintenance";
+}
+
+function buildIssuedAt(date, time) {
+  return `${date} ${normalizeScheduleTime(time)}:00`;
+}
+
+async function sendReservationStatusExport({ request, response, repo, db, statusCode, todayProvider, currentTimeProvider }) {
+  const reportFilters = cleanReportFilters(request.query);
+
+  if (!reportFilters.valid) {
+    sendValidationError(response, reportFilters.errors);
+    return;
+  }
+
+  try {
+    const reservations = await repo.listReservations(db, {
+      ...reportFilters.value,
+      statusCode
+    });
+    sendCsv(
+      response,
+      `${statusCode.toLowerCase()}-reservations-${buildExportTimestamp(todayProvider(), currentTimeProvider())}.csv`,
+      buildReservationsCsv(reservations.map(toApiReservation))
+    );
+  } catch (error) {
+    sendDatabaseError(response, error);
+  }
+}
+
+function sendCsv(response, filename, csv) {
+  response.setHeader("content-type", "text/csv; charset=utf-8");
+  response.setHeader("content-disposition", `attachment; filename="${filename}"`);
+  response.send(csv);
+}
+
+function buildExportTimestamp(date, time) {
+  return `${date.replaceAll("-", "")}-${normalizeScheduleTime(time).replace(":", "")}00`;
+}
+
+function getMonthDateRange(month) {
+  if (!/^\d{4}-\d{2}$/.test(month)) {
+    return null;
+  }
+
+  const [year, monthNumber] = month.split("-").map(Number);
+
+  if (monthNumber < 1 || monthNumber > 12) {
+    return null;
+  }
+
+  const lastDay = new Date(Date.UTC(year, monthNumber, 0)).getUTCDate();
+
+  return {
+    fromDate: `${month}-01`,
+    toDate: `${month}-${String(lastDay).padStart(2, "0")}`
+  };
+}
+
+function findAvailabilitySuggestions({ date, startTime, endTime, timeSlots, reservations, blocks = [] }) {
   const requestedDuration = timeToMinutes(endTime) - timeToMinutes(startTime);
   const sameDaySuggestions = findAvailableSlotsForDate({
     date,
     minimumStartMinutes: timeToMinutes(startTime),
     requestedDuration,
     timeSlots,
-    reservations
+    reservations,
+    blocks
   });
 
   if (sameDaySuggestions.length > 0) {
@@ -599,14 +1439,15 @@ function findAvailabilitySuggestions({ date, startTime, endTime, timeSlots, rese
       minimumStartMinutes: 0,
       requestedDuration,
       timeSlots,
-      reservations
+      reservations,
+      blocks
     }));
   }
 
   return futureSuggestions.slice(0, 4);
 }
 
-function findAvailableSlotsForDate({ date, minimumStartMinutes, requestedDuration, timeSlots, reservations }) {
+function findAvailableSlotsForDate({ date, minimumStartMinutes, requestedDuration, timeSlots, reservations, blocks = [] }) {
   const slots = [...timeSlots].sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
   const suggestions = [];
 
@@ -643,6 +1484,10 @@ function findAvailableSlotsForDate({ date, minimumStartMinutes, requestedDuratio
       continue;
     }
 
+    if (findScheduleBlockOverlap({ date, startTime: firstSlot.startTime, endTime, blocks })) {
+      continue;
+    }
+
     suggestions.push({
       date,
       slotId: firstSlot.slotId,
@@ -653,6 +1498,12 @@ function findAvailableSlotsForDate({ date, minimumStartMinutes, requestedDuratio
   }
 
   return suggestions;
+}
+
+function findScheduleBlockOverlap({ date, startTime, endTime, blocks = [] }) {
+  return blocks
+    .filter((block) => block.date === date && block.isActive !== false)
+    .find((block) => timeRangesOverlap(startTime, endTime, block.startTime, block.endTime)) || null;
 }
 
 function buildAvailabilityValidationErrors({ date, rawStartTime, rawEndTime, startTime, endTime, excludeReservationIdText = "", excludeReservationId = null }) {

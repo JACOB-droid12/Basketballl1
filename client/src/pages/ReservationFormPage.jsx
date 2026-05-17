@@ -36,6 +36,16 @@ const EMPTY_FORM = {
   statusCode: "RESERVED"
 };
 
+// Field length caps mirror the DB columns in database/schema.sql so we never
+// let the user type past what the server can store. Remarks is TEXT in the DB
+// but we cap it at 1000 chars on the client to keep the form printable and
+// the Activity Log readable.
+const MAX_REPRESENTATIVE_NAME = 140;
+const MAX_CONTACT_NO = 30;
+const MAX_ADDRESS = 255;
+const MAX_PURPOSE = 120;
+const MAX_REMARKS = 1000;
+
 export function ReservationFormPage({ reservationId, onNavigate }) {
   const isEdit = Boolean(reservationId);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -44,6 +54,10 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
   const [availability, setAvailability] = useState({ loading: false, data: null, error: "", errors: {} });
   const [timeTouched, setTimeTouched] = useState(false);
   const [endTimeOverride, setEndTimeOverride] = useState(false);
+  // Bumping availabilityRetry retriggers the availability check after a
+  // network or server error without the user having to re-touch a time field.
+  const [availabilityRetry, setAvailabilityRetry] = useState(0);
+  const todayInManila = useMemo(() => getManilaDate(), []);
 
   useEffect(() => {
     if (!isEdit) return;
@@ -77,7 +91,7 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
       })
       .catch((error) => {
         if (!active) return;
-        setState({ loading: false, saving: false, error: error.message, fieldErrors: {} });
+        setState({ loading: false, saving: false, error: friendlyLoadError(error), fieldErrors: {} });
       });
 
     return () => {
@@ -110,6 +124,7 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
       return;
     }
 
+    const controller = new AbortController();
     let active = true;
     const timer = window.setTimeout(() => {
       const params = new URLSearchParams({
@@ -122,17 +137,19 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
       }
 
       setAvailability({ loading: true, data: null, error: "", errors: {} });
-      apiRequest(`/api/availability?${params.toString()}`)
+      apiRequest(`/api/availability?${params.toString()}`, { signal: controller.signal })
         .then((data) => {
           if (!active) return;
           setAvailability({ loading: false, data, error: "", errors: {} });
         })
         .catch((error) => {
-          if (!active) return;
+          // An aborted request is not a real error — it just means the user
+          // moved to a different time before the response landed.
+          if (!active || error?.name === "AbortError") return;
           setAvailability({
             loading: false,
             data: null,
-            error: error.message,
+            error: friendlyAvailabilityError(error),
             errors: error.data?.errors || {}
           });
         });
@@ -141,8 +158,11 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
     return () => {
       active = false;
       window.clearTimeout(timer);
+      controller.abort();
     };
-  }, [canCheckAvailability, form.endTime, form.reservationDate, form.startTime, isEdit, reservationId]);
+    // availabilityRetry is intentionally a dependency so the user's "Try
+    // again" tap re-runs this effect even when no other input changed.
+  }, [canCheckAvailability, form.endTime, form.reservationDate, form.startTime, isEdit, reservationId, availabilityRetry]);
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -190,6 +210,10 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
 
   async function handleSubmit(event) {
     event.preventDefault();
+    // Defense-in-depth against double-submit: the button is already disabled
+    // while saving, but this catches the rare Enter-key path where the focus
+    // lands on a non-button element.
+    if (state.saving) return;
     setState((current) => ({ ...current, saving: true, error: "", fieldErrors: {} }));
 
     try {
@@ -226,7 +250,12 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
 
       {state.error && <div className="alert error" role="alert">{state.error}</div>}
 
-      <form className="card staff-reservation-form" onSubmit={handleSubmit}>
+      <form
+        className="card staff-reservation-form"
+        onSubmit={handleSubmit}
+        aria-busy={state.saving ? "true" : undefined}
+        noValidate
+      >
         <section className="form-section">
           <h3><span className="section-num">1</span>Who is booking?</h3>
           <div className="section-hint">Sino ang magpapa-reserba?</div>
@@ -239,13 +268,33 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
               error={state.fieldErrors.representativeName}
               wide
             >
-              <input autoComplete="name" value={form.representativeName} onChange={(event) => updateField("representativeName", event.target.value)} required />
+              <input
+                autoComplete="name"
+                maxLength={MAX_REPRESENTATIVE_NAME}
+                value={form.representativeName}
+                onChange={(event) => updateField("representativeName", event.target.value)}
+                required
+              />
             </Field>
             <Field id="contactNo" label="Contact number" filipino="Cellphone number" error={state.fieldErrors.contactNo}>
-              <input autoComplete="tel" value={form.contactNo} onChange={(event) => updateField("contactNo", event.target.value)} required />
+              <input
+                autoComplete="tel"
+                inputMode="tel"
+                maxLength={MAX_CONTACT_NO}
+                pattern="[0-9+\-()\s]{7,30}"
+                value={form.contactNo}
+                onChange={(event) => updateField("contactNo", event.target.value)}
+                required
+              />
             </Field>
             <Field id="address" label="Address" filipino="Tirahan" error={state.fieldErrors.address}>
-              <input autoComplete="street-address" value={form.address} onChange={(event) => updateField("address", event.target.value)} required />
+              <input
+                autoComplete="street-address"
+                maxLength={MAX_ADDRESS}
+                value={form.address}
+                onChange={(event) => updateField("address", event.target.value)}
+                required
+              />
             </Field>
             <Field
               id="purpose"
@@ -255,7 +304,13 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
               error={state.fieldErrors.purpose}
               wide
             >
-              <input autoComplete="off" value={form.purpose} onChange={(event) => updateField("purpose", event.target.value)} required />
+              <input
+                autoComplete="off"
+                maxLength={MAX_PURPOSE}
+                value={form.purpose}
+                onChange={(event) => updateField("purpose", event.target.value)}
+                required
+              />
             </Field>
           </div>
         </section>
@@ -264,9 +319,31 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
           <h3><span className="section-num">2</span>When will they use the court?</h3>
           <div className="section-hint">Kailan nila gustong gamitin?</div>
 
-          <Field id="reservationDate" label="Date" filipino="Petsa" error={state.fieldErrors.reservationDate}>
-            <input type="date" autoComplete="off" value={form.reservationDate} onChange={(event) => updateField("reservationDate", event.target.value)} required />
+          <Field
+            id="reservationDate"
+            label="Date"
+            filipino="Petsa"
+            hint={isPastDate(form.reservationDate, todayInManila) ? "Heads up: this date is in the past. Save anyway only if you are encoding a walk-in that already happened." : undefined}
+            error={state.fieldErrors.reservationDate}
+          >
+            <input
+              type="date"
+              autoComplete="off"
+              value={form.reservationDate}
+              onChange={(event) => updateField("reservationDate", event.target.value)}
+              required
+            />
           </Field>
+
+          {isLegacyTimeSlot(form.startTime, form.endTime) && (
+            <div className="banner banner-info availability-panel" role="status">
+              <div className="b-ic"><Icon name="info" /></div>
+              <div>
+                <h4>Saved time uses an old slot</h4>
+                <p>This reservation was saved at {formatTime(form.startTime)} to {formatTime(form.endTime)}, which is not on the current hourly grid. Pick a Start time below to move it onto the standard schedule, or open Adjust end time manually to keep a custom end.</p>
+              </div>
+            </div>
+          )}
 
           <div className="slot-picker time-chip-picker" aria-label="Start time picker">
             <span className="field-label">
@@ -345,7 +422,9 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
             isEdit={isEdit}
             hasEditedTimeChanged={hasEditedTimeChanged}
             timeTouched={timeTouched}
+            suppressUnchangedHint={isLegacyTimeSlot(form.startTime, form.endTime)}
             onApplySuggestion={applySuggestion}
+            onRetry={() => setAvailabilityRetry((value) => value + 1)}
           />
         </section>
 
@@ -353,7 +432,13 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
           <h3><span className="section-num">3</span>Any notes?</h3>
           <div className="section-hint">Mga paalala</div>
           <Field id="remarks" label="Remarks" filipino="Paalala" error={state.fieldErrors.remarks} wide>
-            <textarea autoComplete="off" value={form.remarks} onChange={(event) => updateField("remarks", event.target.value)} rows="4" />
+            <textarea
+              autoComplete="off"
+              maxLength={MAX_REMARKS}
+              value={form.remarks}
+              onChange={(event) => updateField("remarks", event.target.value)}
+              rows="4"
+            />
           </Field>
         </section>
 
@@ -375,7 +460,7 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
   );
 }
 
-function AvailabilityNotice({ availability, canCheck, isEdit, hasEditedTimeChanged, timeTouched, onApplySuggestion }) {
+function AvailabilityNotice({ availability, canCheck, isEdit, hasEditedTimeChanged, timeTouched, suppressUnchangedHint, onApplySuggestion, onRetry }) {
   // Don't show the idle "pick a valid date and time" panel until the user has
   // touched a time field. On a fresh form it would be pre-emptive helper text
   // that creates anxiety where there shouldn't be any.
@@ -385,6 +470,10 @@ function AvailabilityNotice({ availability, canCheck, isEdit, hasEditedTimeChang
 
   if (!canCheck) {
     const unchangedEditSlot = isEdit && !hasEditedTimeChanged;
+    // If the legacy-time-slot notice above already explains "this saved time
+    // is off the standard grid, pick a Start time below," we'd be repeating
+    // ourselves with a second info banner. Skip it.
+    if (unchangedEditSlot && suppressUnchangedHint) return null;
 
     return (
       <div className="banner banner-info availability-panel">
@@ -417,6 +506,15 @@ function AvailabilityNotice({ availability, canCheck, isEdit, hasEditedTimeChang
           <h4>Availability could not be confirmed</h4>
           <p>{availability.error}</p>
           <ValidationErrorList errors={availability.errors} />
+          {typeof onRetry === "function" && (
+            <button
+              type="button"
+              className="btn btn-light availability-retry"
+              onClick={onRetry}
+            >
+              Try again
+            </button>
+          )}
         </div>
       </div>
     );
@@ -478,12 +576,106 @@ function ValidationErrorList({ errors }) {
 }
 
 function buildSubmitError(error) {
-  if (error.status === 409 && error.data?.overlap) {
+  if (error?.name === "AbortError") {
+    return "The save was interrupted. Please try again.";
+  }
+
+  if (isNetworkError(error)) {
+    return "The system is offline or the office network is down. Reservation was not saved. Try again once the network is back.";
+  }
+
+  if (error?.status === 409 && error.data?.overlap) {
     const overlap = error.data.overlap;
     return `${error.message} Conflict: #${overlap.reservationId} ${overlap.representativeName} on ${formatDate(overlap.reservationDate)} ${formatTime(overlap.startTime)} - ${formatTime(overlap.endTime)}.`;
   }
 
-  return error.message;
+  if (error?.status === 401) {
+    return "Your session has expired. Sign in again, then re-open this reservation.";
+  }
+
+  if (error?.status === 403) {
+    return "You do not have permission to save this reservation. Ask the staff lead.";
+  }
+
+  if (error?.status === 404) {
+    return "This reservation no longer exists. It may have been deleted by another staff member.";
+  }
+
+  if (error?.status === 429) {
+    return "Too many save attempts in a row. Wait a moment and try again.";
+  }
+
+  if (error?.status >= 500) {
+    return "The system could not save the reservation. The office computer may need a restart.";
+  }
+
+  return error?.message || "Reservation was not saved.";
+}
+
+function friendlyLoadError(error) {
+  if (isNetworkError(error)) {
+    return "The system is offline or the office network is down. Bukas hindi makakonekta. Try again once the network is back.";
+  }
+
+  if (error?.status === 401) {
+    return "Your session has expired. Sign in again to keep editing.";
+  }
+
+  if (error?.status === 403) {
+    return "You do not have permission to view this reservation.";
+  }
+
+  if (error?.status === 404) {
+    return "This reservation could not be found. It may have been deleted.";
+  }
+
+  if (error?.status >= 500) {
+    return "The system could not load this reservation. The office computer may need a restart.";
+  }
+
+  return error?.message || "This reservation could not be loaded.";
+}
+
+function friendlyAvailabilityError(error) {
+  if (isNetworkError(error)) {
+    return "Could not reach the court schedule. Check the office network, then tap Try again.";
+  }
+
+  if (error?.status === 401) {
+    return "Your session has expired. Sign in again to check availability.";
+  }
+
+  if (error?.status >= 500) {
+    return "The schedule check did not respond. Tap Try again, or save anyway and the backend will still confirm.";
+  }
+
+  return error?.message || "Availability could not be confirmed.";
+}
+
+function isNetworkError(error) {
+  if (!error) return false;
+  // fetch() throws a TypeError with no `status` when the request never reached
+  // the server (offline, DNS failure, CORS preflight blocked, etc.).
+  if (error.name === "TypeError" && typeof error.status === "undefined") return true;
+  if (error.message === "Failed to fetch") return true;
+  if (error.message === "Network request failed") return true;
+  return false;
+}
+
+function isPastDate(date, today) {
+  if (!isValidDate(date) || !isValidDate(today)) return false;
+  return date < today;
+}
+
+function isLegacyTimeSlot(startTime, endTime) {
+  // Detect saved reservations whose times don't fall on the standard hourly
+  // grid the chip picker offers (legacy data, half-hour slots from older
+  // imports). Show a calm explanation rather than leaving the chip strip
+  // looking unselected.
+  if (!isValidTimeRange(startTime, endTime)) return false;
+  const startKnown = TIME_OPTIONS.includes(startTime);
+  const endKnown = TIME_OPTIONS.includes(endTime);
+  return !startKnown || !endKnown;
 }
 
 function normalizeTime(time) {

@@ -3,7 +3,10 @@ const STATUS_LABELS = {
   RESERVED: "Reserved",
   MISSED: "Missed",
   CANCELLED: "Cancelled",
-  COMPLETED: "Completed"
+  COMPLETED: "Completed",
+  MAINTENANCE: "Maintenance",
+  BARANGAY_EVENT: "Barangay event",
+  CLEARED_PUBLIC_USE: "Cleared for public use"
 };
 
 export function toApiUser(user) {
@@ -43,6 +46,7 @@ export function toApiReservation(reservation) {
 
   return {
     reservationId: reservation.reservationId,
+    referenceNo: reservation.referenceNo || "",
     reservationDate: reservation.reservationDate,
     startTime: normalizeTime(reservation.startTime),
     endTime: normalizeTime(reservation.endTime),
@@ -72,7 +76,32 @@ export function toApiScheduleSlot(slot) {
     statusCode,
     statusName: STATUS_LABELS[statusCode] || slot.statusName || statusCode,
     isAvailableForBooking: Boolean(slot.isAvailableForBooking),
-    reservation: toApiReservation(slot.reservation)
+    reservation: toApiReservation(slot.reservation),
+    block: toApiScheduleBlock(slot.block)
+  };
+}
+
+export function toApiScheduleBlock(block) {
+  if (!block) {
+    return null;
+  }
+
+  const statusCode = normalizeStatus(block.statusCode || block.type || block.category);
+
+  return {
+    blockId: block.blockId,
+    date: block.date,
+    startTime: normalizeTime(block.startTime),
+    endTime: normalizeTime(block.endTime),
+    mode: block.mode || "TIME_RANGE",
+    category: block.category || "",
+    type: block.type || "",
+    statusCode,
+    statusName: STATUS_LABELS[statusCode] || block.statusName || statusCode,
+    reason: block.reason || "",
+    createdByName: block.createdByName || "",
+    createdAt: block.createdAt || "",
+    isActive: block.isActive !== false
   };
 }
 

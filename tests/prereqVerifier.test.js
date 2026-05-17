@@ -6,6 +6,7 @@ import {
   commandResult,
   formatPrereqReport,
   parseMajorVersion,
+  resolveRuntimeCommand,
   verifyPrerequisites
 } from "../scripts/verify-prereqs.mjs";
 
@@ -82,6 +83,17 @@ test("requires APP_SESSION_SECRET to be at least 32 characters and not a placeho
   assert.equal(shortSecretReport.checks.find((check) => check.name === "APP_SESSION_SECRET").ok, false);
   assert.equal(placeholderReport.checks.find((check) => check.name === "APP_SESSION_SECRET").ok, false);
   assert.equal(validReport.checks.find((check) => check.name === "APP_SESSION_SECRET").ok, true);
+});
+
+test("uses bundled runtime tools when the office package includes them", async () => {
+  const command = await resolveRuntimeCommand(
+    "C:\\BarangayCourtScheduler",
+    ["runtime/mariadb/bin/mysql.exe"],
+    "mysql",
+    async (candidate) => candidate.endsWith("mysql.exe")
+  );
+
+  assert.equal(command, "C:\\BarangayCourtScheduler\\runtime\\mariadb\\bin\\mysql.exe");
 });
 
 test("formats prereq report without leaking database password", () => {

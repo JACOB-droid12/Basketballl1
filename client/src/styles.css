@@ -112,6 +112,16 @@
   --shadow-lg: 0 24px 60px rgba(15, 30, 60, 0.18);
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
   --font-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+
+  /* ----- Motion ---------------------------------------------------------- */
+  /* Civic register motion: short, functional, decisive. Decelerating curves */
+  /* (no bounce, no elastic). Reused by the login entrance and any later     */
+  /* page-mount choreography. Durations stay inside the 120–250ms working    */
+  /* band; the orientation entrance is the one place we permit ~600ms.       */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo:  cubic-bezier(0.16, 1, 0.3, 1);
+
   font-family: var(--font-sans);
   font-size: 17px;
 }
@@ -2671,6 +2681,15 @@ p {
   margin-top: 20px;
 }
 
+/* Recovery affordance shown when /api/availability fails. Sits below the
+   error copy so the message is the lead and the retry tap follows it. */
+.availability-retry {
+  margin-top: 12px;
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
 .suggestion-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -3136,6 +3155,189 @@ p {
     transform: rotate(360deg);
   }
 }
+
+/* ----- Login entrance choreography ------------------------------------- */
+/* One orientation moment. The Civic Blue side glides in from the left at  */
+/* 0ms, the form card from the right at 80ms. Inside the side, the seal,   */
+/* serif headline, body line, and install-note stagger so the bilingual    */
+/* welcome reads like a spoken sentence. Inside the form, the heading,     */
+/* fields, and submit step in at 120ms intervals. Reduced-motion users get */
+/* the final state with no transform; the rule below restores opacity:1.   */
+
+@keyframes login-side-in {
+  from {
+    opacity: 0;
+    transform: translate3d(-12px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes login-form-in {
+  from {
+    opacity: 0;
+    transform: translate3d(12px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes login-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes login-em-warm {
+  from {
+    color: rgba(255, 255, 255, 0.9);
+  }
+  to {
+    color: var(--accent-warm);
+  }
+}
+
+@keyframes alert-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.login-side {
+  animation: login-side-in 560ms var(--ease-out-quart) both;
+}
+
+.login-form-card {
+  animation: login-form-in 560ms 80ms var(--ease-out-quart) both;
+}
+
+.login-side .seal-row,
+.login-side .login-mark,
+.login-side .login-headline,
+.login-side .login-side-foot,
+.login-side > div:nth-of-type(2),
+.login-install-note {
+  animation: login-rise 540ms var(--ease-out-quint) both;
+}
+
+.login-side .seal-row,
+.login-side .login-mark { animation-delay: 120ms; }
+.login-side > div:nth-of-type(2),
+.login-side .login-headline { animation-delay: 220ms; }
+.login-install-note,
+.login-side .login-side-foot { animation-delay: 360ms; }
+
+/* The italic Court Orange Warm "Maligayang pagdating" finishes warming a  */
+/* beat after the headline lands, so the local language arrives last like  */
+/* a spoken second clause. White → accent-warm, never the reverse.         */
+.login-side h1 em {
+  animation: login-em-warm 480ms 520ms var(--ease-out-quart) both;
+}
+
+.login-form-card > * {
+  animation: login-rise 460ms var(--ease-out-quint) both;
+}
+
+.login-form-card > *:nth-child(1) { animation-delay: 160ms; }
+.login-form-card > *:nth-child(2) { animation-delay: 220ms; }
+.login-form-card > *:nth-child(3) { animation-delay: 280ms; }
+.login-form-card > *:nth-child(4) { animation-delay: 340ms; }
+.login-form-card > *:nth-child(5) { animation-delay: 400ms; }
+.login-form-card > *:nth-child(6) { animation-delay: 460ms; }
+.login-form-card > *:nth-child(7) { animation-delay: 520ms; }
+
+.login-form-card .alert {
+  animation: alert-rise 200ms var(--ease-out-quart) both;
+}
+
+/* Seal hover: a small confident lift, not a wiggle. The seal is the only */
+/* element on the side that responds to pointer; we treat it as a brand   */
+/* moment, not an interactive control. */
+.login-side .seal {
+  transition: transform 200ms var(--ease-out-quart),
+              border-color 200ms var(--ease-out-quart);
+}
+
+.seal-row:hover .seal {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+/* Sign-in button press feedback. The translate is reversed by ease-out    */
+/* on release, so it reads as decisive, never bouncy. */
+.login-form-card .btn-primary {
+  transition: background 160ms var(--ease-out-quart),
+              border-color 160ms var(--ease-out-quart),
+              color 160ms var(--ease-out-quart),
+              transform 120ms var(--ease-out-quart),
+              box-shadow 200ms var(--ease-out-quart);
+}
+
+.login-form-card .btn-primary:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+/* Inline spinner that rides next to the "Signing in…" label so the button */
+/* stays the same height and never reflows. Builds on the existing `spin`  */
+/* keyframe at the top of this file. */
+.btn-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: white;
+  animation: spin 720ms linear infinite;
+  vertical-align: -3px;
+  margin-right: 10px;
+}
+
+/* Reduced-motion override: hold final visual state, no entrance, no       */
+/* warming-color shift, no spinner rotation. The global reduced-motion     */
+/* block at the bottom of the file shortens transitions, but elements      */
+/* using `animation: ... both` still need their final color/transform     */
+/* explicitly restored. */
+@media (prefers-reduced-motion: reduce) {
+  .login-side,
+  .login-form-card,
+  .login-side .seal-row,
+  .login-side .login-mark,
+  .login-side .login-headline,
+  .login-side .login-side-foot,
+  .login-side > div:nth-of-type(2),
+  .login-install-note,
+  .login-form-card > *,
+  .login-form-card .alert {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .login-side h1 em {
+    animation: none !important;
+    color: var(--accent-warm) !important;
+  }
+
+  .btn-spinner {
+    animation: none !important;
+    border-top-color: rgba(255, 255, 255, 0.4) !important;
+  }
+}
+
 
 @media (max-width: 820px) {
   .login-page {
@@ -3749,5 +3951,408 @@ p {
   .loading-mark {
     animation: none !important;
     border-top-color: var(--primary);
+  }
+}
+
+
+/* ----- Login overdrive ------------------------------------------------- */
+/* Pushes the staff login from "calm and confident" to "this office system  */
+/* watches my back" without leaving the civic-paper register. Four parts:   */
+/*   A. Sentinel: caps lock surface, enter-hint chip, system-ready dot.     */
+/*   B. Handoff: same-document View Transition into the dashboard, with     */
+/*      the seal as the morphing identity element.                          */
+/*   C. Office Clock: live "Today" line in Filipino + greeting that swaps   */
+/*      with time of day (handled in JSX; CSS just shapes it).              */
+/*   D. Real seal + civic-paper backdrop: image-or-fallback seal centerpiece*/
+/*      and a one-time-baked watermark + grain on the blue panel.           */
+
+/* Layout reset for the new login-side structure. Old markup used a flex    */
+/* column with three direct children; new markup adds explicit landmark     */
+/* wrappers (login-mark, login-headline, login-side-foot) that still flow   */
+/* in the same pattern.                                                     */
+.login-side {
+  isolation: isolate;
+}
+
+.login-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.login-mark .login-republic {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.login-mark .login-barangay {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: white;
+  letter-spacing: 0.005em;
+}
+
+.login-mark .login-locale {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* The real seal: civic centerpiece on the blue panel. The Court Orange    */
+/* Soft tint behind it is the sanctioned "seal-on-blue" treatment from     */
+/* DESIGN.md — the only place that surface ever appears.                    */
+.login-seal {
+  display: block;
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  padding: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18),
+              0 0 0 6px rgba(255, 204, 160, 0.18);
+  user-select: none;
+  -webkit-user-drag: none;
+  /* Identity element for the View Transition handoff. The dashboard's     */
+  /* topbar brand-seal carries the same name so the API morphs them.       */
+  view-transition-name: barangay-seal;
+}
+
+.login-seal--fallback {
+  background: white;
+  padding: 0;
+}
+
+/* Headline + body. Same hierarchy as before, just inside its own landmark.*/
+.login-headline {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 540px;
+}
+
+.login-headline h1 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(44px, 4.6vw, 60px);
+  font-weight: 400;
+  line-height: 1.05;
+  color: white;
+}
+
+.login-headline h1 em {
+  color: var(--accent-warm);
+  font-style: italic;
+}
+
+.login-headline p {
+  margin: 0;
+  max-width: 480px;
+  font-size: 17px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* Bottom landmark: live "Today" line above, ready-state install note     */
+/* below. Reads as office-letterhead structure, not generic footer noise. */
+.login-side-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.login-today {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.login-today-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.login-today-value {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: white;
+  font-feature-settings: "tnum" 1;
+}
+
+.login-install-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* System-ready dot: amber while loading, civic-soft-blue once fonts and  */
+/* DOM are ready. Single 700ms pulse on the transition; no looping.       */
+.login-ready-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-warm);
+  box-shadow: 0 0 0 0 rgba(255, 204, 160, 0.6);
+  transition: background 240ms var(--ease-out-quart),
+              box-shadow 240ms var(--ease-out-quart);
+  flex: 0 0 auto;
+}
+
+.login-ready-dot.is-ready {
+  background: var(--primary-soft);
+  animation: login-ready-pulse 720ms var(--ease-out-quart) 1;
+}
+
+@keyframes login-ready-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 234, 242, 0.85);
+  }
+  100% {
+    box-shadow: 0 0 0 12px rgba(220, 234, 242, 0);
+  }
+}
+
+/* Watermark: a large geometric cog silhouette anchored bottom-right of   */
+/* the blue panel. Pure SVG inlined as a data URL, baked once, no JS, no   */
+/* re-render. Sits at 7% white so it reads as embossed civic letterhead   */
+/* texture, not decoration. */
+.login-side-watermark {
+  position: absolute;
+  inset: auto -120px -180px auto;
+  width: 720px;
+  height: 720px;
+  pointer-events: none;
+  z-index: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'><g fill='none' stroke='white' stroke-width='1.4' stroke-linejoin='round'><circle cx='200' cy='200' r='190'/><circle cx='200' cy='200' r='150'/><circle cx='200' cy='200' r='62'/><g fill='white' opacity='0.45'><path d='M200 50 L210 80 L240 76 L232 106 L260 122 L234 142 L246 172 L216 168 L210 198 L190 198 L184 168 L154 172 L166 142 L140 122 L168 106 L160 76 L190 80 Z'/></g></g></svg>");
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.07;
+  filter: drop-shadow(0 0 0 white);
+}
+
+/* Grain: one-shot baked SVG turbulence noise, scaled large so it reads as */
+/* paper, not pixels. Uses screen blend so it lifts highlights only on the */
+/* deep civic-blue surface. Static — never animates. */
+.login-side-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  mix-blend-mode: screen;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 240px 240px;
+}
+
+.login-side > .login-mark,
+.login-side > .login-headline,
+.login-side > .login-side-foot {
+  position: relative;
+  z-index: 1;
+}
+
+/* ----- Sentinel: caps lock + enter hint -------------------------------- */
+
+.login-caps {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--alert-warning-bg);
+  border: 1px solid var(--alert-warning-border);
+  color: var(--alert-warning-text-strong);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  animation: login-caps-in 200ms var(--ease-out-quart) both;
+}
+
+.login-caps svg {
+  flex: 0 0 auto;
+  color: var(--warning);
+}
+
+.login-caps .fil {
+  font-style: italic;
+  font-weight: 500;
+  color: var(--alert-warning-text);
+}
+
+@keyframes login-caps-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -4px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Enter-hint chip rides inside the primary button on the right edge,     */
+/* fades + slides in only when the password field has content.            */
+.login-form-card .btn-primary {
+  position: relative;
+}
+
+.login-enter-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 14px;
+  padding: 4px 8px 4px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.92);
+  opacity: 0;
+  transform: translate3d(4px, 0, 0);
+  transition: opacity 180ms var(--ease-out-quart),
+              transform 180ms var(--ease-out-quart);
+}
+
+.login-enter-hint.is-shown {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.login-enter-hint kbd {
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1;
+  color: white;
+}
+
+/* ----- View Transition handoff ----------------------------------------- */
+/* Two named transitions. The seal morphs across pages (login centerpiece  */
+/* → topbar brand-seal). Everything else cross-fades. The default ::view   */
+/* -transition root cross-fade is 250ms; we tune the seal to 360ms with    */
+/* an exponential ease so it lands like the rest of the system motion.    */
+
+@supports (view-transition-name: x) {
+  ::view-transition-old(barangay-seal),
+  ::view-transition-new(barangay-seal) {
+    animation-duration: 360ms;
+    animation-timing-function: var(--ease-out-quart);
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 280ms;
+    animation-timing-function: var(--ease-out-quart);
+  }
+}
+
+/* The dashboard's topbar brand-seal becomes the destination of the seal  */
+/* morph. We tag it with the same view-transition-name as the login seal. */
+.brand-seal {
+  view-transition-name: barangay-seal;
+}
+
+/* ----- Reduced motion overrides for the new pieces --------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .login-caps,
+  .login-enter-hint,
+  .login-ready-dot.is-ready {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .login-enter-hint.is-shown {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Disable the View Transition entirely; the API still runs but the     */
+  /* zero-duration animation makes it a hard swap.                         */
+  ::view-transition-old(root),
+  ::view-transition-new(root),
+  ::view-transition-old(barangay-seal),
+  ::view-transition-new(barangay-seal) {
+    animation: none !important;
+  }
+}
+
+/* ----- Responsive: tablet and below ----------------------------------- */
+
+@media (max-width: 820px) {
+  .login-mark {
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .login-mark .login-republic {
+    flex-basis: 100%;
+  }
+
+  .login-seal {
+    width: 88px;
+    height: 88px;
+    padding: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16),
+                0 0 0 4px rgba(255, 204, 160, 0.18);
+  }
+
+  .login-mark .login-barangay {
+    font-size: 22px;
+  }
+
+  .login-side-watermark {
+    inset: auto -160px -200px auto;
+    width: 540px;
+    height: 540px;
+  }
+
+  .login-today-value {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 560px) {
+  .login-side-foot {
+    padding-top: 14px;
+  }
+
+  .login-mark .login-barangay {
+    font-size: 20px;
+  }
+
+  .login-seal {
+    width: 76px;
+    height: 76px;
+  }
+
+  .login-side-watermark {
+    inset: auto -200px -240px auto;
+    width: 460px;
+    height: 460px;
+    opacity: 0.05;
   }
 }
