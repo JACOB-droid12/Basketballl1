@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { apiRequest } from "../api/client.js";
 import { BackupReminderCard } from "../components/BackupReminderCard.jsx";
 import { CourtPolicyForm } from "../components/CourtPolicyForm.jsx";
-import { DashboardAlertsCard } from "../components/DashboardAlertsCard.jsx";
 import { EmptyState } from "../components/EmptyState.jsx";
 import { LoadingState } from "../components/LoadingState.jsx";
 
@@ -106,7 +105,6 @@ export function CourtPolicyPage({ user, onNavigate }) {
         />
       ) : (
         <>
-          <BackupReminderCard />
           {alertsState.error && (
             <div className="alert error" role="alert">
               <span>{alertsState.error}</span>
@@ -119,7 +117,8 @@ export function CourtPolicyPage({ user, onNavigate }) {
               </button>
             </div>
           )}
-          {alertsState.payload && <DashboardAlertsCard payload={alertsState.payload} />}
+          {alertsState.payload && <CompactAlertsStrip payload={alertsState.payload} />}
+          <BackupReminderCard />
           <CourtPolicyForm
             user={user}
             initialPolicy={state.policy}
@@ -129,6 +128,47 @@ export function CourtPolicyPage({ user, onNavigate }) {
         </>
       )}
     </section>
+  );
+}
+
+/**
+ * Compact inline alerts strip for the Court Policy page.
+ * Shows today's reservation count and any active alerts in a single
+ * tight row instead of the full DashboardAlertsCard with oversized
+ * stat cards. Keeps focus on the policy form.
+ */
+function CompactAlertsStrip({ payload }) {
+  const alerts = Array.isArray(payload?.alerts)
+    ? payload.alerts.filter((a) => a && (a.message || a.title || a.body))
+    : [];
+  const metrics = payload?.metrics || {};
+  const todayCount = Number(metrics.todayReservationCount) || 0;
+  const missedCount = Number(metrics.missedPendingCount) || 0;
+  const hasAlerts = alerts.length > 0 || todayCount > 0 || missedCount > 0;
+
+  if (!hasAlerts) return null;
+
+  return (
+    <div className="court-policy-alerts-strip" role="status" aria-label="Today's alerts">
+      {todayCount > 0 && (
+        <span className="policy-alert-chip">
+          <strong>{todayCount}</strong> reservation{todayCount !== 1 ? "s" : ""} today
+        </span>
+      )}
+      {missedCount > 0 && (
+        <span className="policy-alert-chip policy-alert-chip-warn">
+          <strong>{missedCount}</strong> missed, pending review
+        </span>
+      )}
+      {alerts.map((alert, index) => (
+        <span
+          key={alert.id || `alert-${index}`}
+          className={`policy-alert-chip ${alert.severity === "warning" || alert.severity === "danger" ? "policy-alert-chip-warn" : ""}`}
+        >
+          {alert.message || alert.title || alert.body}
+        </span>
+      ))}
+    </div>
   );
 }
 

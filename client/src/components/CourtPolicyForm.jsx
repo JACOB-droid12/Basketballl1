@@ -426,28 +426,6 @@ export function CourtPolicyForm({ user, initialPolicy, onSaved, onNavigate }) {
           </div>
         </section>
 
-        <section className="court-policy-group" aria-labelledby="court-policy-group-backup">
-          <header className="court-policy-group-head">
-            <h3 id="court-policy-group-backup">Backup reminder</h3>
-            <p>Backup status and reminders are managed on the dashboard, not on this page.</p>
-          </header>
-          <div className="court-policy-group-body">
-            <p className="form-copy">
-              <a
-                href="/dashboard"
-                onClick={(event) => {
-                  if (typeof onNavigate === "function") {
-                    event.preventDefault();
-                    onNavigate("/dashboard");
-                  }
-                }}
-              >
-                See dashboard for backup reminders
-              </a>
-            </p>
-          </div>
-        </section>
-
         {isAdmin && (
           <div className="button-row form-actions court-policy-actions">
             {isDirty && (

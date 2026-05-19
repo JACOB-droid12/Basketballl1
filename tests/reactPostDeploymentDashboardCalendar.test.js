@@ -93,16 +93,14 @@ test("DashboardAlertsCard renders today's count, next reservation, missed-pendin
 test("CourtPolicyPage mounts the alerts card and backup reminder while DashboardPage stays focused", () => {
   const courtPolicy = readSourceFile("client/src/pages/CourtPolicyPage.jsx");
 
-  // Today's alerts and backup status sit on the admin-leaning court
-  // policy/settings surface, leaving the calendar tab focused on the
-  // week grid and leaving the dashboard focused on today's schedule.
-  assert.match(
-    courtPolicy,
-    /import\s*\{\s*DashboardAlertsCard\s*\}\s*from\s*["'][^"']*DashboardAlertsCard\.jsx["']/
-  );
+  // Today's alerts are rendered as a compact inline strip on the court
+  // policy page (deployment polish pass replaced the full-size
+  // DashboardAlertsCard). The page still fetches the alerts endpoint
+  // and surfaces errors.
   assert.match(courtPolicy, /apiRequest\("\/api\/dashboard\/alerts"\)/);
-  assert.match(courtPolicy, /<DashboardAlertsCard\s+payload=\{alertsState\.payload\}/);
   assert.match(courtPolicy, /alertsState\.error/);
+  // CompactAlertsStrip renders the alerts payload inline
+  assert.match(courtPolicy, /CompactAlertsStrip/);
 
   // The backup reminder card moved to the court policy page so it
   // sits inside the admin-leaning settings surface (Req. 12.1, 12.5).
