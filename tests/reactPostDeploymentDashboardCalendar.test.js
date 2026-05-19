@@ -100,7 +100,7 @@ test("CourtPolicyPage mounts the alerts card and backup reminder while Dashboard
   assert.match(courtPolicy, /apiRequest\("\/api\/dashboard\/alerts"\)/);
   assert.match(courtPolicy, /alertsState\.error/);
   // CompactAlertsStrip renders the alerts payload inline
-  assert.match(courtPolicy, /CompactAlertsStrip/);
+  assert.match(courtPolicy, /PolicyContextStrip/);
 
   // The backup reminder card moved to the court policy page so it
   // sits inside the admin-leaning settings surface (Req. 12.1, 12.5).

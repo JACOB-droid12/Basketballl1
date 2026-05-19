@@ -104,19 +104,19 @@
   --bar-track-bg: #EEE7DC;
 
   /* ----- Status badge colors (stronger for low-quality monitors) -------- */
-  --status-available-border: #3B9959;
+  --status-available-border: #2E8B47;
   --status-available-bg: #D4EDDA;
   --status-available-text: #1B6530;
-  --status-reserved-border: #4A90B8;
+  --status-reserved-border: #2B7AB5;
   --status-reserved-bg: #D6EAF5;
   --status-reserved-text: #0B4A6F;
-  --status-completed-border: #6B8FB5;
-  --status-completed-bg: #E3EEF7;
-  --status-completed-text: #1A4A6F;
-  --status-missed-border: #C0665A;
+  --status-completed-border: #3A8A6A;
+  --status-completed-bg: #D8F0E6;
+  --status-completed-text: #1A5C42;
+  --status-missed-border: #C0524A;
   --status-missed-bg: #FCDBD6;
   --status-missed-text: #7A2318;
-  --status-cancelled-border: #A08050;
+  --status-cancelled-border: #9A7040;
   --status-cancelled-bg: #F5ECD6;
   --status-cancelled-text: #6B4C12;
   --status-maintenance-border: #C49530;
@@ -3478,8 +3478,8 @@ button.booking-card.history-row:focus-visible {
 }
 
 .calendar-legend-item .legend-swatch {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   flex: 0 0 auto;
   border: 2px solid var(--border);
   border-radius: 3px;
@@ -3487,40 +3487,43 @@ button.booking-card.history-row:focus-visible {
 }
 
 .calendar-legend-item.legend-reserved .legend-swatch {
-  border-color: color-mix(in srgb, var(--primary) 28%, var(--border));
-  background: var(--primary-softer);
+  border-color: var(--status-reserved-border);
+  background: var(--status-reserved-bg);
 }
 
 .calendar-legend-item.legend-completed .legend-swatch {
-  border-color: var(--ink-muted);
-  background: var(--surface);
-  opacity: 0.74;
+  border-color: var(--status-completed-border);
+  background: var(--status-completed-bg);
 }
 
-.calendar-legend-item.legend-missed .legend-swatch,
+.calendar-legend-item.legend-missed .legend-swatch {
+  border-color: var(--status-missed-border);
+  background: var(--status-missed-bg);
+}
+
 .calendar-legend-item.legend-cancelled .legend-swatch {
-  border-color: color-mix(in srgb, var(--danger) 32%, var(--border));
-  background: var(--danger-soft);
+  border-color: var(--status-cancelled-border);
+  background: var(--status-cancelled-bg);
 }
 
 .calendar-legend-item.legend-available .legend-swatch {
-  border-color: color-mix(in srgb, var(--success) 32%, var(--border));
-  background: var(--success-soft);
+  border-color: var(--status-available-border);
+  background: var(--status-available-bg);
 }
 
 .calendar-legend-item.legend-maintenance .legend-swatch {
-  border-color: color-mix(in srgb, var(--warning) 32%, var(--border));
-  background: var(--alert-warning-bg);
+  border-color: var(--status-maintenance-border);
+  background: var(--status-maintenance-bg);
 }
 
 .calendar-legend-item.legend-barangay .legend-swatch {
-  border-color: color-mix(in srgb, var(--primary) 28%, var(--border));
-  background: var(--primary-softer);
+  border-color: var(--status-barangay-border);
+  background: var(--status-barangay-bg);
 }
 
 .calendar-legend-item.legend-cleared .legend-swatch {
-  border-color: var(--border-strong);
-  background: var(--surface-2);
+  border-color: var(--status-cleared-border);
+  background: var(--status-cleared-bg);
 }
 
 @media (max-width: 560px) {
@@ -4973,9 +4976,8 @@ button.booking-card.history-row:focus-visible {
 .reservation-drawer-actions {
   width: 100%;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .reservation-drawer-actions-main,
@@ -4987,8 +4989,10 @@ button.booking-card.history-row:focus-visible {
 }
 
 .reservation-drawer-actions-status {
-  justify-content: flex-end;
-  flex-wrap: nowrap;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
 }
 
 .reservation-drawer-actions .btn {
@@ -6980,10 +6984,9 @@ button.booking-card.history-row:focus-visible {
 /* --- Issue 2: Reservation modal footer button layout ------------------- */
 .reservation-drawer-actions {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   gap: 16px;
-  flex-wrap: wrap;
+  width: 100%;
 }
 
 .reservation-drawer-actions-main {
@@ -6998,6 +7001,8 @@ button.booking-card.history-row:focus-visible {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
 }
 
 .reservation-drawer-actions .btn {
