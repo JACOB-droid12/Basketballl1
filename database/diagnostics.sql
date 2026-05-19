@@ -14,8 +14,8 @@ WHERE SCHEMA_NAME = DATABASE();
 
 SELECT
   'Required tables exist' AS check_name,
-  CASE WHEN COUNT(*) = 7 THEN 'PASS' ELSE 'FAIL' END AS result,
-  CONCAT(COUNT(*), ' of 7 required tables found') AS details
+  CASE WHEN COUNT(*) = 9 THEN 'PASS' ELSE 'FAIL' END AS result,
+  CONCAT(COUNT(*), ' of 9 required tables found') AS details
 FROM information_schema.TABLES
 WHERE TABLE_SCHEMA = DATABASE()
   AND TABLE_NAME IN (
@@ -24,16 +24,18 @@ WHERE TABLE_SCHEMA = DATABASE()
     'reservation_statuses',
     'time_slots',
     'court_settings',
+    'reservation_reference_sequences',
     'reservations',
+    'schedule_blocks',
     'activity_logs'
   );
 
 SELECT
   'Required tables use InnoDB and utf8mb4' AS check_name,
   CASE
-    WHEN COUNT(*) = 7
-      AND SUM(ENGINE = 'InnoDB') = 7
-      AND SUM(TABLE_COLLATION = 'utf8mb4_unicode_ci') = 7
+    WHEN COUNT(*) = 9
+      AND SUM(ENGINE = 'InnoDB') = 9
+      AND SUM(TABLE_COLLATION = 'utf8mb4_unicode_ci') = 9
     THEN 'PASS'
     ELSE 'FAIL'
   END AS result,
@@ -49,14 +51,16 @@ WHERE TABLE_SCHEMA = DATABASE()
     'reservation_statuses',
     'time_slots',
     'court_settings',
+    'reservation_reference_sequences',
     'reservations',
+    'schedule_blocks',
     'activity_logs'
   );
 
 SELECT
   'Reservation foreign keys exist' AS check_name,
-  CASE WHEN COUNT(DISTINCT CONSTRAINT_NAME) = 7 THEN 'PASS' ELSE 'FAIL' END AS result,
-  CONCAT(COUNT(DISTINCT CONSTRAINT_NAME), ' of 7 reservation/log foreign keys found') AS details
+  CASE WHEN COUNT(DISTINCT CONSTRAINT_NAME) = 9 THEN 'PASS' ELSE 'FAIL' END AS result,
+  CONCAT(COUNT(DISTINCT CONSTRAINT_NAME), ' of 9 reservation/block/log foreign keys found') AS details
 FROM information_schema.REFERENTIAL_CONSTRAINTS
 WHERE CONSTRAINT_SCHEMA = DATABASE()
   AND CONSTRAINT_NAME IN (
@@ -65,9 +69,22 @@ WHERE CONSTRAINT_SCHEMA = DATABASE()
     'fk_reservations_status',
     'fk_reservations_approved_by_user',
     'fk_reservations_created_by_user',
+    'fk_schedule_blocks_created_by_user',
+    'fk_schedule_blocks_deactivated_by_user',
     'fk_activity_logs_reservation',
     'fk_activity_logs_user'
   );
+
+SELECT
+  'Reservation references exist and are unique' AS check_name,
+  CASE
+    WHEN COUNT(*) = COUNT(DISTINCT reference_no)
+      AND SUM(reference_no REGEXP '^BCS-[0-9]{4}-[0-9]{6}$') = COUNT(*)
+    THEN 'PASS'
+    ELSE 'FAIL'
+  END AS result,
+  CONCAT(COUNT(*), ' reservations, ', COUNT(DISTINCT reference_no), ' unique reference numbers') AS details
+FROM reservations;
 
 SELECT
   'Overlap triggers exist' AS check_name,
@@ -122,7 +139,7 @@ WHERE username = 'admin';
 
 SELECT
   'Court settings seeded' AS check_name,
-  CASE WHEN COUNT(*) = 6 THEN 'PASS' ELSE 'FAIL' END AS result,
+  CASE WHEN COUNT(*) = 12 THEN 'PASS' ELSE 'FAIL' END AS result,
   GROUP_CONCAT(setting_key ORDER BY setting_key SEPARATOR ', ') AS details
 FROM court_settings
 WHERE setting_key IN (
@@ -131,5 +148,20 @@ WHERE setting_key IN (
   'timezone',
   'opening_time',
   'closing_time',
-  'slot_minutes'
+  'min_reservation_minutes',
+  'max_reservation_minutes',
+  'allowed_days',
+  'blocked_days',
+  'missed_grace_minutes',
+  'slot_minutes',
+  'backup_reminder_days'
 );
+
+SELECT
+  'Resident directory columns exist' AS check_name,
+  CASE WHEN COUNT(*) = 2 THEN 'PASS' ELSE 'FAIL' END AS result,
+  GROUP_CONCAT(COLUMN_NAME ORDER BY COLUMN_NAME SEPARATOR ', ') AS details
+FROM information_schema.COLUMNS
+WHERE TABLE_SCHEMA = DATABASE()
+  AND TABLE_NAME = 'residents'
+  AND COLUMN_NAME IN ('group_name', 'notes');

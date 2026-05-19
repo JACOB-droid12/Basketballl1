@@ -5,6 +5,7 @@ $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $DistRoot = Join-Path $ProjectRoot "dist"
 $BundleRoot = Join-Path $DistRoot "barangay-court-scheduler-offline"
 $NodeModulesPath = Join-Path $ProjectRoot "node_modules"
+$ReactManifestPath = Join-Path $ProjectRoot "public\app\.vite\manifest.json"
 
 function Assert-ChildPath {
   param(
@@ -30,16 +31,22 @@ if (-not (Test-Path -LiteralPath $NodeModulesPath)) {
   throw "node_modules was not found. Run npm install on this setup computer before creating the offline bundle."
 }
 
+if (-not (Test-Path -LiteralPath $ReactManifestPath)) {
+  throw "React staff console build was not found. Run npm run frontend:build before npm run bundle:offline."
+}
+
 if (-not (Test-Path -LiteralPath $DistRoot)) {
   New-Item -ItemType Directory -Path $DistRoot | Out-Null
 }
 
 if (Test-Path -LiteralPath $BundleRoot) {
   Assert-ChildPath $DistRoot $BundleRoot
-  Remove-Item -LiteralPath $BundleRoot -Recurse -Force
+  foreach ($ExistingItem in Get-ChildItem -LiteralPath $BundleRoot -Force) {
+    Remove-Item -LiteralPath $ExistingItem.FullName -Recurse -Force
+  }
 }
 
-New-Item -ItemType Directory -Path $BundleRoot | Out-Null
+New-Item -ItemType Directory -Path $BundleRoot -Force | Out-Null
 
 $ItemsToCopy = @(
   ".env.example",
@@ -47,15 +54,11 @@ $ItemsToCopy = @(
   "package-lock.json",
   "START-HERE.bat",
   "STAFF-DAILY-USE.txt",
+  "DEPLOYMENT_READINESS_REPORT.md",
   "README.md",
   "README-FIRST-WINDOWS.txt",
   "TROUBLESHOOT-WINDOWS.txt",
-  "backup-database.bat",
-  "create-desktop-shortcut.bat",
-  "setup-database-only.bat",
-  "check-office-readiness.bat",
-  "run-office-signoff.bat",
-  "setup-barangay-office.bat",
+  "maintenance-tools",
   "start-barangay-office.bat",
   "src",
   "views",
@@ -76,6 +79,25 @@ foreach ($Item in $ItemsToCopy) {
 
   Copy-Item -LiteralPath $Source -Destination $BundleRoot -Recurse -Force
 }
+
+$OptionalItemsToCopy = @(
+  "runtime",
+  "installers"
+)
+
+foreach ($Item in $OptionalItemsToCopy) {
+  $Source = Join-Path $ProjectRoot $Item
+
+  if (Test-Path -LiteralPath $Source) {
+    Copy-Item -LiteralPath $Source -Destination $BundleRoot -Recurse -Force
+  } else {
+    Write-Host "Optional deployment folder not found: $Item"
+  }
+}
+
+$BundleDataDir = Join-Path $BundleRoot "data\mariadb-data"
+New-Item -ItemType Directory -Path $BundleDataDir -Force | Out-Null
+Write-Host "Prepared empty portable database data folder: data\mariadb-data"
 
 Write-Host ""
 Write-Host "Offline bundle created:"

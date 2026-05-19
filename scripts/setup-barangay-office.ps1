@@ -1,11 +1,20 @@
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
+trap {
+  Write-Host ""
+  Write-Host "Setup could not continue."
+  Write-Host $_.Exception.Message
+  Write-Host "Open TROUBLESHOOT-WINDOWS.txt for common Windows setup fixes, then run START-HERE.bat again."
+  exit 1
+}
+
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $EnvPath = Join-Path $ProjectRoot ".env"
 $SchemaPath = Join-Path $ProjectRoot "database\schema.sql"
 $SeedPath = Join-Path $ProjectRoot "database\seed.sql"
 $DiagnosticsPath = Join-Path $ProjectRoot "database\diagnostics.sql"
+$BundledMariaDbServer = Join-Path $ProjectRoot "runtime\mariadb\bin\mariadbd.exe"
 
 function Test-CommandAvailable {
   param([string] $CommandName)
@@ -122,6 +131,24 @@ function Convert-SecureStringToPlainText {
   }
 }
 
+function New-LocalDatabasePassword {
+  $Alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789"
+  $Bytes = New-Object byte[] 32
+  $Generator = [Security.Cryptography.RandomNumberGenerator]::Create()
+
+  try {
+    $Generator.GetBytes($Bytes)
+  } finally {
+    $Generator.Dispose()
+  }
+
+  $Characters = foreach ($Byte in $Bytes) {
+    $Alphabet[$Byte % $Alphabet.Length]
+  }
+
+  return -join $Characters
+}
+
 function Invoke-MysqlFile {
   param(
     [string] $Label,
@@ -137,7 +164,9 @@ function Invoke-MysqlFile {
   $MysqlArgs = @(
     "-h", $Settings["DB_HOST"],
     "-P", $Settings["DB_PORT"],
-    "-u", $Settings["DB_USER"]
+    "-u", $Settings["DB_USER"],
+    "--protocol=TCP",
+    "--ssl=0"
   )
 
   if ($DatabaseName -ne "") {
@@ -156,20 +185,27 @@ Write-Host ""
 Set-Location -LiteralPath $ProjectRoot
 
 if (-not (Test-CommandAvailable "node")) {
-  throw "Node.js was not found. Install Node.js 20 or newer before running this setup."
+  throw "Node.js was not found. START-HERE.bat checked bundled runtime\node and installed Node.js. The deployment package is missing bundled Node, or Node.js must be installed by the installer/admin."
 }
 
 if (-not (Test-CommandAvailable "npm")) {
-  throw "npm was not found. Install Node.js 20 or newer before running this setup."
+  throw "npm was not found. START-HERE.bat checked bundled runtime\node and installed Node.js. The deployment package is missing npm, or Node.js must be installed by the installer/admin."
 }
 
 if (-not (Test-CommandAvailable "mysql")) {
-  throw "mysql was not found. Install local MySQL 8+ or MariaDB and add the database bin folder to PATH before running this setup."
+  throw "mysql was not found. START-HERE.bat checked bundled runtime\mariadb\bin and installed MySQL/MariaDB tools. The deployment package is missing database client tools, or MySQL/MariaDB must be installed by the installer/admin."
 }
 
 if (-not (Test-Path -LiteralPath $EnvPath)) {
   Invoke-CheckedCommand "Create .env" {
-    npm run setup:env
+    $PreviousOneStopSetup = $env:BARANGAY_OFFICE_ONE_STOP_SETUP
+    $env:BARANGAY_OFFICE_ONE_STOP_SETUP = "1"
+
+    try {
+      npm run setup:env
+    } finally {
+      $env:BARANGAY_OFFICE_ONE_STOP_SETUP = $PreviousOneStopSetup
+    }
   }
 }
 
@@ -194,9 +230,15 @@ if (-not $Settings.ContainsKey("DB_USER") -or $Settings["DB_USER"] -eq "") {
 $Settings = Read-EnvFile $EnvPath
 
 if (-not $Settings.ContainsKey("DB_PASSWORD") -or $Settings["DB_PASSWORD"] -eq "" -or $Settings["DB_PASSWORD"] -eq "your-local-mysql-password") {
-  $SecurePassword = Read-Host "Enter the local MySQL/MariaDB password for user '$($Settings["DB_USER"])'" -AsSecureString
-  $PlainPassword = Convert-SecureStringToPlainText $SecurePassword
-  Set-EnvValue $EnvPath "DB_PASSWORD" $PlainPassword
+  if (Test-Path -LiteralPath $BundledMariaDbServer) {
+    Set-EnvValue $EnvPath "DB_PASSWORD" (New-LocalDatabasePassword)
+    Write-Host "Generated a local bundled database password for this computer."
+  } else {
+    $SecurePassword = Read-Host "Enter the local MySQL/MariaDB password for user '$($Settings["DB_USER"])'" -AsSecureString
+    $PlainPassword = Convert-SecureStringToPlainText $SecurePassword
+    Set-EnvValue $EnvPath "DB_PASSWORD" $PlainPassword
+  }
+
   $Settings = Read-EnvFile $EnvPath
 }
 
@@ -212,6 +254,10 @@ Write-Host "node_modules found. Setup will use local files only."
 
 Invoke-CheckedCommand "Check SQL files" {
   npm run verify:sql
+}
+
+Invoke-CheckedCommand "Start bundled local database if available" {
+  powershell -NoProfile -ExecutionPolicy Bypass -File "scripts\ensure-local-database.ps1"
 }
 
 $PreviousMysqlPassword = $env:MYSQL_PWD
@@ -231,5 +277,5 @@ Invoke-CheckedCommand "Verify live MySQL setup" {
 
 Write-Host ""
 Write-Host "Setup completed."
-Write-Host "Start the system with start-barangay-office.bat."
+Write-Host "Start the system with the Barangay Court Scheduler Desktop shortcut, or choose daily startup from START-HERE.bat."
 Write-Host "Default login after setup: admin / admin123"

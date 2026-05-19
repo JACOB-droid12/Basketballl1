@@ -5,6 +5,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 import dotenv from "dotenv";
 
+import { hasStrongSessionSecret } from "../src/config/sessionSecret.js";
+
 dotenv.config();
 
 const PROJECT_ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -40,14 +42,34 @@ export async function buildPrereqReport(options = {}) {
     detail: npmResult.ok ? `found ${cleanOutput(npmResult.stdout || npmResult.stderr)}` : missingDetail("npm", npmResult)
   });
 
-  const mysqlResult = await runCommand("mysql", ["--version"]);
+  const mysqlCommand = await resolveRuntimeCommand(
+    cwd,
+    [
+      "runtime/mariadb/bin/mysql.exe",
+      "runtime/mariadb/bin/mariadb.exe",
+      "runtime/mysql/bin/mysql.exe"
+    ],
+    "mysql",
+    fileExists
+  );
+  const mysqlResult = await runCommand(mysqlCommand, ["--version"]);
   checks.push({
     name: "mysql client",
     ok: mysqlResult.ok,
     detail: mysqlResult.ok ? `found ${cleanOutput(mysqlResult.stdout || mysqlResult.stderr)}` : missingDetail("mysql", mysqlResult)
   });
 
-  const mysqldumpResult = await runCommand("mysqldump", ["--version"]);
+  const mysqldumpCommand = await resolveRuntimeCommand(
+    cwd,
+    [
+      "runtime/mariadb/bin/mysqldump.exe",
+      "runtime/mariadb/bin/mariadb-dump.exe",
+      "runtime/mysql/bin/mysqldump.exe"
+    ],
+    "mysqldump",
+    fileExists
+  );
+  const mysqldumpResult = await runCommand(mysqldumpCommand, ["--version"]);
   checks.push({
     name: "mysqldump",
     ok: mysqldumpResult.ok,
@@ -81,13 +103,25 @@ export async function buildPrereqReport(options = {}) {
   checks.push({
     name: "APP_SESSION_SECRET",
     ok: hasStrongSessionSecret(env.APP_SESSION_SECRET),
-    detail: "set APP_SESSION_SECRET to a long local secret in .env"
+    detail: "set APP_SESSION_SECRET to a 32+ character local secret in .env"
   });
 
   return {
     ok: checks.every((check) => check.ok),
     checks
   };
+}
+
+export async function resolveRuntimeCommand(cwd, relativeCandidates, fallbackCommand, fileExists = exists) {
+  for (const relativeCandidate of relativeCandidates) {
+    const candidate = path.join(cwd, relativeCandidate);
+
+    if (await fileExists(candidate)) {
+      return candidate;
+    }
+  }
+
+  return fallbackCommand;
 }
 
 export function formatPrereqReport(report) {
@@ -119,7 +153,7 @@ function runVersionCommand(command, args) {
 
     try {
       child = spawn(command, args, {
-        shell: process.platform === "win32",
+        shell: process.platform === "win32" && !path.isAbsolute(command),
         windowsHide: true
       });
     } catch (error) {
@@ -157,11 +191,6 @@ function missingDetail(command, result) {
 
 function cleanOutput(value) {
   return String(value || "").trim().replace(/\s+/g, " ");
-}
-
-function hasStrongSessionSecret(value) {
-  const secret = String(value || "").trim();
-  return secret.length >= 24 && secret !== "replace-with-a-long-random-local-secret";
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -135,6 +135,88 @@ test("prototype reservation API returns conflict when backend overlap prevention
   }
 });
 
+test("prototype clear public-use API is admin-only and persists a whole-day clear range", async () => {
+  const staffApp = buildPrototypeApiTestApp({ session: signedInStaffSession() });
+  const staffServer = staffApp.listen(0);
+
+  try {
+    const staffResponse = await postJson(staffServer, "/api/prototype/clear-public-use", {
+      date: TODAY,
+      mode: "WHOLE_DAY",
+      reason: "Prototype day header clear"
+    });
+
+    assert.equal(staffResponse.status, 403);
+  } finally {
+    await closeServer(staffServer);
+  }
+
+  let receivedPayload = null;
+  let receivedOptions = null;
+  const adminApp = buildPrototypeApiTestApp({
+    session: signedInAdminSession(),
+    repositories: {
+      clearPublicUseRange: async (_db, payload, options) => {
+        receivedPayload = payload;
+        receivedOptions = options;
+        return {
+          block: {
+            blockId: 22,
+            date: payload.date,
+            startTime: payload.startTime,
+            endTime: payload.endTime,
+            category: "PUBLIC_USE",
+            type: "CLEARED_PUBLIC_USE",
+            statusCode: "CLEARED_PUBLIC_USE",
+            reason: payload.reason,
+            isActive: true
+          },
+          cancelledReservations: [
+            {
+              reservationId: 7,
+              referenceNo: "BCS-2026-000007",
+              reservationDate: payload.date,
+              startTime: "08:00",
+              endTime: "09:00",
+              representativeName: "Team Alpha",
+              contactNo: "09171234567",
+              address: "Purok 3",
+              purpose: "Practice",
+              remarks: "",
+              statusCode: "CANCELLED",
+              statusName: "Cancelled",
+              createdByName: "System Administrator"
+            }
+          ]
+        };
+      }
+    }
+  });
+  const adminServer = adminApp.listen(0);
+
+  try {
+    const response = await postJson(adminServer, "/api/prototype/clear-public-use", {
+      date: TODAY,
+      mode: "WHOLE_DAY",
+      reason: "Prototype day header clear"
+    });
+
+    assert.equal(response.status, 201);
+    assert.deepEqual(receivedPayload, {
+      date: TODAY,
+      mode: "WHOLE_DAY",
+      startTime: "07:00",
+      endTime: "21:00",
+      reason: "Prototype day header clear"
+    });
+    assert.deepEqual(receivedOptions, { userId: 1 });
+    assert.equal(response.body.block.statusCode, "CLEARED_PUBLIC_USE");
+    assert.equal(response.body.cancelledReservations[0].referenceNo, "BCS-2026-000007");
+  } finally {
+    await closeServer(adminServer);
+  }
+});
+
 test("prototype account API is admin-only and maps duplicate username errors", async () => {
   const staffApp = buildPrototypeApiTestApp({ session: signedInStaffSession() });
   const staffServer = staffApp.listen(0);
@@ -156,8 +238,9 @@ test("prototype account API is admin-only and maps duplicate username errors", a
   const adminApp = buildPrototypeApiTestApp({
     session: signedInAdminSession(),
     repositories: {
-      createUser: async (_db, user) => {
+      createUser: async (_db, user, options) => {
         receivedUser = user;
+        assert.deepEqual(options, { createdByUserId: 1 });
         return {
           userId: 9,
           fullName: user.fullName,
@@ -220,12 +303,15 @@ function buildPrototypeApiTestApp({ session = {}, repositories = {} } = {}) {
     db: {},
     repositories: {
       findUserByUsername: async () => null,
+      clearPublicUseRange: async () => ({ block: null, cancelledReservations: [] }),
+      listScheduleBlocks: async () => [],
       listReservations: async () => [],
       listUsers: async () => [],
       updateReservationStatus: async () => {},
       ...repositories
     },
-    todayProvider: () => TODAY
+    todayProvider: () => TODAY,
+    currentTimeProvider: () => "06:00"
   }));
   return app;
 }

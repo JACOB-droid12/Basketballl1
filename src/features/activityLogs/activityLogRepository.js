@@ -12,6 +12,16 @@ export function buildActivityLogListQuery(filters = {}) {
     params.date = filters.date;
   }
 
+  if (filters.fromDate) {
+    where.push("DATE(al.created_at) >= :fromDate");
+    params.fromDate = filters.fromDate;
+  }
+
+  if (filters.toDate) {
+    where.push("DATE(al.created_at) <= :toDate");
+    params.toDate = filters.toDate;
+  }
+
   if (filters.search) {
     where.push("(user.full_name LIKE :searchLike OR al.details LIKE :searchLike OR al.action LIKE :searchLike)");
     params.searchLike = `%${filters.search}%`;

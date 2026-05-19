@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 
-const defaultOfficePath = "/prototype";
+const defaultOfficePath = "/dashboard";
 
 export function buildOfficeUrl(port, officePath = defaultOfficePath) {
   const normalizedPath = officePath.startsWith("/") ? officePath : `/${officePath}`;

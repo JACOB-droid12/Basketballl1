@@ -12,7 +12,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, "..");
 
-function createTestApp({ repositories, sessionUser = null } = {}) {
+function createTestApp({ repositories, sessionUser = null, enableLegacyAccountUi = true } = {}) {
   const app = express();
   app.set("view engine", "ejs");
   app.set("views", path.join(projectRoot, "views"));
@@ -24,12 +24,20 @@ function createTestApp({ repositories, sessionUser = null } = {}) {
     }
     next();
   });
-  app.use(createAuthRoutes({ db: {}, repositories }));
+  app.use(createAuthRoutes({
+    db: {},
+    repositories: {
+      writeUserActivityLog: async () => {},
+      ...repositories
+    },
+    enableLegacyAccountUi
+  }));
   return app;
 }
 
 test("POST /login verifies a hashed password and redirects to dashboard", async () => {
   const passwordHash = await bcrypt.hash("admin123", 10);
+  let loginLog = null;
   const app = createTestApp({
     repositories: {
       findUserByUsername: async () => ({
@@ -38,7 +46,10 @@ test("POST /login verifies a hashed password and redirects to dashboard", async 
         username: "admin",
         passwordHash,
         role: "ADMIN"
-      })
+      }),
+      writeUserActivityLog: async (_db, entry) => {
+        loginLog = entry;
+      }
     }
   });
 
@@ -53,6 +64,41 @@ test("POST /login verifies a hashed password and redirects to dashboard", async 
 
     assert.equal(response.status, 302);
     assert.equal(response.headers.get("location"), "/dashboard");
+    assert.deepEqual(loginLog, {
+      userId: 1,
+      action: "LOGIN",
+      details: "User logged in."
+    });
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("POST /logout writes an activity log without blocking session cleanup", async () => {
+  let logoutLog = null;
+  const app = createTestApp({
+    sessionUser: { userId: 1, fullName: "System Administrator", username: "admin", role: "ADMIN" },
+    repositories: {
+      writeUserActivityLog: async (_db, entry) => {
+        logoutLog = entry;
+      }
+    }
+  });
+
+  const server = app.listen(0);
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/logout`, {
+      method: "POST",
+      redirect: "manual"
+    });
+
+    assert.equal(response.status, 302);
+    assert.equal(response.headers.get("location"), "/login");
+    assert.deepEqual(logoutLog, {
+      userId: 1,
+      action: "LOGOUT",
+      details: "User logged out."
+    });
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
@@ -326,6 +372,25 @@ test("POST /account/create returns duplicate username validation", async () => {
 
     assert.equal(response.status, 409);
     assert.match(body, /Username already exists/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("GET /account/create redirects to React account page when legacy account UI is disabled", async () => {
+  const app = createTestApp({
+    enableLegacyAccountUi: false,
+    sessionUser: { userId: 1, fullName: "System Administrator", username: "admin", role: "ADMIN" }
+  });
+
+  const server = app.listen(0);
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/account/create`, {
+      redirect: "manual"
+    });
+
+    assert.equal(response.status, 302);
+    assert.equal(response.headers.get("location"), "/account");
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }

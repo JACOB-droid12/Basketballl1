@@ -4,7 +4,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { createDatabasePool } from "./config/database.js";
+import { getRequiredSessionSecret } from "./config/sessionSecret.js";
+import { createApiRoutes } from "./features/api/apiRoutes.js";
 import { createActivityLogRoutes } from "./features/activityLogs/activityLogRoutes.js";
+import { createReactAppRoutes } from "./features/frontend/reactAppRoutes.js";
 import { createPrototypeApiRoutes } from "./features/prototype/prototypeApiRoutes.js";
 import { createPrototypeRoutes } from "./features/prototype/prototypeRoutes.js";
 import { createReservationRoutes } from "./features/reservations/reservationRoutes.js";
@@ -17,9 +20,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, "..");
 
-export function createApp() {
+export function createApp(options = {}) {
   const app = express();
-  const db = createDatabasePool();
+  const db = options.db || createDatabasePool();
+  const env = options.env || process.env;
   app.locals.db = db;
 
   app.set("view engine", "ejs");
@@ -28,10 +32,13 @@ export function createApp() {
   app.use(express.urlencoded({ extended: false }));
   app.use(express.json());
   app.use(express.static(path.join(projectRoot, "public")));
+  app.use("/app/assets", (_request, response) => {
+    response.status(404).type("text/plain").send("React asset not found.");
+  });
   app.use(
-    session({
+    options.sessionMiddleware || session({
       name: "barangay_scheduler_sid",
-      secret: process.env.APP_SESSION_SECRET || "development-only-change-me",
+      secret: getRequiredSessionSecret(env),
       resave: false,
       saveUninitialized: false,
       cookie: {
@@ -45,14 +52,18 @@ export function createApp() {
     next();
   });
 
-  app.use(createPrototypeRoutes());
-
   app.get("/health", (_request, response) => {
     response.json({ status: "ok", milestone: "foundation" });
   });
+  app.get("/favicon.ico", (_request, response) => {
+    response.status(204).end();
+  });
 
-  app.use(createAuthRoutes({ db }));
+  app.use(createAuthRoutes({ db, enableLegacyAccountUi: false, enableLegacyLoginUi: false }));
+  app.use(createApiRoutes({ db }));
   app.use(createPrototypeApiRoutes({ db }));
+  app.use(createReactAppRoutes());
+  app.use(createPrototypeRoutes());
   app.use(requireSignedIn);
   app.use(createDashboardRoutes({ db }));
   app.use(createReservationRoutes({ db }));

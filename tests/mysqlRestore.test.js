@@ -8,6 +8,7 @@ import {
   buildMysqlRestoreConfig,
   buildMysqlRestoreEnv,
   resolveBackupFile,
+  resolveMysqlCommand,
   runMysqlRestore
 } from "../scripts/restore-mysql.mjs";
 
@@ -70,9 +71,18 @@ test("builds mysql restore args without exposing the password", () => {
     "--host=localhost",
     "--port=3306",
     "--user=root",
-    "barangay_court_scheduler"
+    "--protocol=TCP",
+    "--ssl=0"
   ]);
   assert.equal(args.some((arg) => arg.includes("secret")), false);
+});
+
+test("prefers bundled mysql client when the offline runtime is present", async () => {
+  const command = await resolveMysqlCommand("C:\\BarangayCourtScheduler", {
+    fileExists: async (candidate) => candidate.endsWith(path.join("runtime", "mariadb", "bin", "mysql.exe"))
+  });
+
+  assert.equal(command, path.join("C:\\BarangayCourtScheduler", "runtime", "mariadb", "bin", "mysql.exe"));
 });
 
 test("passes the MySQL password through child process environment", () => {
@@ -100,16 +110,18 @@ test("runs mysql restore using the backup file as stdin", async () => {
     fileExists: async () => true,
     output: { log: (message) => output.push(message) },
     processArgs: ["node", "restore-mysql.mjs", backupFile],
+    writeMaintenanceActivityLog: async () => {},
     spawnCommand
   });
 
   assert.equal(result.backupFile, backupFile);
-  assert.equal(spawnCommand.calls[0].command, "mysql");
+  assert.equal(spawnCommand.calls[0].command, path.join("C:\\BarangayCourtScheduler", "runtime", "mariadb", "bin", "mysql.exe"));
   assert.deepEqual(spawnCommand.calls[0].args, [
     "--host=localhost",
     "--port=3306",
     "--user=root",
-    "barangay_court_scheduler"
+    "--protocol=TCP",
+    "--ssl=0"
   ]);
   assert.equal(spawnCommand.calls[0].options.stdio[0], "pipe");
   assert.equal(spawnCommand.calls[0].options.env.MYSQL_PWD, "secret");

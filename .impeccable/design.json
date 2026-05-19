@@ -1,0 +1,270 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-16T00:00:00Z",
+  "title": "Design System: Barangay Sto. Niño Court Scheduler",
+  "extensions": {
+    "colorMeta": {
+      "civic-blue": {
+        "role": "primary",
+        "displayName": "Civic Blue",
+        "canonical": "#0B4A6F",
+        "tonalRamp": ["#031822", "#062D43", "#083A57", "#0B4A6F", "#256389", "#5189AC", "#9CC0D5", "#DCEAF2"]
+      },
+      "civic-blue-deep": {
+        "role": "primary-hover",
+        "displayName": "Civic Blue Deep",
+        "canonical": "#083A57",
+        "tonalRamp": ["#020D14", "#04212F", "#062D43", "#083A57", "#1F5577", "#487AA0", "#94B5D2", "#D6E5EF"]
+      },
+      "civic-blue-soft": {
+        "role": "primary-tonal",
+        "displayName": "Soft Civic Blue",
+        "canonical": "#DCEAF2",
+        "tonalRamp": ["#0B4A6F", "#256389", "#5189AC", "#7FA8C5", "#A8C5DA", "#C5DAE6", "#DCEAF2", "#EFF5F8"]
+      },
+      "civic-blue-softer": {
+        "role": "primary-tonal-low",
+        "displayName": "Softer Civic Blue",
+        "canonical": "#EFF5F8",
+        "tonalRamp": ["#0B4A6F", "#3A6E8F", "#6A92AC", "#94B5C9", "#B8CFDF", "#D5E2EC", "#EFF5F8", "#FAFCFD"]
+      },
+      "court-orange": {
+        "role": "secondary",
+        "displayName": "Court Orange",
+        "canonical": "#C85C1C",
+        "tonalRamp": ["#3F1A06", "#6B2D0E", "#8E3D14", "#C85C1C", "#D87A45", "#E5996F", "#F1B998", "#FDEEDE"]
+      },
+      "court-orange-soft": {
+        "role": "secondary-tonal",
+        "displayName": "Court Orange Soft",
+        "canonical": "#FDEEDE",
+        "tonalRamp": ["#C85C1C", "#D87A45", "#E5996F", "#EBAF8C", "#F2C2A6", "#F7D5BF", "#FBE2D1", "#FDEEDE"]
+      },
+      "success-green": {
+        "role": "tertiary-success",
+        "displayName": "Success Green",
+        "canonical": "#1F7A43",
+        "tonalRamp": ["#082C18", "#114A28", "#175E33", "#1F7A43", "#469767", "#76B292", "#AED1BD", "#DEF0E3"]
+      },
+      "success-soft": {
+        "role": "tertiary-success-tonal",
+        "displayName": "Success Soft",
+        "canonical": "#DEF0E3",
+        "tonalRamp": ["#1F7A43", "#469767", "#76B292", "#A2C5B0", "#BFD7C7", "#D2E5D7", "#DEF0E3", "#EEF7F1"]
+      },
+      "warning-gold": {
+        "role": "tertiary-warning",
+        "displayName": "Warning Gold",
+        "canonical": "#B4761A",
+        "tonalRamp": ["#2A1B05", "#4D3209", "#7A4F0F", "#B4761A", "#C99540", "#DAB377", "#E9CFA8", "#FBEFCF"]
+      },
+      "warning-soft": {
+        "role": "tertiary-warning-tonal",
+        "displayName": "Warning Soft",
+        "canonical": "#FBEFCF",
+        "tonalRamp": ["#B4761A", "#C99540", "#DAB377", "#E2C492", "#EAD3AB", "#F1DEC1", "#F7E8CA", "#FBEFCF"]
+      },
+      "danger-red": {
+        "role": "tertiary-danger",
+        "displayName": "Danger Red",
+        "canonical": "#B83B2A",
+        "tonalRamp": ["#2A0A06", "#4F140C", "#7B2114", "#B83B2A", "#CC6657", "#DA8B81", "#EAB5AC", "#FADEDA"]
+      },
+      "danger-soft": {
+        "role": "tertiary-danger-tonal",
+        "displayName": "Danger Soft",
+        "canonical": "#FADEDA",
+        "tonalRamp": ["#B83B2A", "#CC6657", "#DA8B81", "#E1A39B", "#E9B8B1", "#F0CCC6", "#F5D5D0", "#FADEDA"]
+      },
+      "warm-office-bg": {
+        "role": "neutral-bg",
+        "displayName": "Warm Office Background",
+        "canonical": "#F6F4EE",
+        "tonalRamp": ["#1F1B12", "#3A3326", "#5A5240", "#857B66", "#B0A790", "#D4CDB8", "#E8E2D2", "#F6F4EE"]
+      },
+      "paper-surface": {
+        "role": "neutral-surface",
+        "displayName": "Paper Surface",
+        "canonical": "#FFFFFF",
+        "tonalRamp": ["#1F2937", "#3F4754", "#6B7280", "#9CA3AF", "#D1D5DB", "#E5E7EB", "#F9FAFB", "#FFFFFF"]
+      },
+      "muted-paper": {
+        "role": "neutral-surface-low",
+        "displayName": "Muted Paper",
+        "canonical": "#F0ECE3",
+        "tonalRamp": ["#1F1A0E", "#3B3320", "#5C5238", "#857B66", "#B0A98F", "#CFC9B5", "#E2DDC9", "#F0ECE3"]
+      },
+      "ink": {
+        "role": "neutral-text",
+        "displayName": "Ink",
+        "canonical": "#1F2937",
+        "tonalRamp": ["#0A0E14", "#141A22", "#1F2937", "#3F4754", "#6B7280", "#9CA3AF", "#D1D5DB", "#F3F4F6"]
+      },
+      "ink-secondary": {
+        "role": "neutral-text-secondary",
+        "displayName": "Ink Secondary",
+        "canonical": "#3F4754",
+        "tonalRamp": ["#10131A", "#1F2630", "#2F3742", "#3F4754", "#666E7B", "#929AA4", "#C2C7CD", "#E5E7EB"]
+      },
+      "ink-muted": {
+        "role": "neutral-text-muted",
+        "displayName": "Ink Muted",
+        "canonical": "#6B7280",
+        "tonalRamp": ["#191C22", "#2D323A", "#454B55", "#6B7280", "#959AA3", "#B5B9C0", "#D1D5DB", "#E5E7EB"]
+      },
+      "border": {
+        "role": "neutral-border",
+        "displayName": "Office Border",
+        "canonical": "#DCD6C7",
+        "tonalRamp": ["#2C271B", "#4F4734", "#766C53", "#A39A7E", "#C0B89C", "#DCD6C7", "#EAE5D8", "#F4F0E6"]
+      },
+      "border-strong": {
+        "role": "neutral-border-strong",
+        "displayName": "Office Border Strong",
+        "canonical": "#B9B19E",
+        "tonalRamp": ["#26221A", "#46402F", "#6B6447", "#8E8569", "#B9B19E", "#CDC7B7", "#DDD9CC", "#EBE8DD"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display Serif", "purpose": "Page titles, hero numbers, login headline. Instrument Serif at 400 weight only." },
+      "headline": { "displayName": "Headline Serif", "purpose": "Card heads, dialog heads, section titles inside the reservation form, calendar week label." },
+      "title": { "displayName": "Working Title", "purpose": "Inter 600 to 700 from 16 to 22px. Booking row name, nav label, brand title, table emphasis." },
+      "body": { "displayName": "Working Body", "purpose": "Inter 17px at 1.5 line-height. The 17px baseline is a deliberate staff-readability floor." },
+      "label": { "displayName": "Civic Label", "purpose": "Inter 600 12 to 14px with 0.06em letter-spacing on uppercase. Table headers, eyebrows, status text." }
+    },
+    "shadows": [
+      { "name": "shadow-sm", "value": "0 1px 2px rgba(15, 30, 60, 0.06)", "purpose": "Subtle contained surfaces when a border alone is not enough." },
+      { "name": "shadow-md", "value": "0 4px 14px rgba(15, 30, 60, 0.10)", "purpose": "Calendar toolbar, staff day cards (resting), hover lift on form cards." },
+      { "name": "shadow-lg", "value": "0 24px 60px rgba(15, 30, 60, 0.18)", "purpose": "Reservation drawer, dialogs, blocking confirmations." },
+      { "name": "shadow-detail", "value": "0 10px 28px rgba(32, 35, 38, 0.08)", "purpose": "Sticky reservation detail rail beside lists." }
+    ],
+    "motion": [
+      { "name": "ease-default", "value": "ease", "purpose": "Default easing for state transitions. Used implicitly with 120 to 160ms durations." },
+      { "name": "duration-quick", "value": "120ms", "purpose": "Hover and selection on rows, blocks, chips, and nav items." },
+      { "name": "duration-standard", "value": "160ms", "purpose": "Button background and border state transitions." },
+      { "name": "spin", "value": "0.9s linear infinite", "purpose": "Loading mark rotation." },
+      { "name": "shimmer", "value": "1.4s ease-in-out infinite", "purpose": "Skeleton line shimmer." }
+    ],
+    "breakpoints": [
+      { "name": "lg", "value": "1240px" },
+      { "name": "md", "value": "820px" },
+      { "name": "sm", "value": "380px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Civic blue action. The default primary for save, approve, navigate.",
+      "html": "<button class=\"ds-btn ds-btn-primary\" type=\"button\">Save Reservation</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border: 2px solid transparent; border-radius: 10px; padding: 0 20px; font-family: Inter, system-ui, sans-serif; font-size: 16px; font-weight: 700; line-height: 1.2; cursor: pointer; transition: background 160ms ease, border-color 160ms ease, color 160ms ease; } .ds-btn-primary { background: #0B4A6F; color: #FFFFFF; } .ds-btn-primary:hover { background: #083A57; } .ds-btn-primary:focus-visible { outline: 3px solid rgba(11, 74, 111, 0.32); outline-offset: 3px; border-color: #B9B19E; }"
+    },
+    {
+      "name": "Large Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary-large",
+      "description": "The main action of a screen. Add Reservation, Save, Approve.",
+      "html": "<button class=\"ds-btn ds-btn-primary ds-btn-big\" type=\"button\">New Reservation</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 2px solid transparent; border-radius: 10px; font-family: Inter, system-ui, sans-serif; font-weight: 700; line-height: 1.2; cursor: pointer; transition: background 160ms ease, border-color 160ms ease, color 160ms ease; } .ds-btn-primary { background: #0B4A6F; color: #FFFFFF; } .ds-btn-primary:hover { background: #083A57; } .ds-btn-big { min-height: 64px; padding: 0 28px; font-size: 18px; } .ds-btn-primary:focus-visible { outline: 3px solid rgba(11, 74, 111, 0.32); outline-offset: 3px; border-color: #B9B19E; }"
+    },
+    {
+      "name": "Light Button",
+      "kind": "button",
+      "refersTo": "button-light",
+      "description": "Neutral secondary action. Cancel, Go back, Filter.",
+      "html": "<button class=\"ds-btn ds-btn-light\" type=\"button\">Go back</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border: 2px solid #DCD6C7; border-radius: 10px; padding: 0 20px; font-family: Inter, system-ui, sans-serif; font-size: 16px; font-weight: 700; line-height: 1.2; cursor: pointer; transition: background 160ms ease, border-color 160ms ease; } .ds-btn-light { background: #FFFFFF; color: #1F2937; } .ds-btn-light:hover { background: #F0ECE3; border-color: #B9B19E; } .ds-btn-light:focus-visible { outline: 3px solid rgba(11, 74, 111, 0.32); outline-offset: 3px; border-color: #B9B19E; }"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Destructive action: Cancel reservation, Delete account. Visible without competing with primary.",
+      "html": "<button class=\"ds-btn ds-btn-danger\" type=\"button\">Cancel reservation</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border: 2px solid #B83B2A; border-radius: 10px; padding: 0 20px; font-family: Inter, system-ui, sans-serif; font-size: 16px; font-weight: 700; line-height: 1.2; cursor: pointer; transition: background 160ms ease; } .ds-btn-danger { background: #FFFFFF; color: #B83B2A; } .ds-btn-danger:hover { background: #FADEDA; } .ds-btn-danger:focus-visible { outline: 3px solid rgba(184, 59, 42, 0.32); outline-offset: 3px; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Default content surface. Paper white on warm cream, 10px corners, 20px padding, 1px Office Border.",
+      "html": "<section class=\"ds-card ds-card-padded\"><h2 class=\"ds-card-title\">Today's schedule</h2><p class=\"ds-card-body\">Three reservations pending approval. Two are walk-ins from this morning.</p></section>",
+      "css": ".ds-card { background: #FFFFFF; color: #1F2937; border: 1px solid #DCD6C7; border-radius: 10px; overflow: hidden; } .ds-card-padded { display: grid; gap: 18px; padding: 20px; } .ds-card-title { margin: 0; font-family: 'Instrument Serif', Georgia, serif; font-size: 26px; font-weight: 400; line-height: 1.1; color: #1F2937; } .ds-card-body { margin: 0; font-family: Inter, system-ui, sans-serif; font-size: 17px; line-height: 1.5; color: #6B7280; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Staff-friendly form field with English label, Filipino italic helper, hint, and error slot.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Reservation date <span class=\"ds-field-fil\">· Petsa ng reserbasyon</span></span><span class=\"ds-field-hint\">Choose any weekday this month.</span><input class=\"ds-input\" type=\"date\" /></label>",
+      "css": ".ds-field { display: grid; gap: 8px; font-family: Inter, system-ui, sans-serif; } .ds-field-label { display: block; color: #1F2937; font-size: 16px; font-weight: 600; } .ds-field-fil { margin-left: 4px; color: #6B7280; font-size: 14px; font-style: italic; font-weight: 500; } .ds-field-hint { display: block; color: #6B7280; font-size: 14px; font-weight: 600; } .ds-input { width: 100%; min-height: 54px; border: 2px solid #DCD6C7; border-radius: 10px; padding: 14px 16px; background: #FFFFFF; color: #1F2937; font-family: inherit; font-size: 17px; font-weight: 700; } .ds-input:focus { outline: none; border-color: #0B4A6F; box-shadow: 0 0 0 4px #DCEAF2; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "status-badge",
+      "description": "Pill with a colored dot prefix and a labeled state word. Never carries color alone.",
+      "html": "<span class=\"ds-status ds-status-reserved\">Reserved</span>",
+      "css": ".ds-status { display: inline-flex; align-items: center; gap: 7px; min-height: 30px; border-radius: 999px; padding: 0 12px; border: 1px solid #DCD6C7; background: #FFFFFF; color: #1F2937; font-family: Inter, system-ui, sans-serif; font-size: 12px; font-weight: 600; white-space: nowrap; } .ds-status::before { content: ''; width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: currentColor; } .ds-status-reserved { border-color: #B9D4E3; background: #DCEAF2; color: #083A57; } .ds-status-available { border-color: #B9D7C8; background: #E8F4EE; color: #1F7A43; } .ds-status-missed { border-color: #E7B4AD; background: #FAE8E5; color: #B83B2A; } .ds-status-completed { border-color: #DCEAF2; background: #EFF5F8; color: #0B4A6F; }"
+    },
+    {
+      "name": "Sidebar Nav Item (Active)",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Persistent left sidebar row with icon well, English label, Filipino-tone helper text, and visible active state.",
+      "html": "<button class=\"ds-nav ds-nav-active\" type=\"button\" aria-current=\"page\"><span class=\"ds-nav-icon\" aria-hidden=\"true\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 12l9-9 9 9\"></path><path d=\"M5 10v10h14V10\"></path></svg></span><span class=\"ds-nav-copy\"><span class=\"ds-nav-label\">Home</span><small class=\"ds-nav-helper\">Today's schedule</small></span></button>",
+      "css": ".ds-nav { width: 100%; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 14px; min-height: 68px; border: 2px solid transparent; border-radius: 10px; padding: 14px 16px; background: transparent; color: #1F2937; text-align: left; font-family: Inter, system-ui, sans-serif; cursor: pointer; transition: background 120ms ease, border-color 120ms ease; } .ds-nav:hover { background: #F0ECE3; } .ds-nav-active { border-color: #DCEAF2; background: #EFF5F8; } .ds-nav-icon { width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; background: #F0ECE3; color: #1F2937; } .ds-nav-active .ds-nav-icon { background: #0B4A6F; color: #FFFFFF; } .ds-nav-copy { display: grid; min-width: 0; } .ds-nav-label { color: #1F2937; font-size: 16px; font-weight: 700; } .ds-nav-active .ds-nav-label { color: #0B4A6F; } .ds-nav-helper { display: block; margin-top: 3px; color: #6B7280; font-size: 13px; }"
+    },
+    {
+      "name": "Time Chip",
+      "kind": "chip",
+      "refersTo": "time-chip",
+      "description": "Reservation start-time picker. Default, hover, selected, and busy variants. Selected and busy carry a sub-caption.",
+      "html": "<div class=\"ds-time-grid\"><button class=\"ds-time-chip\" type=\"button\">8:00 AM</button><button class=\"ds-time-chip ds-time-chip-selected\" type=\"button\" aria-pressed=\"true\">9:00 AM</button><button class=\"ds-time-chip ds-time-chip-busy\" type=\"button\" disabled>10:00 AM</button></div>",
+      "css": ".ds-time-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; } .ds-time-chip { position: relative; min-height: 60px; border: 2px solid #DCD6C7; border-radius: 10px; padding: 12px 14px; background: #FFFFFF; color: #1F2937; font-family: Inter, system-ui, sans-serif; font-size: 16px; font-weight: 600; text-align: center; cursor: pointer; transition: background 120ms ease, border-color 120ms ease, color 120ms ease; } .ds-time-chip:not(:disabled):hover, .ds-time-chip:not(:disabled):focus-visible { outline: none; border-color: #0B4A6F; background: #EFF5F8; } .ds-time-chip-selected { border-color: #0B4A6F; background: #0B4A6F; color: #FFFFFF; } .ds-time-chip-selected::after { content: 'Selected'; display: block; margin-top: 2px; font-size: 11px; font-weight: 500; opacity: 0.9; } .ds-time-chip-busy { background: #F0ECE3; color: #6B7280; border-style: dashed; cursor: not-allowed; } .ds-time-chip-busy::after { content: 'Booked'; display: block; margin-top: 2px; color: #B83B2A; font-size: 11px; font-weight: 500; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Barangay Desk Ledger",
+    "overview": "This system reads like a well-organized barangay office ledger translated to a screen: warm paper surfaces, civic blue for official action, a court-orange accent for local identity, large readable controls, and labels that speak to staff instead of software specialists. It is a product surface, not a campaign. The design serves the scheduling workflow and stays calm even when conflicts, missed bookings, and approvals demand attention all at once. The persistent left sidebar, 17px body text, 48px minimum control height, and bilingual helper text (Filipino italic underneath English) carry the staff-friendly direction. Instrument Serif appears only at orientation moments (page titles, hero stats, section heads), giving each screen a small civic formality before Inter takes over for the working surfaces. Status colors are always paired with words. The system explicitly rejects the previous prototype's claustrophobic cream-and-red spreadsheet feel, public startup landing-page polish, sports-entertainment energy, dark command-center dashboards, tiny admin-table density, and any cloud-booking language that implies residents reserve remotely.",
+    "keyCharacteristics": [
+      "Warm office-paper background (#F6F4EE) with white card surfaces and civic blue (#0B4A6F) for primary action.",
+      "17px body baseline, 48px minimum standard controls, 64px for the main screen action.",
+      "Persistent left sidebar with large labeled targets, 44px icon wells, and visible active state.",
+      "Status pills paired with words, never relying on color alone.",
+      "Borders and tonal surfaces do most structural work; shadows reserved for overlays and hover lift.",
+      "Short, functional motion only: 120 to 160ms transitions on hover, focus, dialogs, and skeleton shimmer."
+    ],
+    "rules": [
+      { "name": "The Blue Means Action Rule", "body": "Civic Blue is reserved for primary intent, active navigation, and confirmed selected states. Do not spend it on decoration, illustration, or default body copy.", "section": "colors" },
+      { "name": "The Status Must Read Rule", "body": "Never rely on color alone. Every status pill, calendar block, and table row state must carry text or an icon alongside its color. The status-badge primitive bakes this in: a colored dot precedes a labeled word.", "section": "colors" },
+      { "name": "The Court Orange Sparingly Rule", "body": "Court Orange (#C85C1C) appears in three places only: the page eyebrow line, the user-chip avatar, and the login serif em accent. It does not serve as a button background, an alert color, or a decorative surface tint.", "section": "colors" },
+      { "name": "The Staff Can Read It Rule", "body": "Working text never drops below 14px. Forms, cards, and navigation stay at 16px or larger. The body baseline is 17px and that is the floor, not the ceiling.", "section": "typography" },
+      { "name": "The Title Has a Job Rule", "body": "Use Instrument Serif only for orientation and emphasis (page titles, hero numbers, card heads, section heads inside the reservation form, calendar day numbers). Never inside dense tables, repeated metadata, button labels, badges, or table cells.", "section": "typography" },
+      { "name": "The Bilingual Italic Rule", "body": "Filipino helper text appears as italic muted Inter at 13 to 14px directly under the English label, prefixed with a middle dot. It is never the primary label and never replaces the English label.", "section": "typography" },
+      { "name": "The Border First Rule", "body": "Use 1px Office Border and tonal layers for normal structure. Use shadows only when the surface floats above the page (drawer, dialog, sticky detail), moves (hover lift on form cards), or signals a major rest state (calendar toolbar, day card).", "section": "elevation" },
+      { "name": "The No Glass Rule", "body": "Backdrop blur and translucent glass surfaces are not part of this system. Backdrops behind dialogs use opaque dark fill, never backdrop-filter.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep the product offline-first and staff-mediated in language and workflow. Use phrases like Encode walk-in, Office computer, Today's schedule, not Book online, User account, or Cloud sync.",
+      "Do use 48px minimum control height for staff-touched controls and 64px for the main screen action.",
+      "Do pair English labels with Filipino helper italics whenever it lowers staff hesitation. The English label is the primary; the Filipino is a service.",
+      "Do keep reservation status visible in lists, calendars, dialogs, and reports. The status-badge primitive must accompany every reservation reference.",
+      "Do use Civic Blue for action and identity, Court Orange sparingly for local accent, and Paper Surface tones for everything that holds content.",
+      "Do lift overlay surfaces with shadow-lg and bordered surfaces with 1px Office Border at rest."
+    ],
+    "donts": [
+      "Don't make it look like a public startup landing page or a marketing campaign.",
+      "Don't make it look like a sports entertainment app: no team-color saturation, no neon, no display gradients.",
+      "Don't ship a dark command-center dashboard as the default staff experience.",
+      "Don't use tiny admin-table typography for primary workflows. Working text stays at 14px or larger; data-table cells stay at 15px or larger.",
+      "Don't use jargon-heavy workflow labels (Provision, Initialize, Onboard) where plain civic verbs work (Add, Save, Approve, Cancel).",
+      "Don't use decorative glassmorphism, neon gradients, gradient text, or hidden controls that require training to discover.",
+      "Don't use border-left greater than 1px as a colored stripe except on the calendar staff-booking-block. No other surface in the system carries one.",
+      "Don't imply residents can reserve remotely. The system is staff-mediated and offline.",
+      "Don't use Court Orange as a button background, alert color, or surface tint.",
+      "Don't rely on color alone for status. If a booking is missed, Missed must read as a word, not just a red color."
+    ]
+  }
+}

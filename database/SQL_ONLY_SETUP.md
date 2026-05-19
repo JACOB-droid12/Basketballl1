@@ -4,7 +4,7 @@ Use this when the barangay computer already has MySQL installed and you only wan
 
 ## What This Does
 
-`setup-database-only.bat` runs the SQL files in the correct order:
+`maintenance-tools\setup-database-only.bat` runs the SQL files in the correct order:
 
 1. `database/schema.sql` creates the local database, tables, foreign keys, checks, and overlap-prevention triggers.
 2. `database/seed.sql` inserts the starter Admin account, statuses, time slots, and court settings.
@@ -15,7 +15,7 @@ Use this when the barangay computer already has MySQL installed and you only wan
 Easiest Windows option: double-click this from the project folder:
 
 ```text
-setup-database-only.bat
+maintenance-tools\setup-database-only.bat
 ```
 
 It asks for the local MySQL host, port, username, database name, and password, then applies `schema.sql`, `seed.sql`, and `diagnostics.sql` as separate local MySQL commands. This is compatible with Oracle MySQL 9 and MariaDB.

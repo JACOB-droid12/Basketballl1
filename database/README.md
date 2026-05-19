@@ -15,7 +15,7 @@ This database setup has been live-verified against disposable local Oracle MySQL
 From the project root, double-click:
 
 ```text
-setup-database-only.bat
+maintenance-tools\setup-database-only.bat
 ```
 
 Or run the same SQL-only setup from PowerShell:

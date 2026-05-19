@@ -3,6 +3,8 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { analyzeRuntimePackage } from "./verify-runtime-package.mjs";
+
 const PROJECT_ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 
 const REQUIRED_BUNDLE_ITEMS = [
@@ -12,15 +14,18 @@ const REQUIRED_BUNDLE_ITEMS = [
   { path: ".env.example", type: "file" },
   { path: "START-HERE.bat", type: "file" },
   { path: "STAFF-DAILY-USE.txt", type: "file" },
+  { path: "DEPLOYMENT_READINESS_REPORT.md", type: "file" },
   { path: "README.md", type: "file" },
   { path: "README-FIRST-WINDOWS.txt", type: "file" },
   { path: "TROUBLESHOOT-WINDOWS.txt", type: "file" },
-  { path: "backup-database.bat", type: "file" },
-  { path: "create-desktop-shortcut.bat", type: "file" },
-  { path: "setup-database-only.bat", type: "file" },
-  { path: "check-office-readiness.bat", type: "file" },
-  { path: "run-office-signoff.bat", type: "file" },
-  { path: "setup-barangay-office.bat", type: "file" },
+  { path: "maintenance-tools/backup-database.bat", type: "file" },
+  { path: "maintenance-tools/restore-database.bat", type: "file" },
+  { path: "maintenance-tools/create-desktop-shortcut.bat", type: "file" },
+  { path: "maintenance-tools/setup-database-only.bat", type: "file" },
+  { path: "maintenance-tools/check-office-readiness.bat", type: "file" },
+  { path: "maintenance-tools/load-runtime-env.bat", type: "file" },
+  { path: "maintenance-tools/run-office-signoff.bat", type: "file" },
+  { path: "maintenance-tools/setup-barangay-office.bat", type: "file" },
   { path: "start-barangay-office.bat", type: "file" },
   { path: "src/server.js", type: "file" },
   { path: "src/serverStartup.js", type: "file" },
@@ -31,6 +36,8 @@ const REQUIRED_BUNDLE_ITEMS = [
   { path: "views/account/password.ejs", type: "file" },
   { path: "public/css/styles.css", type: "file" },
   { path: "public/js/prototype-backend.js", type: "file" },
+  { path: "public/app", type: "directory" },
+  { path: "public/app/.vite/manifest.json", type: "file" },
   { path: "public/prototype/sto-nino-court-reservation-system-prototype.html", type: "file" },
   { path: "public/vendor/html2canvas.min.js", type: "file" },
   { path: "public/vendor/jspdf.umd.min.js", type: "file" },
@@ -43,12 +50,14 @@ const REQUIRED_BUNDLE_ITEMS = [
   { path: "docs/DEPLOYMENT_GUIDE.md", type: "file" },
   { path: "docs/OFFLINE_INSTALL_CHECKLIST.md", type: "file" },
   { path: "scripts/check-runtime-database.mjs", type: "file" },
+  { path: "scripts/ensure-local-database.ps1", type: "file" },
   { path: "scripts/print-office-url.mjs", type: "file" },
   { path: "scripts/verify-offline-runtime.mjs", type: "file" },
   { path: "scripts/check-office-readiness.ps1", type: "file" },
   { path: "scripts/create-desktop-shortcut.ps1", type: "file" },
   { path: "scripts/run-office-signoff.ps1", type: "file" },
   { path: "scripts/setup-barangay-office.ps1", type: "file" },
+  { path: "scripts/verify-runtime-package.mjs", type: "file" },
   { path: "scripts/verify-mysql.mjs", type: "file" }
 ];
 
@@ -58,13 +67,22 @@ const FORBIDDEN_BUNDLE_ITEMS = [
   "reports"
 ];
 
-export function analyzeOfflineBundle(bundleRoot) {
+export function analyzeOfflineBundle(bundleRoot, options = {}) {
+  const mode = options.mode === "strict" ? "strict" : "candidate";
   const checks = [];
 
   checks.push({
     name: "bundle folder exists",
     ok: isDirectory(bundleRoot),
     detail: bundleRoot
+  });
+
+  checks.push({
+    name: "bundle verification mode",
+    ok: true,
+    detail: mode === "strict"
+      ? "strict one-stop offline package"
+      : "deployment candidate"
   });
 
   for (const item of REQUIRED_BUNDLE_ITEMS) {
@@ -85,8 +103,20 @@ export function analyzeOfflineBundle(bundleRoot) {
     });
   }
 
+  if (mode === "strict") {
+    const runtimeReport = analyzeRuntimePackage(bundleRoot);
+    for (const check of runtimeReport.checks) {
+      checks.push({
+        name: `strict one-stop runtime: ${check.name}`,
+        ok: check.ok,
+        detail: check.detail
+      });
+    }
+  }
+
   return {
     ok: checks.every((check) => check.ok),
+    mode,
     checks
   };
 }
@@ -101,15 +131,23 @@ export async function verifyOfflineBundle(options = {}) {
   const output = options.output || console;
   const bundleRoot = options.bundleRoot ||
     path.join(PROJECT_ROOT, "dist", "barangay-court-scheduler-offline");
-  const report = analyzeOfflineBundle(bundleRoot);
+  const mode = options.mode || getModeFromArgv(process.argv.slice(2));
+  const report = analyzeOfflineBundle(bundleRoot, { mode });
 
   output.log(formatOfflineBundleReport(report));
 
   if (!report.ok) {
-    throw new Error("Offline bundle verification failed. Run npm run bundle:offline, then retry.");
+    const message = mode === "strict"
+      ? "Strict one-stop offline bundle verification failed. Add bundled runtime files and data\\mariadb-data, rerun npm run bundle:offline, then retry."
+      : "Offline bundle verification failed. Run npm run bundle:offline, then retry.";
+    throw new Error(message);
   }
 
   return report;
+}
+
+function getModeFromArgv(args) {
+  return args.includes("--strict") || args.includes("--mode=strict") ? "strict" : "candidate";
 }
 
 function isDirectory(fullPath) {

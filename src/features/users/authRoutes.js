@@ -8,7 +8,8 @@ import {
   listUsers,
   updateUserAccountStatus,
   updateUserPassword,
-  UserNotFoundError
+  UserNotFoundError,
+  writeUserActivityLog
 } from "./userRepository.js";
 import { validateChangePasswordInput, validateCreateUserInput } from "./userValidation.js";
 
@@ -17,21 +18,29 @@ const defaultRepositories = {
   findUserByUsername,
   listUsers,
   updateUserAccountStatus,
-  updateUserPassword
+  updateUserPassword,
+  writeUserActivityLog
 };
 
-export function createAuthRoutes({ db, repositories = {} } = {}) {
+export function createAuthRoutes({
+  db,
+  repositories = {},
+  enableLegacyAccountUi = true,
+  enableLegacyLoginUi = true
+} = {}) {
   const repo = { ...defaultRepositories, ...repositories };
   const router = Router();
 
-  router.get("/login", (request, response) => {
-    if (request.session?.user) {
-      response.redirect("/dashboard");
-      return;
-    }
+  if (enableLegacyLoginUi) {
+    router.get("/login", (request, response) => {
+      if (request.session?.user) {
+        response.redirect("/dashboard");
+        return;
+      }
 
-    renderLogin(response);
-  });
+      renderLogin(response);
+    });
+  }
 
   router.post("/login", async (request, response) => {
     const username = String(request.body.username || "").trim().toLowerCase();
@@ -55,6 +64,11 @@ export function createAuthRoutes({ db, repositories = {} } = {}) {
         username: user.username,
         role: user.role
       };
+      await repo.writeUserActivityLog(db, {
+        userId: user.userId,
+        action: "LOGIN",
+        details: "User logged in."
+      });
       response.redirect("/dashboard");
     } catch (error) {
       renderLogin(response.status(503), {
@@ -64,7 +78,10 @@ export function createAuthRoutes({ db, repositories = {} } = {}) {
     }
   });
 
-  router.post("/logout", (request, response) => {
+  router.post("/logout", async (request, response) => {
+    const user = request.session?.user || null;
+    await writeLogoutActivityLog({ repo, db, user });
+
     if (typeof request.session?.destroy === "function") {
       request.session.destroy(() => response.redirect("/login"));
       return;
@@ -74,12 +91,14 @@ export function createAuthRoutes({ db, repositories = {} } = {}) {
     response.redirect("/login");
   });
 
-  router.get("/account/password", requireSignedIn, (request, response) => {
-    renderChangePassword(response, {
-      currentUser: request.session.user,
-      successMessage: request.query.updated === "1" ? "Password updated successfully." : ""
+  if (enableLegacyAccountUi) {
+    router.get("/account/password", requireSignedIn, (request, response) => {
+      renderChangePassword(response, {
+        currentUser: request.session.user,
+        successMessage: request.query.updated === "1" ? "Password updated successfully." : ""
+      });
     });
-  });
+  }
 
   router.post("/account/password", requireSignedIn, async (request, response) => {
     const result = validateChangePasswordInput(request.body);
@@ -106,7 +125,9 @@ export function createAuthRoutes({ db, repositories = {} } = {}) {
         return;
       }
 
-      await repo.updateUserPassword(db, request.session.user.userId, result.value.newPassword);
+      await repo.updateUserPassword(db, request.session.user.userId, result.value.newPassword, {
+        userId: request.session.user.userId
+      });
       response.redirect("/account/password?updated=1");
     } catch (error) {
       renderChangePassword(response.status(503), {
@@ -116,28 +137,35 @@ export function createAuthRoutes({ db, repositories = {} } = {}) {
     }
   });
 
-  router.get("/account", requireAdmin, async (request, response) => {
-    try {
-      const users = await repo.listUsers(db);
+  if (enableLegacyAccountUi) {
+    router.get("/account", requireAdmin, async (request, response) => {
+      try {
+        const users = await repo.listUsers(db);
 
-      response.render("account/index", {
-        active: "account",
-        currentUserId: request.session.user.userId,
-        users,
-        errorMessage: ""
-      });
-    } catch (error) {
-      response.status(503).render("account/index", {
-        active: "account",
-        currentUserId: request.session.user.userId,
-        users: [],
-        errorMessage: databaseErrorMessage(error)
-      });
-    }
-  });
+        response.render("account/index", {
+          active: "account",
+          currentUserId: request.session.user.userId,
+          users,
+          errorMessage: ""
+        });
+      } catch (error) {
+        response.status(503).render("account/index", {
+          active: "account",
+          currentUserId: request.session.user.userId,
+          users: [],
+          errorMessage: databaseErrorMessage(error)
+        });
+      }
+    });
+  }
 
   router.get("/account/create", requireAdmin, (_request, response) => {
-    renderCreateAccount(response);
+    if (enableLegacyAccountUi) {
+      renderCreateAccount(response);
+      return;
+    }
+
+    response.redirect("/account");
   });
 
   router.post("/account/create", requireAdmin, async (request, response) => {
@@ -190,7 +218,9 @@ export function createAuthRoutes({ db, repositories = {} } = {}) {
     }
 
     try {
-      await repo.updateUserAccountStatus(db, request.params.userId, accountStatus);
+      await repo.updateUserAccountStatus(db, request.params.userId, accountStatus, {
+        userId: request.session.user.userId
+      });
       response.redirect("/account");
     } catch (error) {
       const status = error instanceof UserNotFoundError ? 404 : 503;
@@ -199,6 +229,22 @@ export function createAuthRoutes({ db, repositories = {} } = {}) {
   });
 
   return router;
+}
+
+async function writeLogoutActivityLog({ repo, db, user }) {
+  if (!user?.userId) {
+    return;
+  }
+
+  try {
+    await repo.writeUserActivityLog(db, {
+      userId: user.userId,
+      action: "LOGOUT",
+      details: "User logged out."
+    });
+  } catch (error) {
+    console.error("Unable to write logout activity log:", error.message);
+  }
 }
 
 function requireAdmin(request, response, next) {

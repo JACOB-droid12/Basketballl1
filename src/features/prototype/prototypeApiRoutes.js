@@ -12,6 +12,11 @@ import {
 } from "../reservations/reservationRepository.js";
 import { validateReservationInput } from "../reservations/reservationValidation.js";
 import {
+  clearPublicUseRange,
+  listScheduleBlocks,
+  ScheduleBlockConflictError
+} from "../schedule/scheduleBlockRepository.js";
+import {
   createUser,
   DuplicateUsernameError,
   findUserByUsername,
@@ -23,17 +28,24 @@ const DEFAULT_ADDRESS = "Barangay Sto. Niño, Parañaque City";
 const DEFAULT_PURPOSE = "Basketball court reservation";
 
 const defaultRepositories = {
+  clearPublicUseRange,
   createReservation,
   createUser,
   findUserByUsername,
   getReservationById,
+  listScheduleBlocks,
   listReservations,
   listUsers,
   updateReservation,
   updateReservationStatus
 };
 
-export function createPrototypeApiRoutes({ db, repositories = {}, todayProvider = getTodayDate } = {}) {
+export function createPrototypeApiRoutes({
+  db,
+  repositories = {},
+  todayProvider = getTodayDate,
+  currentTimeProvider = getCurrentManilaTime
+} = {}) {
   const repo = { ...defaultRepositories, ...repositories };
   const router = Router();
 
@@ -83,15 +95,18 @@ export function createPrototypeApiRoutes({ db, repositories = {}, todayProvider 
 
   router.get("/api/prototype/reservations", async (_request, response) => {
     try {
-      const reservations = await repo.listReservations(db, {});
-      response.json({ reservations });
+      const [reservations, blocks] = await Promise.all([
+        repo.listReservations(db, {}),
+        repo.listScheduleBlocks(db, {})
+      ]);
+      response.json({ reservations, blocks });
     } catch (error) {
       response.status(503).json({ error: databaseErrorMessage(error) });
     }
   });
 
   router.post("/api/prototype/reservations", async (request, response) => {
-    const result = validatePrototypeReservation(request.body, todayProvider());
+    const result = validatePrototypeReservation(request.body, todayProvider(), currentTimeProvider());
 
     if (!result.valid) {
       response.status(400).json({ errors: result.errors });
@@ -112,7 +127,7 @@ export function createPrototypeApiRoutes({ db, repositories = {}, todayProvider 
   });
 
   router.put("/api/prototype/reservations/:reservationId", async (request, response) => {
-    const result = validatePrototypeReservation(request.body, todayProvider());
+    const result = validatePrototypeReservation(request.body, todayProvider(), currentTimeProvider());
 
     if (!result.valid) {
       response.status(400).json({ errors: result.errors });
@@ -153,6 +168,26 @@ export function createPrototypeApiRoutes({ db, repositories = {}, todayProvider 
     }
   });
 
+  router.post("/api/prototype/clear-public-use", requirePrototypeAdmin, async (request, response) => {
+    const result = validatePrototypeClearPublicUse(request.body);
+
+    if (!result.valid) {
+      response.status(400).json({ errors: result.errors });
+      return;
+    }
+
+    try {
+      const clearResult = await repo.clearPublicUseRange(db, result.value, {
+        userId: request.session.user.userId
+      });
+      response.status(201).json(clearResult);
+    } catch (error) {
+      response.status(error instanceof ScheduleBlockConflictError ? 409 : 503).json({
+        error: error instanceof ScheduleBlockConflictError ? error.message : databaseErrorMessage(error)
+      });
+    }
+  });
+
   router.get("/api/prototype/accounts", requirePrototypeAdmin, async (_request, response) => {
     try {
       const users = await repo.listUsers(db);
@@ -176,7 +211,9 @@ export function createPrototypeApiRoutes({ db, repositories = {}, todayProvider 
     }
 
     try {
-      const account = await repo.createUser(db, result.value);
+      const account = await repo.createUser(db, result.value, {
+        createdByUserId: request.session.user.userId
+      });
       response.status(201).json({ account: toPrototypeAccount(account) });
     } catch (error) {
       if (error instanceof DuplicateUsernameError) {
@@ -191,7 +228,7 @@ export function createPrototypeApiRoutes({ db, repositories = {}, todayProvider 
   return router;
 }
 
-function validatePrototypeReservation(input, today) {
+function validatePrototypeReservation(input, today, currentTime) {
   return validateReservationInput({
     reservationDate: input.reservationDate,
     startTime: input.startTime,
@@ -204,8 +241,54 @@ function validatePrototypeReservation(input, today) {
     statusCode: "RESERVED"
   }, {
     today,
+    currentTime,
     requireTodayOrFuture: true
   });
+}
+
+function validatePrototypeClearPublicUse(input = {}) {
+  const errors = {};
+  const date = String(input.date || "").trim();
+  const mode = String(input.mode || "WHOLE_DAY").trim().toUpperCase();
+  const reason = String(input.reason || "Cleared from prototype day header").trim();
+  const startTime = mode === "WHOLE_DAY" ? "07:00" : normalizePrototypeTime(input.startTime);
+  const endTime = mode === "WHOLE_DAY" || mode === "FROM_TIME_ONWARD" ? "21:00" : normalizePrototypeTime(input.endTime);
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    errors.date = "Date must use YYYY-MM-DD format.";
+  }
+
+  if (!["WHOLE_DAY", "TIME_RANGE", "FROM_TIME_ONWARD"].includes(mode)) {
+    errors.mode = "Clear mode is invalid.";
+  }
+
+  if (mode !== "WHOLE_DAY" && !startTime) {
+    errors.startTime = "Start time must use HH:MM format.";
+  }
+
+  if (mode === "TIME_RANGE" && !endTime) {
+    errors.endTime = "End time must use HH:MM format.";
+  }
+
+  if (startTime && endTime && timeToMinutes(endTime) <= timeToMinutes(startTime)) {
+    errors.endTime = "End time must be after start time.";
+  }
+
+  if (!reason) {
+    errors.reason = "Reason is required.";
+  }
+
+  return {
+    valid: Object.keys(errors).length === 0,
+    errors,
+    value: {
+      date,
+      mode,
+      startTime,
+      endTime,
+      reason
+    }
+  };
 }
 
 function requirePrototypeSignedIn(request, response, next) {
@@ -215,6 +298,17 @@ function requirePrototypeSignedIn(request, response, next) {
   }
 
   next();
+}
+
+function normalizePrototypeTime(value) {
+  const match = String(value || "").trim().match(/^([01]\d|2[0-3]):[0-5]\d$/);
+
+  return match ? match[0] : "";
+}
+
+function timeToMinutes(value) {
+  const [hours, minutes] = normalizePrototypeTime(value).split(":").map(Number);
+  return hours * 60 + minutes;
 }
 
 function requirePrototypeAdmin(request, response, next) {
@@ -268,4 +362,16 @@ function getTodayDate() {
 
   const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return `${values.year}-${values.month}-${values.day}`;
+}
+
+function getCurrentManilaTime() {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Manila",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(new Date());
+
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.hour}:${values.minute}`;
 }

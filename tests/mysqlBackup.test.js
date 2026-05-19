@@ -8,6 +8,8 @@ import {
   buildMysqldumpArgs,
   buildMysqldumpEnv,
   createBackupFilePath,
+  createUniqueBackupFilePath,
+  resolveMysqlDumpCommand,
   runMysqlBackup
 } from "../scripts/backup-mysql.mjs";
 
@@ -40,7 +42,32 @@ test("creates deterministic backup file paths with sanitized database names", ()
     timezone: "Asia/Manila"
   });
 
-  assert.equal(filePath, path.join("C:\\backups", "barangay_test_data_2026-05-08_1430.sql"));
+  assert.equal(filePath, path.join("C:\\backups", "barangay_test_data_2026-05-08_143000.sql"));
+});
+
+test("adds a numeric suffix instead of overwriting an existing backup file", async () => {
+  const existing = new Set([
+    path.join("C:\\backups", "barangay_court_scheduler_2026-05-08_143000.sql"),
+    path.join("C:\\backups", "barangay_court_scheduler_2026-05-08_143000_2.sql")
+  ]);
+
+  const filePath = await createUniqueBackupFilePath({
+    backupDir: "C:\\backups",
+    database: "barangay_court_scheduler",
+    now: new Date("2026-05-08T06:30:00.000Z"),
+    timezone: "Asia/Manila",
+    fileExists: async (candidate) => existing.has(candidate)
+  });
+
+  assert.equal(filePath, path.join("C:\\backups", "barangay_court_scheduler_2026-05-08_143000_3.sql"));
+});
+
+test("prefers bundled mysqldump when the offline runtime is present", async () => {
+  const command = await resolveMysqlDumpCommand("C:\\BarangayCourtScheduler", {
+    fileExists: async (candidate) => candidate.endsWith(path.join("runtime", "mariadb", "bin", "mysqldump.exe"))
+  });
+
+  assert.equal(command, path.join("C:\\BarangayCourtScheduler", "runtime", "mariadb", "bin", "mysqldump.exe"));
 });
 
 test("builds mysqldump args without exposing the password", () => {
@@ -56,6 +83,8 @@ test("builds mysqldump args without exposing the password", () => {
     "--host=localhost",
     "--port=3306",
     "--user=root",
+    "--protocol=TCP",
+    "--ssl=0",
     "--single-transaction",
     "--routines",
     "--triggers",
@@ -92,10 +121,11 @@ test("runs mysqldump, creates the backup directory, and returns the file path", 
     mkdir: async (...args) => mkdirCalls.push(args),
     now: new Date("2026-05-08T06:30:00.000Z"),
     output: { log: (message) => output.push(message) },
+    writeMaintenanceActivityLog: async () => {},
     spawnCommand
   });
 
-  assert.equal(result.backupFilePath, path.resolve("C:\\BarangayCourtScheduler", "backups", "barangay_court_scheduler_2026-05-08_1430.sql"));
+  assert.equal(result.backupFilePath, path.resolve("C:\\BarangayCourtScheduler", "backups", "barangay_court_scheduler_2026-05-08_143000.sql"));
   assert.deepEqual(mkdirCalls, [[path.resolve("C:\\BarangayCourtScheduler", "backups"), { recursive: true }]]);
   assert.equal(spawnCommand.calls[0].command, "mysqldump");
   assert.equal(spawnCommand.calls[0].options.env.MYSQL_PWD, "secret");
@@ -118,6 +148,7 @@ test("retries backup without GTID purge option for clients that do not support i
     mkdir: async () => {},
     now: new Date("2026-05-08T06:30:00.000Z"),
     output: { log: () => {} },
+    writeMaintenanceActivityLog: async () => {},
     spawnCommand
   });
 

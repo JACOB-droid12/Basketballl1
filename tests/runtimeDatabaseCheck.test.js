@@ -72,7 +72,7 @@ test("runtime database readiness rejects missing seed data", async () => {
 
   await assert.rejects(
     assertRuntimeDatabaseReady(connection),
-    /reservation statuses are missing/
+    /START-HERE\.bat first-time setup/
   );
 });
 
@@ -123,6 +123,7 @@ test("checkRuntimeDatabase reports unreachable local MySQL without leaking passw
     }),
     (error) => {
       assert.match(error.message, /Unable to connect to the local MySQL\/MariaDB database/);
+      assert.match(error.message, /START-HERE\.bat first-time setup/);
       assert.doesNotMatch(error.message, /very-secret/);
       return true;
     }

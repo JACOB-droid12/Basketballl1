@@ -1,0 +1,7328 @@
+/* ----- Self-hosted fonts (offline) -------------------------------------- */
+/* Inter (SIL Open Font License) and Instrument Serif (SIL Open Font License) */
+/* are bundled locally so the system works without an internet connection.    */
+/* See client/public/fonts/Inter-OFL.txt and InstrumentSerif-OFL.txt for      */
+/* the original license text. Loaded with font-display: swap so staff see     */
+/* instant text in the system fallback while the woff2 streams in.            */
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/app/fonts/Inter-Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/app/fonts/Inter-Medium.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/app/fonts/Inter-SemiBold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/app/fonts/Inter-Bold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/app/fonts/Inter-Italic.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/app/fonts/InstrumentSerif-Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/app/fonts/InstrumentSerif-Italic.woff2") format("woff2");
+}
+
+:root {
+  --bg: #F6F4EE;
+  --surface: #FFFFFF;
+  --surface-2: #F0ECE3;
+  --border: #DCD6C7;
+  --border-strong: #B9B19E;
+  --ink: #1F2937;
+  --ink-2: #3F4754;
+  --ink-muted: #44505F;
+  --primary: #0B4A6F;
+  --primary-dark: #083a57;
+  --primary-soft: #dceaf2;
+  --primary-softer: #EFF5F8;
+  --accent: #C85C1C;
+  --accent-soft: #FDEEDE;
+  --accent-strong: #A14816;
+  --accent-warm: #FFCCA0;
+  --on-accent: #FFFAF2;
+  --success: #1F7A43;
+  --warning: #B4761A;
+  --danger: #B83B2A;
+  --success-soft: #DEF0E3;
+  --warning-soft: #FBEFCF;
+  --danger-soft: #FADEDA;
+
+  /* ----- Alert & status family ----------------------------------------- */
+  /* These are sibling soft variants used by .alert.*, .status-* pills, and  */
+  /* attention surfaces. They share hue with --*-soft tokens above but are   */
+  /* tuned slightly paler / more saturated for legibility on white cards.    */
+  --alert-error-bg: #FAE8E5;
+  --alert-error-border: #E7B4AD;
+  --alert-warning-bg: #FFF3D9;
+  --alert-warning-border: #E3C47C;
+  --alert-warning-text: #775015;
+  --alert-warning-text-strong: #6D4A0D;
+  --alert-success-bg: #E8F4EE;
+  --alert-success-border: #B9D7C8;
+  --info-border: #B9D4E3;
+  --state-error-bg: #FFF8F7;
+  --bar-track-bg: #EEE7DC;
+
+  /* ----- Light button on civic-blue topbar ------------------------------ */
+  /* Translucent white treatment used by .topbar .btn-light. Kept in tokens  */
+  /* so the topbar can be retoned without hunting through selectors.        */
+  --btn-on-primary-bg: rgba(255, 255, 255, 0.12);
+  --btn-on-primary-bg-hover: rgba(255, 255, 255, 0.22);
+  --btn-on-primary-border: rgba(255, 255, 255, 0.22);
+  --btn-on-primary-border-hover: rgba(255, 255, 255, 0.36);
+  --btn-on-primary-focus-ring: rgba(255, 255, 255, 0.88);
+
+  --radius: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 100px;
+  --shadow: 0 4px 14px rgba(15, 30, 60, 0.10);
+  --shadow-sm: 0 1px 2px rgba(15, 30, 60, 0.06);
+  --shadow-md: 0 4px 14px rgba(15, 30, 60, 0.10);
+  --shadow-lg: 0 24px 60px rgba(15, 30, 60, 0.18);
+
+  /* ----- Spacing scale (vertical rhythm) ------------------------------- */
+  /* Single source of truth for layout gaps. Page-level gaps use larger      */
+  /* steps; in-card content rhythm uses the smaller half of the scale.       */
+  /* Card heading → divider → first control gets a deliberate `space-rhythm` */
+  /* step (28px) so the heading does not feel glued to the form below it.    */
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 18px;
+  --space-rhythm: 28px;
+  --space-lg: 36px;
+  --space-xl: 56px;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --font-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+
+  /* ----- Motion ---------------------------------------------------------- */
+  /* Civic register motion: short, functional, decisive. Decelerating curves */
+  /* (no bounce, no elastic). Reused by the login entrance and any later     */
+  /* page-mount choreography. Durations stay inside the 120–250ms working    */
+  /* band; the orientation entrance is the one place we permit ~600ms.       */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo:  cubic-bezier(0.16, 1, 0.3, 1);
+
+  font-family: var(--font-sans);
+  font-size: 17px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  min-width: 0;
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.boot-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.boot-card {
+  width: min(420px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  text-align: center;
+}
+
+.brand-seal {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 16px;
+  background: var(--primary);
+  color: white;
+  font-weight: 600;
+  font-size: 28px;
+  font-family: var(--font-serif);
+  font-style: italic;
+}
+
+.brand-seal.small {
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.15);
+  font-size: 22px;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 28px;
+}
+
+h2 {
+  margin: 0;
+}
+
+p {
+  margin: 0;
+  color: var(--ink-muted);
+}
+
+.btn {
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 0 20px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  overflow-wrap: anywhere;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.btn svg {
+  flex: 0 0 auto;
+}
+
+.btn:hover:not(:disabled),
+.btn:focus-visible {
+  outline: 3px solid rgba(11, 74, 111, 0.32);
+  outline-offset: 3px;
+  border-color: var(--border-strong);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-dark);
+}
+
+.btn-light {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+.btn-light:hover:not(:disabled),
+.btn-light:focus-visible {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+}
+
+/* Square icon-only button. Used on dense rows where a labeled
+   button would crowd the layout; the action is conveyed by the
+   icon plus the standard `aria-label` / `title` pair. */
+.btn-icon {
+  width: 40px;
+  min-height: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.topbar .btn-light {
+  background: var(--btn-on-primary-bg);
+  border-color: var(--btn-on-primary-border);
+  color: white;
+}
+
+.topbar .btn-light:hover:not(:disabled),
+.topbar .btn-light:focus-visible {
+  background: var(--btn-on-primary-bg-hover);
+  border-color: var(--btn-on-primary-border-hover);
+}
+
+.topbar .btn-light:focus-visible {
+  outline-color: var(--btn-on-primary-focus-ring);
+}
+
+.btn-danger {
+  background: var(--surface);
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: var(--danger-soft);
+}
+
+.btn-big {
+  width: 100%;
+  min-height: 64px;
+  padding: 0 28px;
+  font-size: 18px;
+}
+
+.alert {
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-weight: 700;
+}
+
+.alert.error {
+  background: var(--alert-error-bg);
+  border: 1px solid var(--alert-error-border);
+  color: var(--danger);
+}
+
+.alert.warning {
+  display: grid;
+  gap: 6px;
+  background: var(--alert-warning-bg);
+  border: 1px solid var(--alert-warning-border);
+  color: var(--alert-warning-text);
+}
+
+.alert.success {
+  background: var(--alert-success-bg);
+  border: 1px solid var(--alert-success-border);
+  color: var(--success);
+}
+
+.alert.info {
+  background: var(--primary-soft);
+  border: 1px solid var(--info-border);
+  color: var(--primary-dark);
+}
+
+.status-toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-toast span {
+  flex: 1;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--bg);
+}
+
+.login-side {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 42px;
+  padding: clamp(36px, 5vw, 56px);
+  background: var(--primary);
+  color: white;
+}
+
+.login-side > * {
+  position: relative;
+  z-index: 1;
+}
+
+.login-side p,
+.login-side span {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.login-side h1 {
+  max-width: 720px;
+  font-size: clamp(48px, 5vw, 64px);
+  line-height: 1.05;
+  margin-bottom: 12px;
+  font-family: var(--font-serif);
+  font-weight: 400;
+}
+
+.login-side h1 em {
+  color: var(--accent-warm);
+  font-style: italic;
+}
+
+.login-side p {
+  max-width: 440px;
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.brand-row,
+.brand,
+.topbar-actions,
+.user-chip {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.brand-row,
+.seal-row,
+.brand {
+  gap: 14px;
+}
+
+.seal-row {
+  display: flex;
+  align-items: center;
+}
+
+.seal {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-style: italic;
+}
+
+.brand-row strong,
+.brand strong,
+.user-chip strong {
+  display: block;
+}
+
+.brand-row span,
+.brand span:not(.brand-subtitle),
+.user-chip small {
+  display: block;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.login-side .brand-seal {
+  background: white;
+  color: var(--primary);
+}
+
+.login-republic,
+.login-terminal-note {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.login-republic {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.welcome-fil {
+  font-style: italic;
+  opacity: 0.85;
+}
+
+.login-install-note {
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.eyebrow {
+  margin-bottom: 12px;
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.login-form-side {
+  display: grid;
+  place-items: center;
+  padding: clamp(28px, 5vw, 56px);
+}
+
+.login-form-card {
+  width: min(420px, 100%);
+  display: grid;
+  gap: 18px;
+}
+
+.login-form-card h2 {
+  font-family: var(--font-serif);
+  font-size: 42px;
+  font-weight: 400;
+  line-height: 1.05;
+}
+
+.login-form-card .sub {
+  margin-top: 6px;
+  margin-bottom: 12px;
+  font-size: 17px;
+}
+
+.login-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 6px;
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: var(--surface-2);
+  color: var(--ink-muted);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.login-hint svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--primary);
+}
+
+.login-hint strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--primary-dark);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.login-hint-sub {
+  display: inline-block;
+  margin-top: 4px;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.field span {
+  font-size: 14px;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+}
+
+.field input,
+.field select {
+  min-height: 48px;
+  padding: 0 12px;
+}
+
+.field textarea {
+  min-height: 112px;
+  padding: 12px;
+  resize: vertical;
+}
+
+.field.compact {
+  min-width: min(260px, 100%);
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: 3px solid var(--primary-soft);
+  border-color: var(--primary);
+}
+
+.app-layout {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  grid-template-rows: 72px minmax(0, 1fr);
+}
+
+.topbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 0 28px;
+  background: var(--primary);
+  color: white;
+  min-width: 0;
+}
+
+.brand-text {
+  display: grid;
+  gap: 2px;
+  line-height: 1.15;
+  min-width: 0;
+}
+
+.brand-title {
+  color: white;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.brand-title,
+.brand-subtitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.brand-subtitle,
+.topbar .user-chip small {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+}
+
+.topbar-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 14px;
+  min-width: 0;
+}
+
+.office-clock {
+  display: grid;
+  gap: 2px;
+  min-width: 148px;
+  text-align: right;
+  line-height: 1.15;
+}
+
+.office-clock strong,
+.office-clock small {
+  display: block;
+}
+
+.office-clock strong {
+  color: white;
+  font-size: 15px;
+}
+
+.office-clock small {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+}
+
+.user-chip {
+  gap: 10px;
+  min-width: 0;
+  max-width: min(340px, 36vw);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 6px 12px 6px 6px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.user-chip > span:last-child {
+  min-width: 0;
+}
+
+.user-chip strong,
+.user-chip small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.avatar {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--accent-strong);
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px 16px;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  min-width: 0;
+}
+
+/* Sidebar nav grouping. The eleven nav items are split into three
+   labeled groups (Operate / Records / Account) so a clerk reading
+   the rail top-to-bottom understands "what kind of thing am I
+   looking at?" before they read each item's label. The group
+   label is a small uppercase eyebrow; the dividers between
+   groups come from spacing only, no horizontal rules. */
+.nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-group + .nav-group {
+  margin-top: 14px;
+}
+
+.nav-group-label {
+  padding: 6px 12px 2px;
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.nav-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 68px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.nav-copy,
+.nav-item small {
+  display: block;
+}
+
+.nav-copy > span {
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.nav-item small {
+  margin-top: 3px;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.nav-item:hover {
+  background: var(--surface-2);
+}
+
+.nav-item.active {
+  border-color: var(--primary-soft);
+  background: var(--primary-softer);
+}
+
+.nav-item.active .nav-copy > span {
+  color: var(--primary);
+}
+
+.nav-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.nav-icon svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nav-item.active .nav-icon {
+  background: var(--primary);
+  color: white;
+}
+
+.sidebar-help {
+  margin-top: auto;
+  display: grid;
+  gap: 8px;
+  border-radius: 10px;
+  padding: 16px;
+  background: var(--primary-softer);
+  color: var(--primary);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.sidebar-help .help-icon {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: white;
+  color: var(--primary);
+}
+
+.sidebar-help strong {
+  display: block;
+  color: var(--primary);
+  font-size: 15px;
+}
+
+/* Mobile compact nav toggle — hidden on desktop, visible on narrow screens */
+.mobile-nav-bar {
+  display: none;
+}
+
+.mobile-nav-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 14px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mobile-nav-toggle .nav-icon {
+  width: 28px;
+  height: 28px;
+  background: var(--primary);
+  color: white;
+}
+
+.mobile-nav-toggle .nav-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.mobile-nav-current {
+  flex: 1;
+  text-align: left;
+}
+
+.main-panel {
+  min-width: 0;
+  overflow-y: auto;
+  padding: clamp(24px, 4vw, 40px) clamp(20px, 4vw, 40px) 64px;
+}
+
+.page-stack {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.page-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.page-heading h1 {
+  font-size: 40px;
+  line-height: 1.05;
+}
+
+.page {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.page-header h1 {
+  font-size: 40px;
+  line-height: 1.05;
+}
+
+.home-header h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(40px, 5vw, 58px);
+  font-weight: 400;
+}
+
+.home-action {
+  width: auto;
+  min-width: min(240px, 100%);
+}
+
+.btn .btn-fil {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.86;
+}
+
+.page-kicker {
+  margin-bottom: 12px;
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.page-subtitle {
+  max-width: 620px;
+  line-height: 1.5;
+}
+
+.button-row,
+.toolbar,
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.button-row .btn,
+.button-row a.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  text-decoration: none;
+}
+
+.toolbar {
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.content-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.6fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  /* Scroll affordance: a soft shadow on the right edge hints to the user */
+  /* that the table extends beyond the viewport on narrow screens. The */
+  /* shadow uses the same rgba-on-blue tone as our other shadow tokens. */
+  background:
+    linear-gradient(to right, var(--surface), var(--surface)) left center / 16px 100% no-repeat,
+    linear-gradient(to right, var(--surface), var(--surface)) right center / 16px 100% no-repeat,
+    radial-gradient(farthest-side at 0% 50%, rgba(15, 30, 60, 0.12), transparent) left center / 16px 100% no-repeat,
+    radial-gradient(farthest-side at 100% 50%, rgba(15, 30, 60, 0.12), transparent) right center / 16px 100% no-repeat;
+  background-attachment: local, local, scroll, scroll;
+}
+
+.data-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  background: var(--surface);
+}
+
+.data-table th,
+.data-table td {
+  padding: 15px 16px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.data-table th {
+  background: var(--surface-2);
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--border);
+}
+
+.data-table td {
+  max-width: 220px;
+  overflow-wrap: anywhere;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.data-table tbody tr:hover,
+.data-table tbody tr.selected {
+  background: var(--primary-soft);
+}
+
+.data-table tr:focus {
+  outline: 3px solid var(--primary-soft);
+  outline-offset: -3px;
+}
+
+.detail-panel,
+.form-card,
+.dialog {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 10px 28px rgba(32, 35, 38, 0.08);
+}
+
+.detail-panel {
+  position: sticky;
+  top: 18px;
+  display: grid;
+  gap: 18px;
+  padding: 20px;
+}
+
+.detail-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.detail-head h2 {
+  overflow-wrap: anywhere;
+}
+
+.detail-grid {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+}
+
+.detail-grid div {
+  display: grid;
+  gap: 4px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-grid dt {
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.detail-grid dd {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 600;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.form-card {
+  display: grid;
+  gap: var(--space-rhythm);
+  padding: 28px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.form-grid .wide {
+  grid-column: 1 / -1;
+}
+
+.field-error {
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.form-actions {
+  justify-content: flex-end;
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(32, 35, 38, 0.46);
+}
+
+.dialog {
+  width: min(440px, 100%);
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+}
+
+.dialog p {
+  line-height: 1.5;
+}
+
+.dialog-actions {
+  justify-content: flex-end;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.home-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr);
+  gap: 24px;
+  align-items: stretch;
+}
+
+.hero-card {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  min-height: 260px;
+  border-radius: 10px;
+  padding: 32px;
+  background: var(--primary);
+  color: white;
+}
+
+.hero-card::before,
+.hero-card::after {
+  content: "";
+  position: absolute;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.hero-card::before {
+  right: -80px;
+  top: -80px;
+  width: 280px;
+  height: 280px;
+}
+
+.hero-card::after {
+  right: 60px;
+  bottom: -100px;
+  width: 160px;
+  height: 160px;
+}
+
+.hero-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-card h2 {
+  font-family: var(--font-serif);
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1.05;
+}
+
+.hero-date {
+  margin-bottom: 18px;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 15px;
+}
+
+.hero-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.hero-stat .num {
+  font-family: var(--font-serif);
+  font-size: 80px;
+  font-weight: 400;
+  line-height: 1;
+  color: white;
+}
+
+.hero-stat .unit {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.hero-note {
+  max-width: 620px;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 15px;
+}
+
+.hero-note strong {
+  color: white;
+}
+
+.quick-actions {
+  display: grid;
+  gap: 12px;
+}
+
+.quick-action {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 22px;
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+}
+
+.quick-action:hover,
+.quick-action:focus-visible {
+  outline: 3px solid rgba(11, 74, 111, 0.24);
+  outline-offset: 2px;
+  border-color: var(--primary);
+}
+
+.quick-action .qa-ic {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--primary-softer);
+  color: var(--primary);
+}
+
+.quick-action .qa-ic svg {
+  width: 28px;
+  height: 28px;
+}
+
+.quick-action .qa-label {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.quick-action .qa-label .l1 {
+  color: var(--primary-dark);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.quick-action .qa-label .l2 {
+  color: var(--ink-muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.quick-action .qa-arrow {
+  color: var(--ink-muted);
+}
+
+.stat-card,
+.card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.stat-card {
+  display: grid;
+  gap: 12px;
+  padding: 22px;
+}
+
+.stat-card span {
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.stat-card strong {
+  color: var(--primary-dark);
+  font-size: 40px;
+  line-height: 1;
+}
+
+.stat-card small {
+  color: var(--ink-muted);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.info-banner {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  border: 1px solid var(--primary-soft);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  background: var(--primary-softer);
+  color: var(--ink-2);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.info-banner strong {
+  color: var(--primary-dark);
+}
+
+.card {
+  overflow: hidden;
+}
+
+.padded-card {
+  display: grid;
+  gap: var(--space-rhythm);
+  padding: 24px;
+}
+
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.card-head h2 {
+  font-size: 22px;
+}
+
+.card-title,
+.card-head .card-title {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.card-title .fil {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink-muted);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.card-head span {
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.admin-grid,
+.report-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.42fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.admin-table {
+  min-width: 860px;
+}
+
+.logs-table {
+  min-width: 760px;
+}
+
+.filter-card {
+  overflow: visible;
+}
+
+.filter-actions {
+  align-self: end;
+}
+
+.action-code {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  padding: 0 12px;
+  background: var(--surface-2);
+  color: var(--primary-dark);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1024px) {
+  .logs-table,
+  .admin-table {
+    display: block;
+    min-width: 0;
+  }
+
+  .logs-table thead,
+  .admin-table thead {
+    display: none;
+  }
+
+  .logs-table tbody,
+  .logs-table tr,
+  .admin-table tbody,
+  .admin-table tr {
+    display: block;
+  }
+
+  .logs-table tr,
+  .admin-table tr {
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+  }
+
+  .logs-table td,
+  .admin-table td {
+    display: block;
+    max-width: none;
+    padding: 4px 0;
+    border: 0;
+  }
+
+  .logs-table td::before,
+  .admin-table td::before {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--ink-muted);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .logs-table td:nth-of-type(1)::before { content: "Date and time"; }
+  .logs-table td:nth-of-type(2)::before { content: "User"; }
+  .logs-table td:nth-of-type(3)::before { content: "Action"; }
+  .logs-table td:nth-of-type(4)::before { content: "Details"; }
+
+  .admin-table td:nth-of-type(1)::before { content: "Full name"; }
+  .admin-table td:nth-of-type(2)::before { content: "Username"; }
+  .admin-table td:nth-of-type(3)::before { content: "Role"; }
+  .admin-table td:nth-of-type(4)::before { content: "Status"; }
+  .admin-table td:nth-of-type(5)::before { content: "Created"; }
+  .admin-table td:nth-of-type(6)::before { content: "Action"; }
+
+  .admin-table td:last-of-type {
+    margin-top: 8px;
+  }
+
+  .admin-table td:last-of-type .btn {
+    width: 100%;
+  }
+}
+
+.staff-filter-card {
+  overflow: hidden;
+}
+
+/* Cramped-card antidote: cards using the `<head + bottom-border> /
+   <body content>` pattern (`.card.staff-filter-card`, `.card.filter-card`,
+   regular `.card` with `.card-head`) need explicit gutter + rhythm on
+   their body children, since they have no padded body wrapper. Padded
+   cards (`.padded-card`) already carry 24px padding and `gap: rhythm`,
+   so they don't get this treatment.
+   The product register asks for "tight grouping for related elements,
+   generous separation between distinct sections." This is the rule
+   that earns it. Tables (`.table-wrap`) and elements that render flush
+   to the card edge (`.toolbar`) are excepted. */
+.card:not(.padded-card) > .staff-filter-head ~ *:not(.table-wrap):not(.toolbar),
+.card:not(.padded-card) > .card-head ~ *:not(.table-wrap):not(.toolbar),
+.card:not(.padded-card) > .card-section-head ~ *:not(.table-wrap):not(.toolbar),
+.card:not(.padded-card) > .filter-card-head ~ *:not(.table-wrap):not(.toolbar) {
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+.card:not(.padded-card) > .staff-filter-head + *,
+.card:not(.padded-card) > .card-head + *,
+.card:not(.padded-card) > .card-section-head + *,
+.card:not(.padded-card) > .filter-card-head + * {
+  margin-top: var(--space-rhythm);
+}
+
+.card:not(.padded-card) > .staff-filter-head ~ * + *,
+.card:not(.padded-card) > .card-head ~ * + *,
+.card:not(.padded-card) > .card-section-head ~ * + *,
+.card:not(.padded-card) > .filter-card-head ~ * + * {
+  margin-top: var(--space-rhythm);
+}
+
+.card:not(.padded-card) > .staff-filter-head ~ *:last-child,
+.card:not(.padded-card) > .card-head ~ *:last-child,
+.card:not(.padded-card) > .card-section-head ~ *:last-child,
+.card:not(.padded-card) > .filter-card-head ~ *:last-child {
+  padding-bottom: 24px;
+}
+
+.staff-filter-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.staff-filter-head h2 {
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.staff-filter-head p {
+  margin-top: 4px;
+  max-width: 720px;
+  font-size: 15px;
+}
+
+.staff-filter-head strong {
+  flex: 0 0 auto;
+  min-width: 94px;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--primary-softer);
+  color: var(--primary-dark);
+  text-align: center;
+}
+
+.staff-filter-toolbar {
+  border-bottom: 0;
+}
+
+.logs-presets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 0 20px 12px;
+}
+
+.logs-load-more {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.logs-load-more span {
+  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.logs-load-more .btn {
+  flex: 0 0 auto;
+}
+
+.activity-log-card .empty {
+  border: 0;
+}
+
+.error-state {
+  border-color: var(--alert-error-border);
+  background: var(--state-error-bg);
+}
+
+.account-status {
+  min-width: 82px;
+  justify-content: center;
+}
+
+.status-account-active {
+  border-color: var(--alert-success-border);
+  background: var(--alert-success-bg);
+  color: var(--success);
+}
+
+.status-account-inactive {
+  border-color: var(--alert-error-border);
+  background: var(--alert-error-bg);
+  color: var(--danger);
+}
+
+.current-account-note strong {
+  color: inherit;
+}
+
+.account-totals {
+  margin: 0 0 4px;
+  color: var(--ink-2);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.form-copy {
+  margin-top: 8px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.current-account-lock {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  border-radius: 8px;
+  padding: 0 10px;
+  background: var(--surface-2);
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.print-title {
+  display: none;
+}
+
+.report-headline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.7fr);
+  gap: 24px;
+  align-items: stretch;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  background: var(--surface);
+}
+
+.report-range {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+}
+
+.report-range-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.report-range-custom {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.page-sub-fil-inline {
+  display: inline-block;
+  margin-left: 6px;
+  color: var(--ink-muted);
+  font-size: 14px;
+  font-style: italic;
+}
+
+.report-headline-main {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.report-headline-label {
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.report-headline-label .fil {
+  display: block;
+  margin-top: 4px;
+  color: var(--ink-muted);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.report-headline-main strong {
+  color: var(--primary);
+  font-family: var(--font-serif);
+  font-size: 64px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.report-headline-main small {
+  color: var(--ink-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.report-headline-side {
+  display: grid;
+  align-content: center;
+  gap: 18px;
+  margin: 0;
+  padding-left: 24px;
+  border-left: 1px solid var(--border);
+  min-width: 0;
+}
+
+.report-headline-side > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.report-headline-side dt {
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.report-headline-side dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.report-headline-side small {
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.report-stat-note {
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .report-headline {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    padding: 22px 20px;
+  }
+
+  .report-headline-main strong {
+    font-size: 48px;
+  }
+
+  .report-headline-side {
+    padding-left: 0;
+    padding-top: 18px;
+    border-left: 0;
+    border-top: 1px solid var(--border);
+  }
+}
+
+.report-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 0.72fr);
+}
+
+/* Detail tabs card on Reports. Four detail tables (Missed,
+   Cancelled, Cleared for public use, Maintenance) share one
+   bordered card; tabs at the top switch which table is shown
+   on screen. The print stylesheet below restores all four
+   tables for the printed output. */
+.report-detail-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.report-detail-tabs {
+  margin-top: 4px;
+}
+
+.report-detail-tabs .filter-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.report-detail-tabs .filter-tab span {
+  color: var(--ink-muted);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.report-detail-tabs .filter-tab.on span {
+  color: inherit;
+  opacity: 0.78;
+}
+
+.report-detail-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.report-detail-caption {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Task-led report views (Req. OPUS-UI-003). The Reports page splits
+   the same backend payload across four staff-friendly views (Usage,
+   Status, Staff, Maintenance) instead of stacking every section.
+   `.report-view-tabs` reuses the `.filter-tab` chrome so the visual
+   language stays consistent with the rest of the app. Inactive views
+   stay in the DOM (`hidden`) so the tab keyboard semantics are
+   straightforward and the print stylesheet can flip everything back
+   to visible when staff prints the page. */
+.report-view-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.report-view {
+  display: contents;
+}
+
+.report-view[hidden] {
+  display: none;
+}
+
+.report-view-heading {
+  margin: 0;
+  color: var(--primary-dark);
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 400;
+}
+
+.print-only {
+  display: none;
+}
+
+.report-detail-print {
+  display: none;
+}
+
+.report-detail-print-section + .report-detail-print-section {
+  margin-top: 20px;
+}
+
+/* Reservation History summary card. The hero number on the left
+   answers the most common counter question ("how many times has
+   this resident booked?") at a glance; the supporting stats sit
+   in a tight grid on the right. At narrow widths the hero stacks
+   above the stats. */
+.history-summary-card {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.45fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: center;
+}
+
+.history-summary-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 24px;
+  border-right: 1px solid var(--border);
+}
+
+.history-summary-eyebrow {
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.history-summary-number {
+  font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
+  font-size: 72px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--primary);
+}
+
+.history-summary-sub {
+  color: var(--ink-2);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.history-summary-stats {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 24px;
+}
+
+.history-summary-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+}
+
+.history-summary-stat dt {
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.history-summary-stat dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.history-summary-stat.is-wide {
+  grid-column: 1 / -1;
+}
+
+.history-summary-stat.is-wide dd {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.history-summary-stat.is-serif dd {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: 0.005em;
+}
+
+@media (max-width: 720px) {
+  .history-summary-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .history-summary-hero {
+    padding-right: 0;
+    border-right: 0;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .history-summary-number {
+    font-size: 56px;
+  }
+}
+
+/* Reservation History tabs card. Same family as the Reports
+   detail-tabs card: one bordered card holds two lists, tabs at
+   the top switch which list is shown. */
+.history-tabs-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.history-tabs {
+  margin-top: 4px;
+}
+
+.history-tabs-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.history-tabs-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.history-tabs .filter-tab span {
+  color: var(--ink-muted);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.history-tabs .filter-tab.on span {
+  color: inherit;
+  opacity: 0.78;
+}
+
+/* Booking-card rendered as a <button>: keep all the visual chrome from
+   the existing .booking-card pattern, just neutralise default button
+   styling so the row reads as a card and not as a chunky button. */
+button.booking-card.history-row {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+button.booking-card.history-row:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 3px var(--primary-soft);
+  border-color: var(--primary);
+}
+
+.history-tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Court policy "Allowed days" picker. Seven day options sit in a
+   horizontal pill row that mirrors the time-chip / duration-picker
+   family — same 10px radius, 2px Office Border, hover-lift to Civic
+   Blue, selected fills Civic Blue. Native checkbox is visually hidden
+   but stays focusable; the pill itself shows the state. */
+.court-policy-allowed-days {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.court-policy-allowed-days .field-label {
+  margin-bottom: var(--space-sm);
+}
+
+.court-policy-day-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+}
+
+.court-policy-day-option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  min-height: 60px;
+  padding: 10px 18px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.court-policy-day-option > input {
+  /* Visually hide the native checkbox while keeping it focusable. The
+     pill carries the state; the checkbox is the source of truth. */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.court-policy-day-option > span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.court-policy-day-option > span > .fil {
+  display: block;
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.court-policy-day-option:hover {
+  border-color: var(--primary);
+  background: var(--primary-softer);
+}
+
+.court-policy-day-option:has(> input:focus-visible) {
+  outline: 3px solid var(--primary-soft);
+  outline-offset: 2px;
+  border-color: var(--primary);
+}
+
+.court-policy-day-option:has(> input:checked) {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+}
+
+.court-policy-day-option:has(> input:checked) > span > .fil {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.court-policy-day-option:has(> input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.court-policy-day-option:has(> input:disabled):hover {
+  /* Read-only fallback for non-admin: do not lift on hover. */
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+.court-policy-day-option:has(> input:checked:disabled) {
+  /* Non-admin sees the same blue chip-on selection so the policy reads
+     correctly, but the affordance stays calm (no hover, lower opacity). */
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+}
+
+/* Court policy page-level layout: form left, sticky preview right at
+   desktop. Collapses to a single column at narrow widths. The preview
+   is non-editable and only mirrors the form's current state, so it can
+   safely sit behind the form on mobile (where space is the constraint). */
+.court-policy-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+.court-policy-form {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.form-card-head {
+  display: grid;
+  gap: 6px;
+}
+
+.form-card-head h2 {
+  font-size: 22px;
+}
+
+.form-card-head .form-copy {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.court-policy-group {
+  display: grid;
+  gap: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border);
+}
+
+.court-policy-group:first-of-type {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.court-policy-group-head {
+  display: grid;
+  gap: 4px;
+}
+
+.court-policy-group-head h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.court-policy-group-head p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.court-policy-group-body {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.court-policy-group-body.two-up {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.court-policy-group-body.three-up {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 720px) {
+  .court-policy-group-body.two-up,
+  .court-policy-group-body.three-up {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.court-policy-hint-list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+  font-weight: 500;
+}
+
+/* Blocked-dates picker: native date input + add button + chip list. */
+.court-policy-blocked {
+  display: grid;
+  gap: 10px;
+}
+
+.court-policy-blocked-label {
+  display: grid;
+  gap: 4px;
+}
+
+.court-policy-blocked-label .field-label {
+  display: block;
+}
+
+.court-policy-blocked-label .field-hint {
+  color: var(--ink-muted);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.court-policy-blocked-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.court-policy-blocked-input {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  background: var(--surface);
+  color: var(--ink);
+  flex: 0 1 220px;
+}
+
+.court-policy-blocked-input:focus {
+  outline: 4px solid var(--primary-soft);
+  border-color: var(--primary);
+}
+
+.court-policy-blocked-empty {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 14px;
+  font-style: italic;
+}
+
+.court-policy-blocked-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.court-policy-blocked-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.court-policy-blocked-remove {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink-muted);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.court-policy-blocked-remove:hover,
+.court-policy-blocked-remove:focus-visible {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+  color: var(--danger);
+  outline: none;
+}
+
+.court-policy-blocked.has-error .court-policy-blocked-input {
+  border-color: var(--danger);
+}
+
+.court-policy-actions {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border);
+}
+
+/* Preview rail: sticky non-editable mirror of the policy form. */
+.court-policy-preview {
+  position: sticky;
+  top: var(--space-md);
+  display: grid;
+  gap: var(--space-md);
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.court-policy-preview-head {
+  display: grid;
+  gap: 6px;
+}
+
+.court-policy-preview-head h2 {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.court-policy-preview-head p {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.court-policy-preview-section {
+  display: grid;
+  gap: 8px;
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border);
+}
+
+.court-policy-preview-section:first-of-type {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.court-policy-preview-section h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.court-policy-preview-week {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.court-policy-preview-daycell {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 8px 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.court-policy-preview-daycell.on {
+  border-color: var(--primary);
+  background: var(--primary-softer);
+  color: var(--primary);
+}
+
+.court-policy-preview-daycell.off {
+  background: var(--surface-2);
+  color: var(--ink-muted);
+}
+
+.court-policy-preview-daylabel {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.court-policy-preview-daystate {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.court-policy-preview-day {
+  display: grid;
+  gap: 8px;
+}
+
+.court-policy-preview-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.court-policy-preview-slots {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.court-policy-preview-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 70px;
+  padding: 4px 10px;
+  border: 1px solid var(--primary-soft);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.court-policy-preview-slot.empty {
+  border-style: dashed;
+  border-color: var(--border);
+  background: var(--surface-2);
+  color: var(--ink-muted);
+}
+
+.court-policy-preview-rule {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.court-policy-preview-warn {
+  margin: 0;
+  color: var(--alert-warning-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.court-policy-preview-empty {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 14px;
+  font-style: italic;
+}
+
+.court-policy-preview-blockedlist {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 4px;
+}
+
+.court-policy-preview-blockedlist li {
+  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.court-policy-preview-more {
+  font-style: italic;
+  color: var(--ink-muted) !important;
+  font-weight: 500 !important;
+}
+
+@media (max-width: 1024px) {
+  .court-policy-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .court-policy-preview {
+    position: static;
+  }
+}
+
+/* Resident Directory list. At >=720px the table is shown and the
+   card list is hidden; at <720px they swap so the directory reads
+   as a stack of cards instead of a horizontally-scrolling table.
+   Notes/Group used to be table columns; they now render inline
+   under the name (group as a small caption) or in tooltip / card
+   detail (notes). */
+.resident-list-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.resident-list-table {
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+}
+
+.resident-list-cards {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.resident-name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.resident-name {
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.resident-group {
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 600;
+  font-style: italic;
+}
+
+.resident-row-actions {
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.resident-actions-th {
+  text-align: right;
+}
+
+.resident-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  align-items: start;
+}
+
+.resident-card.selected {
+  border-color: var(--primary);
+  background: var(--primary-softer);
+}
+
+.resident-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.resident-card-meta {
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.resident-card-notes {
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.resident-card-actions {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+@media (max-width: 820px) {
+  .resident-list-table-wrap {
+    display: none;
+  }
+
+  .resident-list-cards {
+    display: flex;
+  }
+}
+
+/* Resident directory page-head: page title left, primary "Add resident"
+   button right. The button stays a `.btn-big` (64px) to match other
+   primary screen actions across the staff console. */
+.resident-directory-page .staff-page-head {
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.resident-add-btn {
+  align-self: end;
+}
+
+@media (max-width: 720px) {
+  .resident-add-btn {
+    width: 100%;
+  }
+}
+
+/* Resident editor drawer: slide-in from the right at desktop, full
+   sheet at narrow widths. Z-index sits above the page but below the
+   topbar. Reuses the dialog backdrop colour from DESIGN.md so it
+   matches ConfirmDialog and the reservation drawer. */
+.resident-editor-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(15, 30, 60, 0.5);
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+}
+
+.resident-editor {
+  width: min(640px, 100%);
+  max-height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: 28px 32px 32px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+}
+
+.resident-editor-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.resident-editor-head h2 {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.05;
+  margin: 4px 0 6px;
+}
+
+.resident-editor-close {
+  flex: 0 0 auto;
+}
+
+.resident-editor-form {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.resident-editor-actions {
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border);
+  justify-content: flex-end;
+}
+
+@media (max-width: 720px) {
+  .resident-editor-backdrop {
+    align-items: flex-end;
+  }
+  .resident-editor {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 16px 16px 0 0;
+    border-left: 0;
+  }
+}
+
+/* Equal-weight row actions: the row carries three labelled buttons
+   (Use / Edit / Remove). Use stays primary at the page level, the
+   row-level treatment uses btn-light + btn-danger so the table doesn't
+   shout. */
+.resident-row-actions {
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.resident-row-actions .btn {
+  min-height: 40px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+
+.resident-card-actions {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.resident-card-actions .btn {
+  min-height: 44px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+.card-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.card-section-head h2 {
+  font-size: 22px;
+}
+
+.card-section-head span {
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.bar-list,
+.requester-list {
+  display: grid;
+  gap: 14px;
+}
+
+.bar-row {
+  display: grid;
+  gap: 8px;
+}
+
+.bar-label,
+.requester-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.bar-label strong,
+.requester-row strong {
+  color: var(--primary-dark);
+  font-size: 18px;
+}
+
+.bar-track {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--bar-track-bg);
+}
+
+.bar-track span {
+  display: block;
+  height: 100%;
+  min-width: 3px;
+  border-radius: inherit;
+  background: var(--primary);
+}
+
+.requester-row {
+  min-height: 48px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.requester-row:last-child {
+  border-bottom: 0;
+}
+
+.requester-row span {
+  min-width: 0;
+  color: var(--ink);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.booking-list {
+  display: grid;
+}
+
+.booking-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: center;
+  min-height: 92px;
+  padding: 20px 24px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.booking-row:hover,
+.booking-row:focus-visible {
+  outline: none;
+  background: var(--primary-softer);
+}
+
+.booking-row:hover .b-meta,
+.booking-row:hover .b-dur,
+.booking-row:focus-visible .b-meta,
+.booking-row:focus-visible .b-dur {
+  color: var(--ink-2);
+}
+
+.booking-row .b-time {
+  color: var(--primary);
+  font-family: var(--font-serif);
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.booking-row:last-child {
+  border-bottom: 0;
+}
+
+.booking-row .b-name {
+  min-width: 0;
+  margin-bottom: 3px;
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.booking-row .b-purpose {
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.booking-row .b-meta,
+.booking-row .b-dur {
+  display: block;
+  color: var(--ink-muted);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 500;
+}
+
+.booking-row .b-meta {
+  margin-top: 4px;
+}
+
+.booking-row .b-dur {
+  margin-top: 2px;
+}
+
+.booking-row.missed,
+.booking-row.cancelled {
+  opacity: 0.82;
+}
+
+.booking-row.missed .b-name,
+.booking-row.cancelled .b-name {
+  text-decoration: line-through;
+}
+
+.booking-row.completed .b-time {
+  color: var(--primary);
+}
+
+.booking-row.missed .b-time,
+.booking-row.cancelled .b-time {
+  color: #9C3222;
+}
+
+.booking-row small {
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.muted {
+  color: var(--ink-muted);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  background: var(--primary);
+  color: white;
+  font-weight: 700;
+  text-decoration: none;
+  transform: translateY(-150%);
+  transition: transform 160ms ease;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.88);
+  outline-offset: 2px;
+  transform: translateY(0);
+}
+
+.date-input {
+  min-height: 48px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 12px;
+  background: white;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.date-field {
+  display: grid;
+  gap: 6px;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.date-field span {
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.date-input:focus {
+  outline: 3px solid var(--primary-soft);
+  border-color: var(--primary);
+}
+
+.calendar-toolbar {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px 14px;
+  min-width: 0;
+  margin-bottom: 18px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.calendar-week-label {
+  display: grid;
+  gap: 2px;
+  min-width: 230px;
+  margin-right: auto;
+  min-inline-size: 0;
+}
+
+.calendar-week-label span,
+.compact-date span {
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.calendar-week-label strong {
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.calendar-actions {
+  display: flex;
+  align-items: end;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.calendar-actions .btn,
+.calendar-more-trigger,
+.compact-date {
+  flex: 0 0 auto;
+}
+
+.compact-date {
+  min-width: 184px;
+}
+
+.calendar-toolbar .date-input {
+  min-height: 48px;
+}
+
+/* Segmented week-nav: prev / this-week / next read as one        */
+/* control instead of three same-weight light buttons. The middle */
+/* "This week" pill carries an active state when the visible week */
+/* already contains today (`is-current`).                         */
+.calendar-week-nav {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.calendar-week-nav-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 16px;
+  height: 48px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.calendar-week-nav-btn + .calendar-week-nav-btn {
+  border-left: 1px solid var(--border);
+}
+
+.calendar-week-nav-btn:hover {
+  background: var(--surface-2);
+}
+
+.calendar-week-nav-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+.calendar-week-nav-today {
+  padding: 0 16px;
+  font-weight: 700;
+}
+
+.calendar-week-nav-today.is-current {
+  background: var(--primary-softer);
+  color: var(--primary);
+}
+
+/* Overflow menu for tertiary calendar actions (daily print, plus */
+/* admin-only maintenance + clear-public-use). Anchored to the    */
+/* trigger; opens on click, closes on outside-click or Escape.    */
+.calendar-more-menu {
+  position: relative;
+  display: inline-flex;
+}
+
+.calendar-more-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.calendar-more-caret {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.calendar-more-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  min-width: 240px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-md);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* `display: flex` above wins specificity against the user-agent
+   `[hidden] { display: none }` rule, so the menu would stay visible
+   when closed. Re-assert hidden inside the same selector group so
+   the React `hidden={!open}` attribute works as authored. */
+.calendar-more-list[hidden] {
+  display: none;
+}
+
+.calendar-more-item {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 120ms ease;
+}
+
+.calendar-more-item:hover {
+  background: var(--surface-2);
+}
+
+.calendar-more-item:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+.calendar-more-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 6px;
+}
+
+/* ----- Calendar status legend ----------------------------------------- */
+/* Calm, paper-style explainer placed under the toolbar. Uses the same   */
+/* status tokens the booking blocks use so staff can map a chip to the   */
+/* coloring inside each day card without crowding the toolbar.           */
+.calendar-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  margin: -6px 0 14px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.calendar-legend-label {
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.calendar-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.calendar-legend-item .legend-swatch {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--primary-softer);
+}
+
+.calendar-legend-item.legend-reserved .legend-swatch {
+  border-color: color-mix(in srgb, var(--primary) 28%, var(--border));
+  background: var(--primary-softer);
+}
+
+.calendar-legend-item.legend-completed .legend-swatch {
+  border-color: var(--ink-muted);
+  background: var(--surface);
+  opacity: 0.74;
+}
+
+.calendar-legend-item.legend-missed .legend-swatch,
+.calendar-legend-item.legend-cancelled .legend-swatch {
+  border-color: color-mix(in srgb, var(--danger) 32%, var(--border));
+  background: var(--danger-soft);
+}
+
+.calendar-legend-item.legend-available .legend-swatch {
+  border-color: color-mix(in srgb, var(--success) 32%, var(--border));
+  background: var(--success-soft);
+}
+
+.calendar-legend-item.legend-maintenance .legend-swatch {
+  border-color: color-mix(in srgb, var(--warning) 32%, var(--border));
+  background: var(--alert-warning-bg);
+}
+
+.calendar-legend-item.legend-barangay .legend-swatch {
+  border-color: color-mix(in srgb, var(--primary) 28%, var(--border));
+  background: var(--primary-softer);
+}
+
+.calendar-legend-item.legend-cleared .legend-swatch {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+
+@media (max-width: 560px) {
+  .calendar-legend {
+    gap: 8px 14px;
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+}
+
+.calendar-state-card {
+  display: grid;
+}
+
+.calendar-state-card .state-card {
+  min-height: 300px;
+}
+
+.staff-week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(138px, 1fr));
+  gap: 10px;
+  align-items: stretch;
+  min-width: 0;
+}
+
+@media (max-width: 1280px) {
+  .staff-week-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .staff-week-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .staff-week-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.staff-day-card {
+  min-width: 0;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.staff-day-head {
+  min-height: 80px;
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+.staff-day-head.today {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.staff-day-head span {
+  display: block;
+  margin-bottom: 4px;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.staff-day-head strong {
+  display: block;
+  color: inherit;
+  font-family: var(--font-serif);
+  font-size: 34px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.staff-day-head-name {
+  font: 600 13px/1.2 var(--font-sans);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.staff-day-head.today .staff-day-head-name {
+  color: var(--paper-surface, white);
+}
+
+.staff-day-head-num {
+  font: 400 30px/1 var(--font-serif);
+  color: var(--ink-2);
+  display: block;
+}
+
+.staff-day-head.today .staff-day-head-num {
+  color: var(--paper-surface, white);
+}
+
+.staff-day-body {
+  flex: 1;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 10px 10px 12px;
+}
+
+.staff-booking-block {
+  width: 100%;
+  min-height: 0;
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px 11px;
+  background: var(--primary-softer);
+  color: var(--ink);
+  text-align: left;
+  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.staff-booking-block:hover,
+.staff-booking-block:focus-visible {
+  outline: 3px solid rgba(11, 74, 111, 0.26);
+  outline-offset: 2px;
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.staff-booking-block.status-missed,
+.staff-booking-block.status-cancelled {
+  border-color: color-mix(in srgb, var(--danger) 30%, var(--border));
+  background: var(--danger-soft);
+  opacity: 0.85;
+}
+
+.staff-booking-block.status-missed .staff-booking-name,
+.staff-booking-block.status-cancelled .staff-booking-name {
+  text-decoration: line-through;
+}
+
+/* COMPLETED reads as "already happened": dim, faded, line-through on the time.
+   This carries status without a pill, matching the visual language MISSED and
+   CANCELLED already use. The "Status Must Read" rule passes because the time
+   text is muted and struck through, plus the booking name fades. */
+.staff-booking-block.status-completed {
+  border-color: var(--border);
+  background: var(--surface);
+  opacity: 0.74;
+}
+
+.staff-booking-block.status-completed .staff-booking-name,
+.staff-booking-block.status-completed .staff-booking-purpose {
+  color: var(--ink-muted);
+}
+
+.staff-booking-time {
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.staff-booking-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  line-height: 1.2;
+}
+
+.staff-booking-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 1px 7px;
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--border));
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--primary-dark);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.staff-booking-block.status-missed .staff-booking-time,
+.staff-booking-block.status-cancelled .staff-booking-time {
+  color: var(--danger);
+}
+
+.staff-booking-block.status-missed .staff-booking-status,
+.staff-booking-block.status-cancelled .staff-booking-status {
+  border-color: color-mix(in srgb, var(--danger) 28%, var(--border));
+  color: var(--danger);
+}
+
+.staff-booking-block.status-completed .staff-booking-time {
+  color: var(--ink-muted);
+  text-decoration: line-through;
+}
+
+.staff-booking-block.status-completed .staff-booking-status {
+  border-color: var(--border);
+  color: var(--ink-muted);
+}
+
+/* Schedule-block variants (Maintenance, Barangay event, Cleared for public use)
+   carry the block type via .staff-booking-block chrome only. Each uses an
+   existing soft-fill alert token plus a full-border treatment so shape,
+   text, and tint back up color (Requirements 12.1, 12.2, 13.1). */
+.staff-booking-block.status-maintenance {
+  border-color: var(--alert-warning-border);
+  background: var(--alert-warning-bg);
+}
+
+.staff-booking-block.status-maintenance .staff-booking-time {
+  color: var(--alert-warning-text-strong);
+}
+
+.staff-booking-block.status-maintenance .staff-booking-name,
+.staff-booking-block.status-maintenance .staff-booking-purpose {
+  color: var(--alert-warning-text-strong);
+}
+
+/* `getStatusDisplay()` returns `status-barangay_event` and
+   `status-cleared_public_use` (underscore form) — the selectors below match
+   that helper output verbatim. */
+.staff-booking-block.status-barangay_event {
+  background: var(--primary-softer);
+  border-color: color-mix(in srgb, var(--primary) 26%, var(--border));
+}
+
+.staff-booking-block.status-barangay_event .staff-booking-time {
+  color: var(--primary);
+}
+
+.staff-booking-block.status-cleared_public_use {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+}
+
+.staff-booking-block.status-cleared_public_use .staff-booking-time {
+  color: var(--ink-muted);
+}
+
+.staff-booking-block__action {
+  margin-top: 8px;
+  align-self: flex-start;
+}
+
+.staff-booking-name,
+.staff-booking-purpose {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.staff-booking-name {
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+}
+
+.staff-booking-purpose {
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+}
+
+.staff-day-empty {
+  border: 0;
+  background: transparent;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 16px 8px;
+  font: italic 400 13px/1.4 var(--font-sans);
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+/* Stacking the bilingual line at every viewport width keeps the
+   English label and the Filipino helper on their own rows inside
+   narrow day cards, which avoids the awkward inline wrap when each
+   `.staff-day-card` shrinks below ~150px. The `.fil` half reads at
+   one weight lighter than the English so it stays a helper, not a
+   parallel label. */
+.staff-day-empty-en {
+  font-weight: 600;
+}
+
+.staff-day-empty-fil {
+  font-weight: 400;
+}
+
+.staff-day-overflow {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--ink-muted);
+  font: 600 13px/1.2 var(--font-sans);
+  cursor: pointer;
+}
+
+.staff-day-overflow:hover {
+  background: var(--surface-2);
+}
+
+.staff-day-overflow:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+/* Weekend equality guards: lock Saturday/Sunday cards to render identically
+   to weekday cards (same surface, same head fill, no italic eyebrow). These
+   are no-ops against the current rules but guard the contract against future
+   drift. The redesign explicitly forbids weekend muting (Req. 10.1–10.3). */
+.staff-day-card[data-weekend="true"] {
+  opacity: 1;
+  background: var(--surface);
+}
+
+.staff-day-card[data-weekend="true"] .staff-day-head {
+  background: inherit;
+}
+
+.staff-day-card[data-weekend="true"] .staff-day-head-name {
+  font-style: normal;
+}
+
+.staff-day-foot {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-style: italic;
+  font-weight: 600;
+  text-align: center;
+}
+
+.state-card {
+  width: 100%;
+  min-height: 220px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 32px;
+  background: var(--surface);
+  text-align: center;
+}
+
+.loading-state {
+  min-height: 260px;
+}
+
+.state-card.empty {
+  min-height: 260px;
+}
+
+.state-card h2 {
+  color: var(--primary-dark);
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 400;
+}
+
+.state-card p {
+  max-width: 560px;
+  line-height: 1.5;
+}
+
+.state-mark {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+.empty-mark {
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+}
+
+.empty-mark svg {
+  stroke-width: 2;
+}
+
+.loading-mark {
+  border: 5px solid var(--primary-soft);
+  border-top-color: var(--primary);
+  animation: spin 0.9s linear infinite;
+}
+
+.skeleton-stack {
+  width: min(420px, 100%);
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+}
+
+.skeleton-line {
+  width: min(280px, 70%);
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--border), var(--primary-soft), var(--border));
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-line.wide {
+  width: min(420px, 86%);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  border-radius: 999px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-badge::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.status-available {
+  border-color: var(--alert-success-border);
+  background: var(--alert-success-bg);
+  color: var(--success);
+}
+
+.status-reserved {
+  border-color: var(--info-border);
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+}
+
+.status-missed,
+.status-cancelled {
+  border-color: var(--alert-error-border);
+  background: var(--alert-error-bg);
+  color: #8B2D1F;
+}
+
+.status-completed {
+  border-color: var(--primary-soft);
+  background: var(--primary-softer);
+  color: var(--primary);
+}
+
+/* Block-style statuses returned by the backend `/api/schedule` and
+   `/api/schedule/daily-print` payloads. Each one uses an existing
+   soft-color token from `:root` so no new colors are introduced — the
+   warning palette for maintenance/repairs (matches `.alert.warning`),
+   the info palette for an officially-scheduled barangay event
+   (matches `.alert.info`), and the surface-2 palette for a cleared-
+   for-public-use range (a calm "open court" mark, distinct from
+   maintenance and from a regular reservation). Status text is still
+   the primary signal; this only ensures the legend's three new chips
+   read as visually distinct from each other and from the white
+   default `.status-badge` chrome (Req. 10.5, OPUS-UI-005). */
+.status-maintenance {
+  border-color: var(--alert-warning-border);
+  background: var(--alert-warning-bg);
+  color: var(--alert-warning-text-strong);
+}
+
+.status-barangay_event {
+  border-color: var(--info-border);
+  background: var(--primary-softer);
+  color: var(--primary-dark);
+}
+
+.status-cleared_public_use {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+
+.status-unknown {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--ink-muted);
+}
+
+/* Compact button variant. Used inline on dense rows (booking-card
+   "Print slip", status-toast "View record" / dismiss) where the
+   default 48px `.btn` height crowds the row. Composes with `.btn`
+   and `.btn-light` / `.btn-danger` so existing focus rings, palette,
+   and hover treatments keep working. Padding mirrors the
+   `.resident-row-actions .btn` override so the two dense-row
+   variants match. */
+.btn-small {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.btn-small svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Activity-log reference suffix. Sits under the action sentence in
+   the details cell so the resident-facing reference number reads as
+   its own line instead of running into the action narrative. */
+.log-reference {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Daily print totals grid. Renders the backend `totals` map as a
+   compact two-up label/value grid on screen and as a tighter ruler
+   on print, so the sheet does not waste paper on a tall column. */
+.daily-print-totals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 24px;
+  margin: 0;
+}
+
+.daily-print-totals > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.daily-print-totals > div:last-child,
+.daily-print-totals > div:nth-last-child(2):nth-child(odd) {
+  border-bottom: 0;
+}
+
+.daily-print-totals dt {
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.daily-print-totals dd {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+/* Past same-day slot rows on the Daily_Schedule_Printout. When the
+   print sheet is opened for today's Manila date and a slot's end time
+   has already passed, every cell on that row is dimmed to the muted
+   ink token and the time + status cells gain a strikethrough so the
+   posted printout never reads as if the slot were still bookable
+   (Req. 9.6, 9.7). Uses only existing tokens. */
+.daily-print-row-past td {
+  color: var(--ink-muted);
+  opacity: 0.55;
+}
+
+.daily-print-row-past td:nth-child(2),
+.daily-print-row-past td:nth-child(3) {
+  text-decoration: line-through;
+}
+
+.daily-print-row-past .status-badge {
+  text-decoration: line-through;
+}
+
+.staff-page-head {
+  align-items: flex-end;
+  margin-bottom: var(--space-xs);
+  padding-bottom: var(--space-rhythm);
+  border-bottom: 2px solid var(--border);
+}
+
+.staff-page-head .page-title {
+  margin: 0 0 var(--space-xs);
+  font-family: var(--font-serif);
+  font-size: clamp(36px, 5vw, 44px);
+  font-weight: 400;
+  line-height: 1;
+}
+
+.page-sub,
+.page-sub-fil {
+  color: var(--ink-muted);
+}
+
+.page-sub-fil {
+  margin-top: 2px;
+  font-size: 15px;
+  font-style: italic;
+}
+
+.staff-page-head .btn-big,
+.bookings-actions .btn-big,
+.form-footer .btn-big {
+  width: auto;
+}
+
+.banner {
+  display: flex;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 2px solid;
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.banner .b-ic {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: white;
+  font-weight: 700;
+}
+
+.banner h4 {
+  margin: 0 0 4px;
+  font-size: 17px;
+}
+
+.banner p {
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.banner-info {
+  border-color: var(--primary-soft);
+  background: var(--primary-softer);
+}
+
+.banner-info .b-ic {
+  background: var(--primary);
+}
+
+.banner-warn {
+  border-color: var(--warning);
+  background: var(--warning-soft);
+}
+
+.banner-warn .b-ic {
+  background: var(--warning);
+}
+
+.banner-ok {
+  border-color: var(--success);
+  background: var(--success-soft);
+}
+
+.banner-ok .b-ic {
+  background: var(--success);
+}
+
+.staff-reservation-form {
+  overflow: hidden;
+}
+
+.form-section {
+  padding: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.form-section:first-child {
+  border-top: 0;
+}
+
+.form-section h3 {
+  display: flex;
+  align-items: center;
+  margin: 0 0 4px;
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 400;
+}
+
+.section-num {
+  width: 32px;
+  height: 32px;
+  display: inline-grid;
+  place-items: center;
+  margin-right: 12px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.section-hint {
+  margin: 0 0 18px 44px;
+  color: var(--ink-muted);
+  font-size: 15px;
+  font-style: italic;
+}
+
+.staff-field {
+  margin-bottom: 0;
+}
+
+.field-label,
+.field .field-label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.field-label .fil,
+.field .field-label .fil {
+  margin-left: 4px;
+  color: var(--ink-muted);
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.field-hint {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--ink-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.req {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.staff-field .input,
+.search-input .input {
+  min-height: 54px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 17px;
+}
+
+.staff-field textarea.input {
+  min-height: 112px;
+}
+
+.staff-field .input:focus,
+.search-input .input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+.slot-picker {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.duration-pick {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(72px, 1fr));
+  gap: 10px;
+}
+
+.duration-pick button,
+.time-chip {
+  min-height: 60px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.duration-pick button:hover,
+.time-chip:hover {
+  border-color: var(--primary);
+  background: var(--primary-softer);
+}
+
+.duration-pick button.on {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+}
+
+.end-time-summary {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 14px 18px;
+  border: 1px solid var(--primary-soft);
+  border-radius: var(--radius);
+  background: var(--primary-softer);
+}
+
+.end-time-summary-main {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.end-time-summary-main > span {
+  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.end-time-summary-main > strong {
+  color: var(--primary-dark);
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.end-time-override-toggle {
+  justify-self: start;
+  align-self: start;
+  width: auto;
+  min-height: 40px;
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.end-time-override-toggle svg {
+  color: var(--primary);
+}
+
+.end-time-override-toggle:hover:not(:disabled),
+.end-time-override-toggle:focus-visible {
+  border-color: var(--primary);
+  background: var(--primary-softer);
+}
+
+.end-time-override-panel {
+  border-top: 1px solid var(--primary-soft);
+  padding-top: 12px;
+}
+
+.availability-panel {
+  margin-top: 20px;
+}
+
+/* Recovery affordance shown when /api/availability fails. Sits below the
+   error copy so the message is the lead and the retry tap follows it. */
+.availability-retry {
+  margin-top: 12px;
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+.suggestion-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.suggestion-chip {
+  display: grid;
+  gap: 2px;
+  min-height: 76px;
+  text-align: left;
+}
+
+.suggestion-chip strong {
+  color: var(--primary-dark);
+  font-size: 14px;
+}
+
+.suggestion-chip span {
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.validation-list {
+  margin: 10px 0 0;
+  padding-left: 20px;
+  color: var(--alert-warning-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 24px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.staff-bookings-card {
+  overflow: hidden;
+}
+
+.attention-panel {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.attention-panel h2 {
+  margin: 2px 0 6px;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.attention-panel p {
+  max-width: 780px;
+  color: var(--ink-muted);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.attention-count {
+  flex: 0 0 190px;
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  min-height: 118px;
+  border: 2px solid var(--primary-soft);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--primary-softer);
+  color: var(--primary-dark);
+  text-align: center;
+}
+
+.attention-count:hover,
+.attention-count:focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--surface);
+  box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+.attention-count strong {
+  font-family: var(--font-serif);
+  font-size: 46px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.attention-count span {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.bookings-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  min-width: 0;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.search-input {
+  position: relative;
+  flex: 1 1 280px;
+  min-width: min(280px, 100%);
+}
+
+.search-mark {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  transform: translateY(-50%);
+  color: var(--ink-muted);
+  pointer-events: none;
+}
+
+.search-mark svg {
+  display: block;
+}
+
+.search-input .input {
+  padding-left: 48px;
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.filter-tab {
+  max-width: 100%;
+  min-height: 48px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 10px 16px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.filter-tab span {
+  margin-left: 5px;
+  opacity: 0.72;
+}
+
+.filter-tab:hover {
+  background: var(--surface-2);
+}
+
+.filter-tab.on {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+}
+
+.status-filter-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 220px;
+}
+
+.status-filter-label {
+  flex: 0 0 auto;
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.status-filter-select select {
+  flex: 1;
+  min-height: 48px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 0 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.status-filter-select select:hover {
+  border-color: var(--border-strong);
+}
+
+.status-filter-select select:focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+/* Reservation list shell. The list semantics moved from a `<div>` row
+   container to `<ul>` + `<li>` (UI-AUD-007, Req 6.1) so we explicitly
+   reset the default UA list styling: no marker, no inline padding, no
+   block margin. The grid layout that used to live on the `<div>` now
+   lives on the `<ul>` here. */
+.booking-card-list {
+  display: grid;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.booking-card-item {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Explicit focus indicator on the per-row action buttons (Req. 6.6).
+   The shared `.btn:focus-visible` outline is rendered at 32% alpha,
+   which falls short of the 3:1 non-text-contrast bar against the
+   white `.booking-card` surface. We override here with a solid
+   `var(--primary)` (#0B4A6F) outline at 2 CSS pixels: that color
+   versus the surrounding white surface yields a ~9.9:1 contrast
+   ratio, well above the 3:1 floor required by WCAG 2.4.13 / Req 6.6.
+   The outline-offset preserves the existing visual rhythm. */
+.booking-card-item button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.booking-card {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(132px, 0.3fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  min-height: 104px;
+  padding: 20px 24px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+}
+
+.booking-card:hover,
+.booking-card:focus-visible,
+.booking-card.selected {
+  outline: none;
+  background: var(--primary-softer);
+}
+
+.booking-card:hover .booking-card-main span,
+.booking-card:hover .booking-card-main small,
+.booking-card:hover .booking-card-time span,
+.booking-card:focus-visible .booking-card-main span,
+.booking-card:focus-visible .booking-card-main small,
+.booking-card:focus-visible .booking-card-time span,
+.booking-card.selected .booking-card-main span,
+.booking-card.selected .booking-card-main small,
+.booking-card.selected .booking-card-time span {
+  color: var(--ink-2);
+}
+
+.booking-card:focus-visible {
+  box-shadow: inset 0 0 0 3px var(--primary-soft);
+}
+
+.booking-card-time {
+  display: grid;
+  gap: 4px;
+}
+
+.booking-card-time strong {
+  color: var(--primary);
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.booking-card-time span,
+.booking-card-main span,
+.booking-card-main small {
+  color: var(--ink-muted);
+  font-size: 14px;
+}
+
+.booking-card-main {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.booking-card-main strong {
+  overflow-wrap: anywhere;
+  font-size: 18px;
+}
+
+.booking-card-main span,
+.booking-card-main small {
+  overflow-wrap: anywhere;
+}
+
+.attention-reason {
+  display: inline-block;
+  margin-top: 6px;
+  border-radius: 8px;
+  padding: 5px 9px;
+  background: var(--warning-soft);
+  color: var(--alert-warning-text-strong);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.booking-card-meta {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  min-width: 0;
+  max-width: 200px;
+}
+
+/* Attention rows: the warning chip in the meta column carries the signal.
+   We avoid a colored left stripe (DESIGN.md ban) and use a subtle
+   warning-soft inset background tint instead, which reads as "this row
+   wants your attention" without breaking the bordered-surface rule. */
+.booking-card.needs-attention {
+  background: var(--warning-soft);
+}
+
+.booking-card.needs-attention:hover,
+.booking-card.needs-attention:focus-visible,
+.booking-card.needs-attention.selected {
+  background: var(--warning-soft);
+  outline: 2px solid var(--warning);
+  outline-offset: -2px;
+}
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 30, 60, 0.5);
+}
+
+.reservation-drawer {
+  width: min(620px, 100%);
+  max-height: min(820px, 92vh);
+  min-width: 0;
+  overflow-y: auto;
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 24px 60px rgba(15, 30, 60, 0.18);
+}
+
+.dialog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 24px 28px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.dialog-head h2 {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.dialog-head .d-sub {
+  color: var(--ink-muted);
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.dialog-close {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.dialog-close:hover {
+  background: var(--surface-2);
+}
+
+.dialog-body {
+  padding: 24px 28px;
+}
+
+/* Selected-schedule context banner used by the Maintenance Block and
+   Clear for Public Use modals. Anchors the action to the dated
+   schedule context the admin opened the modal from so the
+   "what date am I changing?" question is answered before any
+   form input happens (Req. OPUS-UI-005). The strong variant carries
+   a darker treatment for the second confirmation step where the
+   action is about to fire. */
+.modal-context-banner {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--info-border);
+  border-radius: var(--radius);
+  background: var(--primary-softer);
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.modal-context-banner-strong {
+  border-color: var(--alert-warning-border);
+  background: var(--alert-warning-bg);
+  color: var(--alert-warning-text-strong);
+}
+
+.modal-context-label {
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.modal-context-banner-strong .modal-context-label {
+  color: var(--alert-warning-text);
+}
+
+.modal-context-value {
+  color: var(--primary-dark);
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.modal-context-banner-strong .modal-context-value {
+  color: var(--alert-warning-text-strong);
+}
+
+.dialog-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 18px 28px;
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 16px 16px;
+  background: var(--surface-2);
+}
+
+.detail-status-line {
+  margin-bottom: 18px;
+}
+
+.staff-detail-grid .detail-row {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.staff-detail-grid .detail-row:last-child {
+  border-bottom: 0;
+}
+
+.staff-detail-grid dt {
+  color: var(--ink-muted);
+  font-size: 14px;
+  text-transform: none;
+}
+
+.staff-detail-grid dd {
+  font-weight: 600;
+}
+
+.reservation-drawer-actions {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.reservation-drawer-actions-main,
+.reservation-drawer-actions-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.reservation-drawer-actions-status {
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+}
+
+.reservation-drawer-actions .btn {
+  min-width: 118px;
+}
+
+.dialog-backdrop {
+  z-index: 90;
+}
+
+/* ----- Shared Modal_Shell --------------------------------------------- */
+/* Single overlay container that every dialog and drawer renders through.
+   Tokens are reused as-is (no new variables): --surface, --surface-2,
+   --border, --shadow-lg, --radius-lg, the existing spacing scale, and
+   the same backdrop tint as `.dialog-backdrop`. The grid `auto 1fr auto`
+   layout pins the header and footer while the body region is the only
+   scrollable area, so footer action buttons never get clipped at any
+   Supported_Viewport (Req. 3.7, 3.8, 3.9). The four-corner radius is
+   identical on the centered (>=768px) variant; the bottom-sheet
+   variant intentionally squares the bottom edge against the viewport,
+   while the four declared corners on the box still receive an equal
+   `border-radius` shorthand (Req. 3.5, 3.6). */
+.modal-shell-backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(15, 30, 60, 0.45);
+  z-index: 90;
+}
+
+.modal-shell {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  width: min(560px, calc(100% - 32px));
+  max-height: min(92vh, 720px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.modal-shell-sm {
+  width: min(440px, calc(100% - 32px));
+}
+
+.modal-shell-md {
+  width: min(560px, calc(100% - 32px));
+}
+
+.modal-shell-lg {
+  width: min(720px, calc(100% - 32px));
+}
+
+.modal-shell-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-shell-heading {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.modal-shell-heading h2 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.modal-shell-heading .page-kicker {
+  margin: 0;
+}
+
+.modal-shell-heading .d-sub {
+  color: var(--ink-muted);
+  font-size: 15px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.modal-shell-close {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.modal-shell-close:hover:not(:disabled),
+.modal-shell-close:focus-visible {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+
+.modal-shell-close:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.modal-shell-body {
+  padding: 24px;
+  overflow: auto;
+  min-height: 0;
+}
+
+.modal-shell-foot {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+@media (max-width: 767px) {
+  .modal-shell-backdrop {
+    align-items: end;
+    padding: 0;
+  }
+
+  .modal-shell {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  .modal-shell-head {
+    padding: 18px 20px;
+  }
+
+  .modal-shell-body {
+    padding: 20px;
+  }
+
+  .modal-shell-foot {
+    padding: 16px 20px;
+  }
+}
+
+@media (max-width: 1240px) {
+  .staff-week-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ----- Login entrance choreography ------------------------------------- */
+/* One orientation moment. The Civic Blue side glides in from the left at  */
+/* 0ms, the form card from the right at 80ms. Inside the side, the seal,   */
+/* serif headline, body line, and install-note stagger so the bilingual    */
+/* welcome reads like a spoken sentence. Inside the form, the heading,     */
+/* fields, and submit step in at 120ms intervals. Reduced-motion users get */
+/* the final state with no transform; the rule below restores opacity:1.   */
+
+@keyframes login-side-in {
+  from {
+    opacity: 0;
+    transform: translate3d(-12px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes login-form-in {
+  from {
+    opacity: 0;
+    transform: translate3d(12px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes login-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes login-em-warm {
+  from {
+    color: rgba(255, 255, 255, 0.9);
+  }
+  to {
+    color: var(--accent-warm);
+  }
+}
+
+@keyframes alert-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.login-side {
+  animation: login-side-in 560ms var(--ease-out-quart) both;
+}
+
+.login-form-card {
+  animation: login-form-in 560ms 80ms var(--ease-out-quart) both;
+}
+
+.login-side .seal-row,
+.login-side .login-mark,
+.login-side .login-headline,
+.login-side .login-side-foot,
+.login-side > div:nth-of-type(2),
+.login-install-note {
+  animation: login-rise 540ms var(--ease-out-quint) both;
+}
+
+.login-side .seal-row,
+.login-side .login-mark { animation-delay: 120ms; }
+.login-side > div:nth-of-type(2),
+.login-side .login-headline { animation-delay: 220ms; }
+.login-install-note,
+.login-side .login-side-foot { animation-delay: 360ms; }
+
+/* The italic Court Orange Warm "Maligayang pagdating" finishes warming a  */
+/* beat after the headline lands, so the local language arrives last like  */
+/* a spoken second clause. White → accent-warm, never the reverse.         */
+.login-side h1 em {
+  animation: login-em-warm 480ms 520ms var(--ease-out-quart) both;
+}
+
+.login-form-card > * {
+  animation: login-rise 460ms var(--ease-out-quint) both;
+}
+
+.login-form-card > *:nth-child(1) { animation-delay: 160ms; }
+.login-form-card > *:nth-child(2) { animation-delay: 220ms; }
+.login-form-card > *:nth-child(3) { animation-delay: 280ms; }
+.login-form-card > *:nth-child(4) { animation-delay: 340ms; }
+.login-form-card > *:nth-child(5) { animation-delay: 400ms; }
+.login-form-card > *:nth-child(6) { animation-delay: 460ms; }
+.login-form-card > *:nth-child(7) { animation-delay: 520ms; }
+
+.login-form-card .alert {
+  animation: alert-rise 200ms var(--ease-out-quart) both;
+}
+
+/* Seal hover: a small confident lift, not a wiggle. The seal is the only */
+/* element on the side that responds to pointer; we treat it as a brand   */
+/* moment, not an interactive control. */
+.login-side .seal {
+  transition: transform 200ms var(--ease-out-quart),
+              border-color 200ms var(--ease-out-quart);
+}
+
+.seal-row:hover .seal {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+/* Sign-in button press feedback. The translate is reversed by ease-out    */
+/* on release, so it reads as decisive, never bouncy. */
+.login-form-card .btn-primary {
+  transition: background 160ms var(--ease-out-quart),
+              border-color 160ms var(--ease-out-quart),
+              color 160ms var(--ease-out-quart),
+              transform 120ms var(--ease-out-quart),
+              box-shadow 200ms var(--ease-out-quart);
+}
+
+.login-form-card .btn-primary:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+/* Inline spinner that rides next to the "Signing in…" label so the button */
+/* stays the same height and never reflows. Builds on the existing `spin`  */
+/* keyframe at the top of this file. */
+.btn-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: white;
+  animation: spin 720ms linear infinite;
+  vertical-align: -3px;
+  margin-right: 10px;
+}
+
+/* Reduced-motion override: hold final visual state, no entrance, no       */
+/* warming-color shift, no spinner rotation. The global reduced-motion     */
+/* block at the bottom of the file shortens transitions, but elements      */
+/* using `animation: ... both` still need their final color/transform     */
+/* explicitly restored. */
+@media (prefers-reduced-motion: reduce) {
+  .login-side,
+  .login-form-card,
+  .login-side .seal-row,
+  .login-side .login-mark,
+  .login-side .login-headline,
+  .login-side .login-side-foot,
+  .login-side > div:nth-of-type(2),
+  .login-install-note,
+  .login-form-card > *,
+  .login-form-card .alert {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .login-side h1 em {
+    animation: none !important;
+    color: var(--accent-warm) !important;
+  }
+
+  .btn-spinner {
+    animation: none !important;
+    border-top-color: rgba(255, 255, 255, 0.4) !important;
+  }
+}
+
+
+@media (max-width: 820px) {
+  .login-page {
+    grid-template-columns: 1fr;
+  }
+
+  .login-side {
+    min-height: 360px;
+  }
+
+  .login-form-side {
+    align-items: start;
+  }
+
+  .home-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .app-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+  }
+
+  .topbar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 14px;
+    min-height: 64px;
+  }
+
+  .topbar-actions {
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+
+  .user-chip {
+    max-width: 60vw;
+    width: auto;
+    padding: 4px 10px 4px 4px;
+  }
+
+  .user-chip > span:last-child small {
+    display: none;
+  }
+
+  /* Responsive topbar adapt: hide the wordmark next to the seal at
+     narrow widths so the brand seal alone anchors the header. The
+     full title still surfaces on tablets/desktop. This collapses the
+     three-row stacked topbar that the QA audit flagged as "consumes
+     too much vertical space before the actual page content". */
+  .brand .brand-text {
+    display: none;
+  }
+
+  .office-clock {
+    display: none;
+  }
+
+  .sidebar {
+    display: none;
+    flex-direction: column;
+    overflow-x: visible;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 8px 12px 12px;
+  }
+
+  .sidebar.sidebar-open {
+    display: flex;
+    gap: 4px;
+  }
+
+  .mobile-nav-bar {
+    display: block;
+  }
+
+  /* Mobile drawer compaction: the previous responsive style kept
+     three group headings, helper subtitles, and a two-up grid which
+     pushed the drawer past 360px tall. We drop helper subtitles and
+     group labels in the responsive drawer (they're useful on a
+     permanent sidebar but read as chrome inside a temporary menu)
+     and tighten the nav-item heights so opening the drawer adds
+     two short rows over the page instead of half a screen. Page
+     content remains visible the moment the drawer is closed
+     (Req. OPUS-UI-001). */
+  .nav-group {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .nav-group + .nav-group {
+    margin-top: 6px;
+    margin-left: 0;
+  }
+
+  .nav-group-label {
+    display: none;
+  }
+
+  .nav-item {
+    width: 100%;
+    grid-template-columns: 32px minmax(0, 1fr);
+    min-height: 48px;
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  .nav-copy > span {
+    font-size: 14px;
+  }
+
+  .nav-item small {
+    display: none;
+  }
+
+  .nav-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .nav-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .sidebar-help {
+    display: none;
+  }
+
+  /* Tighter main panel padding so the page content begins close to
+     the mobile nav toggle once the drawer is closed. The previous
+     `clamp(24px, 4vw, 40px)` value pushed the first heading down by
+     ~24px even on narrow widths. */
+  .main-panel {
+    padding: 16px 16px 48px;
+  }
+
+  .calendar-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .calendar-toolbar .calendar-week-nav-btn {
+    height: 48px;
+    padding: 0 16px;
+  }
+
+  .calendar-toolbar .date-input {
+    min-height: 48px;
+  }
+
+  .calendar-toolbar .calendar-more-trigger {
+    min-height: 48px;
+  }
+
+  .calendar-week-label {
+    min-width: 0;
+  }
+
+  .calendar-actions {
+    justify-content: flex-start;
+  }
+
+  .staff-week-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .staff-day-card {
+    min-height: 300px;
+  }
+
+  .attention-panel {
+    flex-direction: column;
+  }
+
+  .attention-count {
+    flex-basis: auto;
+    min-height: 96px;
+  }
+
+  /* Tablet adapt: row of 4 calendar buttons + date input overflows narrow */
+  /* tablets. Wrap them to a 2-col grid that keeps each button comfortable. */
+  .calendar-actions {
+    flex-wrap: wrap;
+    justify-content: stretch;
+  }
+
+  .calendar-actions .btn,
+  .calendar-actions .compact-date {
+    flex: 1 1 calc(50% - 5px);
+  }
+
+  /* Tablet adapt: reservation-page action row of Export/Print/New stays in */
+  /* a single column so each button gets full visual weight as a 64px target. */
+  .bookings-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bookings-actions .btn,
+  .bookings-actions a.btn {
+    width: 100%;
+  }
+
+  /* Tablet adapt: attention-panel was already stacking, but the count chip */
+  /* shouldn't grow into a full-width slab; constrain it back to its content. */
+  .attention-count {
+    align-self: stretch;
+  }
+
+  /* Tablet adapt: bookings toolbar search takes its own row so the 6 filter */
+  /* tabs aren't squeezed against it on narrow tablets. */
+  .bookings-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-input {
+    flex: 1 1 100%;
+  }
+
+  /* Tablet adapt: filter card on Activity Logs aligns the count badge inline */
+  /* with the heading instead of floating it to the corner. */
+  .staff-filter-head {
+    align-items: flex-start;
+  }
+
+  .staff-filter-head strong {
+    align-self: flex-start;
+  }
+}
+
+/* Topbar density at <=768px (Req. 12.1, 12.2, 12.3, 12.4 — UI-AUD-013/019/020).
+   Overrides the broader 820px collapse so the brand wordmark and office
+   clock stay visible at tablet/phone widths while the secondary chrome
+   (subtitle, full-name chip) drops to keep the row to a single line. The
+   mobile-nav-bar (rendered at <=820px above) keeps Home / Calendar / New
+   Reservation / current-page context one tap away. */
+@media (max-width: 768px) {
+  .brand .brand-text {
+    display: grid;
+  }
+
+  .brand-subtitle {
+    display: none;
+  }
+
+  .office-clock {
+    display: grid;
+    min-width: 0;
+    text-align: right;
+  }
+
+  /* Reduce the user chip to the avatar (which already renders the staff
+     member's initials) so the topbar isn't dominated by a long name. */
+  .user-chip {
+    padding: 0;
+    background: transparent;
+    border-color: transparent;
+    max-width: none;
+  }
+
+  .user-chip > span:last-child {
+    display: none;
+  }
+
+  /* Card-action density at <=768px (Req. 12.2 — UI-AUD-013/019/020).
+     The reservation form and resident directory pages render a
+     primary header action as `.btn-big` (64px). On a phone-width
+     viewport that height swallows the page-head row, so we drop
+     those two pages back to standard `.btn` sizing (48px). The home
+     dashboard's main action keeps its 64px height (`.home-page
+     .home-action`) so the Barangay_Visual_Language main-action rule
+     stays intact. */
+  .staff-form-page .btn-big,
+  .resident-directory-page .btn-big {
+    min-height: 48px;
+    padding: 0 20px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 560px) {
+  :root {
+    font-size: 16px;
+  }
+
+  .login-side,
+  .login-form-side,
+  .main-panel {
+    padding: 18px;
+  }
+
+  .login-page {
+    min-height: auto;
+  }
+
+  .login-side {
+    gap: 28px;
+    min-height: 0;
+  }
+
+  .login-side h1 {
+    font-size: 34px;
+  }
+
+  .page-heading h1,
+  .page-header h1 {
+    font-size: 32px;
+  }
+
+  .login-card {
+    width: 100%;
+    padding: 22px;
+  }
+
+  .login-card h2 {
+    font-size: 34px;
+  }
+
+  .brand {
+    align-items: flex-start;
+  }
+
+  .brand-title,
+  .brand-subtitle {
+    white-space: normal;
+  }
+
+  .topbar-actions,
+  .page-heading,
+  .page-header,
+  .card-head,
+  .detail-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .user-chip {
+    align-items: flex-start;
+    border-radius: 12px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-action {
+    min-height: 96px;
+  }
+
+  .booking-row {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .content-split,
+  .form-grid,
+  .admin-grid,
+  .report-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-panel {
+    position: static;
+  }
+
+  .button-row,
+  .dialog-actions,
+  .form-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .button-row .btn,
+  .button-row a.btn,
+  .dialog-actions .btn {
+    width: 100%;
+  }
+
+  .data-table,
+  .admin-table,
+  .logs-table {
+    min-width: 680px;
+  }
+
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .staff-filter-head {
+    flex-direction: column;
+  }
+
+  .filter-actions {
+    align-self: stretch;
+  }
+
+  .calendar-actions,
+  .calendar-actions .btn,
+  .compact-date {
+    width: 100%;
+  }
+
+  .calendar-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .staff-week-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-day-card {
+    min-height: auto;
+  }
+
+  .booking-card {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 10px;
+    padding: 18px;
+  }
+
+  .form-footer,
+  .dialog-foot,
+  .bookings-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .reservation-drawer-actions,
+  .reservation-drawer-actions-main,
+  .reservation-drawer-actions-status {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .form-footer .btn,
+  .dialog-foot .btn,
+  .reservation-drawer-actions .btn,
+  .bookings-actions .btn,
+  .bookings-actions a.btn {
+    width: 100%;
+    max-width: none;
+  }
+
+  .duration-pick,
+  .suggestion-list {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-detail-grid .detail-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .staff-day-head {
+    min-height: 84px;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    text-align: left;
+  }
+
+  .staff-day-empty {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .staff-day-empty-fil {
+    padding-left: 0;
+  }
+
+  .staff-booking-block {
+    min-height: 0;
+  }
+
+  .drawer-backdrop,
+  .dialog-backdrop {
+    align-items: end;
+    padding: 10px;
+  }
+
+  .reservation-drawer,
+  .dialog {
+    max-height: calc(100vh - 20px);
+    border-radius: 12px;
+  }
+
+  .dialog-head,
+  .dialog-body,
+  .dialog-foot {
+    padding-inline: 18px;
+  }
+}
+
+/* Office clock density at <=390px (Req. 12.2, 12.3, 12.4 — UI-AUD-019/020).
+   On phone-width viewports the date line below the time pushes the topbar
+   into a second row. We hide the date `<small>` and keep only the time
+   `<strong>` so the clock stays a single line beside the user avatar. The
+   four mobile-nav-bar affordances remain reachable with one tap. */
+@media (max-width: 390px) {
+  .office-clock small {
+    display: none;
+  }
+
+  .office-clock {
+    min-width: 0;
+  }
+
+  /* Card-action density at <=390px (Req. 12.2 — UI-AUD-013/019/020).
+     At this width the reservation list rows and other booking cards
+     fit a tighter action weight; collapse every `.booking-card-actions
+     .btn` to the existing `.btn-small` sizing so the action row matches
+     the typography density without introducing a new modifier or token. */
+  .booking-card-actions .btn {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .booking-card-actions .btn svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 380px) {
+  .login-side,
+  .login-form-side,
+  .main-panel {
+    padding: 14px;
+  }
+
+  .brand-row {
+    align-items: flex-start;
+  }
+
+  .brand-seal {
+    width: 52px;
+    height: 52px;
+    font-size: 24px;
+  }
+
+  .brand-seal.small {
+    width: 38px;
+    height: 38px;
+    font-size: 19px;
+  }
+
+  .login-side h1,
+  .login-card h2 {
+    font-size: 30px;
+  }
+
+  .btn,
+  .btn-big {
+    min-height: 52px;
+    padding-inline: 14px;
+    font-size: 15px;
+  }
+
+  .nav-item {
+    min-height: 56px;
+  }
+
+  /* Small-phone adapt: time-grid drops from 4-col to 3-col so 12px chip text */
+  /* doesn't compress when the viewport is below 360px. The duration-pick    */
+  /* already collapses to 1-col at 560px which is correct for narrow screens. */
+  .time-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media print {
+  :root {
+    --bg: white;
+    --surface: white;
+    --ink: #111;
+    --ink-muted: #444;
+    --shadow: none;
+  }
+
+  body {
+    background: white;
+  }
+
+  .topbar,
+  .sidebar,
+  .print-hidden,
+  .btn {
+    display: none !important;
+  }
+
+  .app-layout {
+    display: block;
+    min-height: auto;
+  }
+
+  .main-panel {
+    padding: 0;
+  }
+
+  .print-title {
+    display: block;
+    margin-bottom: 18px;
+  }
+
+  .print-issued-line {
+    margin-top: 4px;
+    color: #000;
+    font-size: 12px;
+    font-style: italic;
+  }
+
+  /* Daily-print page: the status pills introduced for MAINTENANCE /
+     BARANGAY_EVENT / CLEARED_PUBLIC_USE pick up soft-color tints on
+     screen via the new `.status-*` rules above. On paper we want the
+     same legend in black ink with a 1pt black border so a posted
+     copy stays ink-friendly and reads at a distance. */
+  .daily-print-page .status-badge {
+    background: #fff !important;
+    color: #000 !important;
+    border: 1px solid #000 !important;
+    padding: 0 6px;
+    font-weight: 600;
+  }
+
+  .daily-print-page .status-badge::before {
+    display: none;
+  }
+
+  /* On paper, past same-day slot rows keep the strikethrough so a
+     posted printout reads correctly even after the print stylesheet
+     strips the screen-only opacity (Req. 9.7). The row text uses the
+     muted ink token defined for print at the top of @media print. */
+  .daily-print-row-past td {
+    color: var(--ink-muted) !important;
+    opacity: 1 !important;
+  }
+
+  .daily-print-row-past td:nth-child(2),
+  .daily-print-row-past td:nth-child(3),
+  .daily-print-row-past .status-badge {
+    text-decoration: line-through !important;
+  }
+
+  .daily-print-totals {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .daily-print-totals > div {
+    padding: 2px 0;
+    border-bottom-style: dotted;
+  }
+
+  .daily-print-totals dd {
+    font-size: 16px;
+  }
+
+  .page,
+  .report-page,
+  .report-grid,
+  .stats-grid {
+    display: grid;
+    gap: 14px;
+  }
+
+  .report-grid,
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card,
+  .stat-card,
+  .padded-card {
+    break-inside: avoid;
+    border-color: #999;
+    box-shadow: none;
+  }
+
+  /* Detail tables: in print, show every detail table in full,
+     not just the active tab. The on-screen tabbed panel hides;
+     the print mirror expands. */
+  .report-detail-tabs,
+  .report-detail-panel {
+    display: none !important;
+  }
+
+  /* Task-led report views: print every section, regardless of which
+     on-screen tab is active. Hide the on-screen tab chrome itself,
+     restore every `.report-view` panel, and surface the eyebrow
+     headings so the printed report still reads as one document. */
+  .report-view-tabs {
+    display: none !important;
+  }
+
+  .report-view {
+    display: contents !important;
+  }
+
+  .report-view[hidden] {
+    display: contents !important;
+  }
+
+  .report-view-heading {
+    display: block !important;
+    margin: 14px 0 6px;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .print-only,
+  .report-detail-print {
+    display: block !important;
+  }
+
+  .report-detail-print-section {
+    break-inside: avoid;
+  }
+
+  .report-detail-print-section h3 {
+    margin: 0 0 6px;
+    font-size: 18px;
+    font-weight: 700;
+  }
+}
+
+/* ----- Canonical Barangay (1) extensions -------------------------------- */
+
+/* Time-chip picker for the New Reservation form (start time). The
+   picker now groups the 14 hour chips by morning / afternoon / evening
+   instead of one flat grid, so the staff scans a shorter list at once
+   (Req. OPUS-UI-002). The grid behaviour, chip sizing, and selected/
+   disabled treatments are unchanged; the period labels are small
+   uppercase eyebrows that match the existing `.nav-group-label`
+   typography. */
+.time-period-groups {
+  display: grid;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.time-period-group {
+  display: grid;
+  gap: 6px;
+}
+
+.time-period-label {
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.time-chip {
+  position: relative;
+  min-height: 60px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.time-chip:not(:disabled):hover,
+.time-chip:not(:disabled):focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--primary-softer);
+}
+
+.time-chip.selected,
+.time-chip[aria-pressed="true"] {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+}
+
+.time-chip.busy,
+.time-chip:disabled {
+  background: var(--surface-2);
+  color: var(--ink-muted);
+  border-style: dashed;
+  cursor: not-allowed;
+}
+
+.time-chip.busy::after {
+  content: "Booked";
+  display: block;
+  margin-top: 2px;
+  color: var(--danger);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.time-chip.selected::after {
+  content: "Selected";
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+/* Ceremonial confirm dialog body (icon + serif title + prose, centered) */
+.confirm-body {
+  padding: 32px 28px 12px;
+  text-align: center;
+}
+
+.confirm-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.confirm-icon svg {
+  width: 36px;
+  height: 36px;
+}
+
+.confirm-icon.ok {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.confirm-icon.warn {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.confirm-icon.danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.confirm-body h2 {
+  margin: 0 0 8px;
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.confirm-body p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.confirm-body p strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Banner icon-well: render the icon SVG/glyph cleanly */
+.banner .b-ic svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ----- Reduced motion (a11y) ------------------------------------------- */
+/* Honors prefers-reduced-motion for users with vestibular sensitivity.    */
+/* Pauses the continuous shimmer + spin animations and shortens transitions */
+/* to instant. Buttons, drawers, and dialogs still feel responsive but stop */
+/* moving when the OS asks us to.                                          */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .skeleton-line {
+    animation: none !important;
+    background: var(--primary-soft);
+  }
+
+  .loading-mark {
+    animation: none !important;
+    border-top-color: var(--primary);
+  }
+}
+
+
+/* ----- Login overdrive ------------------------------------------------- */
+/* Pushes the staff login from "calm and confident" to "this office system  */
+/* watches my back" without leaving the civic-paper register. Four parts:   */
+/*   A. Sentinel: caps lock surface, enter-hint chip, system-ready dot.     */
+/*   B. Handoff: same-document View Transition into the dashboard, with     */
+/*      the seal as the morphing identity element.                          */
+/*   C. Office Clock: live "Today" line in Filipino + greeting that swaps   */
+/*      with time of day (handled in JSX; CSS just shapes it).              */
+/*   D. Real seal + civic-paper backdrop: image-or-fallback seal centerpiece*/
+/*      and a one-time-baked watermark + grain on the blue panel.           */
+
+/* Layout reset for the new login-side structure. Old markup used a flex    */
+/* column with three direct children; new markup adds explicit landmark     */
+/* wrappers (login-mark, login-headline, login-side-foot) that still flow   */
+/* in the same pattern.                                                     */
+.login-side {
+  isolation: isolate;
+}
+
+.login-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.login-mark .login-republic {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.login-mark .login-barangay {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: white;
+  letter-spacing: 0.005em;
+}
+
+.login-mark .login-locale {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* The real seal: civic centerpiece on the blue panel. The Court Orange    */
+/* Soft tint behind it is the sanctioned "seal-on-blue" treatment from     */
+/* DESIGN.md — the only place that surface ever appears.                    */
+.login-seal {
+  display: block;
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  padding: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18),
+              0 0 0 6px rgba(255, 204, 160, 0.18);
+  user-select: none;
+  -webkit-user-drag: none;
+  /* Identity element for the View Transition handoff. The dashboard's     */
+  /* topbar brand-seal carries the same name so the API morphs them.       */
+  view-transition-name: barangay-seal;
+}
+
+.login-seal--fallback {
+  background: white;
+  padding: 0;
+}
+
+/* Headline + body. Same hierarchy as before, just inside its own landmark.*/
+.login-headline {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 540px;
+}
+
+.login-headline h1 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(44px, 4.6vw, 60px);
+  font-weight: 400;
+  line-height: 1.05;
+  color: white;
+}
+
+.login-headline h1 em {
+  color: var(--accent-warm);
+  font-style: italic;
+}
+
+.login-headline p {
+  margin: 0;
+  max-width: 480px;
+  font-size: 17px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* Bottom landmark: live "Today" line above, ready-state install note     */
+/* below. Reads as office-letterhead structure, not generic footer noise. */
+.login-side-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.login-today {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.login-today-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.login-today-value {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: white;
+  font-feature-settings: "tnum" 1;
+}
+
+.login-install-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* System-ready dot: amber while loading, civic-soft-blue once fonts and  */
+/* DOM are ready. Single 700ms pulse on the transition; no looping.       */
+.login-ready-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-warm);
+  box-shadow: 0 0 0 0 rgba(255, 204, 160, 0.6);
+  transition: background 240ms var(--ease-out-quart),
+              box-shadow 240ms var(--ease-out-quart);
+  flex: 0 0 auto;
+}
+
+.login-ready-dot.is-ready {
+  background: var(--primary-soft);
+  animation: login-ready-pulse 720ms var(--ease-out-quart) 1;
+}
+
+@keyframes login-ready-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 234, 242, 0.85);
+  }
+  100% {
+    box-shadow: 0 0 0 12px rgba(220, 234, 242, 0);
+  }
+}
+
+/* Watermark: a large geometric cog silhouette anchored bottom-right of   */
+/* the blue panel. Pure SVG inlined as a data URL, baked once, no JS, no   */
+/* re-render. Sits at 7% white so it reads as embossed civic letterhead   */
+/* texture, not decoration. */
+.login-side-watermark {
+  position: absolute;
+  inset: auto -120px -180px auto;
+  width: 720px;
+  height: 720px;
+  pointer-events: none;
+  z-index: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'><g fill='none' stroke='white' stroke-width='1.4' stroke-linejoin='round'><circle cx='200' cy='200' r='190'/><circle cx='200' cy='200' r='150'/><circle cx='200' cy='200' r='62'/><g fill='white' opacity='0.45'><path d='M200 50 L210 80 L240 76 L232 106 L260 122 L234 142 L246 172 L216 168 L210 198 L190 198 L184 168 L154 172 L166 142 L140 122 L168 106 L160 76 L190 80 Z'/></g></g></svg>");
+  background-repeat: no-repeat;
+  background-size: contain;
+  opacity: 0.07;
+  filter: drop-shadow(0 0 0 white);
+}
+
+/* Grain: one-shot baked SVG turbulence noise, scaled large so it reads as */
+/* paper, not pixels. Uses screen blend so it lifts highlights only on the */
+/* deep civic-blue surface. Static — never animates. */
+.login-side-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  mix-blend-mode: screen;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 240px 240px;
+}
+
+.login-side > .login-mark,
+.login-side > .login-headline,
+.login-side > .login-side-foot {
+  position: relative;
+  z-index: 1;
+}
+
+/* ----- Sentinel: caps lock + enter hint -------------------------------- */
+
+.login-caps {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--alert-warning-bg);
+  border: 1px solid var(--alert-warning-border);
+  color: var(--alert-warning-text-strong);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  animation: login-caps-in 200ms var(--ease-out-quart) both;
+}
+
+.login-caps svg {
+  flex: 0 0 auto;
+  color: var(--warning);
+}
+
+.login-caps .fil {
+  font-style: italic;
+  font-weight: 500;
+  color: var(--alert-warning-text);
+}
+
+@keyframes login-caps-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -4px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Enter-hint chip rides inside the primary button on the right edge,     */
+/* fades + slides in only when the password field has content.            */
+.login-form-card .btn-primary {
+  position: relative;
+}
+
+.login-enter-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 14px;
+  padding: 4px 8px 4px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.92);
+  opacity: 0;
+  transform: translate3d(4px, 0, 0);
+  transition: opacity 180ms var(--ease-out-quart),
+              transform 180ms var(--ease-out-quart);
+}
+
+.login-enter-hint.is-shown {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.login-enter-hint kbd {
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1;
+  color: white;
+}
+
+/* ----- View Transition handoff ----------------------------------------- */
+/* Two named transitions. The seal morphs across pages (login centerpiece  */
+/* → topbar brand-seal). Everything else cross-fades. The default ::view   */
+/* -transition root cross-fade is 250ms; we tune the seal to 360ms with    */
+/* an exponential ease so it lands like the rest of the system motion.    */
+
+@supports (view-transition-name: x) {
+  ::view-transition-old(barangay-seal),
+  ::view-transition-new(barangay-seal) {
+    animation-duration: 360ms;
+    animation-timing-function: var(--ease-out-quart);
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 280ms;
+    animation-timing-function: var(--ease-out-quart);
+  }
+}
+
+/* The dashboard's topbar brand-seal becomes the destination of the seal  */
+/* morph. We tag it with the same view-transition-name as the login seal. */
+.brand-seal {
+  view-transition-name: barangay-seal;
+}
+
+/* ----- Reduced motion overrides for the new pieces --------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .login-caps,
+  .login-enter-hint,
+  .login-ready-dot.is-ready {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .login-enter-hint.is-shown {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Disable the View Transition entirely; the API still runs but the     */
+  /* zero-duration animation makes it a hard swap.                         */
+  ::view-transition-old(root),
+  ::view-transition-new(root),
+  ::view-transition-old(barangay-seal),
+  ::view-transition-new(barangay-seal) {
+    animation: none !important;
+  }
+}
+
+/* ----- Responsive: tablet and below ----------------------------------- */
+
+@media (max-width: 820px) {
+  .login-mark {
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .login-mark .login-republic {
+    flex-basis: 100%;
+  }
+
+  .login-seal {
+    width: 88px;
+    height: 88px;
+    padding: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16),
+                0 0 0 4px rgba(255, 204, 160, 0.18);
+  }
+
+  .login-mark .login-barangay {
+    font-size: 22px;
+  }
+
+  .login-side-watermark {
+    inset: auto -160px -200px auto;
+    width: 540px;
+    height: 540px;
+  }
+
+  .login-today-value {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 560px) {
+  .login-side-foot {
+    padding-top: 14px;
+  }
+
+  .login-mark .login-barangay {
+    font-size: 20px;
+  }
+
+  .login-seal {
+    width: 76px;
+    height: 76px;
+  }
+
+  .login-side-watermark {
+    inset: auto -200px -240px auto;
+    width: 460px;
+    height: 460px;
+    opacity: 0.05;
+  }
+}
+
+
+/* ----- Reservation History print view --------------------------------- */
+/* When the staff hits "Print history" on /reservations/history we want a */
+/* clean sheet: app shell hidden, nav hidden, action toolbar hidden,      */
+/* both tabs collapsed into a single sectioned print page so the resident */
+/* gets a full record on one or two pages. We rely on the existing app    */
+/* structure: `.app-layout > .topbar`, `.app-layout > .sidebar`, the      */
+/* page's own toolbar. */
+@media print {
+  body {
+    background: #ffffff;
+  }
+
+  .topbar,
+  .app-sidebar,
+  .mobile-nav-bar,
+  .skip-link,
+  .staff-page-head + form,
+  .filter-card,
+  .filter-tabs,
+  .history-tabs-actions {
+    display: none !important;
+  }
+
+  .app-layout {
+    display: block;
+  }
+
+  .main-area,
+  main,
+  .page {
+    display: block;
+    padding: 0;
+    margin: 0;
+  }
+
+  .page > * + * {
+    margin-top: 18px;
+  }
+
+  .history-tabs-toolbar {
+    display: none;
+  }
+
+  /* Print both the upcoming and past lists by un-hiding the inactive
+     tab panel (React only renders the active tab; this rule is a
+     defensive fallback should we later render both). */
+  .history-tab-panel {
+    display: block;
+  }
+
+  .booking-card,
+  button.booking-card.history-row {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    box-shadow: none;
+    background: transparent;
+  }
+}
+
+/* ----- Reservation slip print view ------------------------------------- */
+/* Cost-effective print layout for /reservations/:id/slip. The on-screen   */
+/* slip keeps the existing card chrome; the print view collapses to a      */
+/* single A4 page of black-on-white text by:                                */
+/*  - hiding the duplicate `.staff-page-head` (the print-title block       */
+/*    already carries the office, slip name, court, and reference);        */
+/*  - laying out the 13 detail rows in two columns;                        */
+/*  - stripping tinted card backgrounds, badges, and alert washes;         */
+/*  - reducing the four-row acknowledgment card to two compact signature   */
+/*    lines (signature-over-name + staff-on-duty).                         */
+
+.slip-print-page .slip-sign-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 8px;
+}
+
+.slip-print-page .slip-sign-cell {
+  display: grid;
+  gap: 6px;
+}
+
+.slip-print-page .slip-sign-line {
+  height: 1px;
+  background: var(--ink);
+  margin-top: 28px;
+}
+
+.slip-print-page .slip-sign-label {
+  color: var(--ink-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.slip-print-page .slip-print-ref {
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .slip-print-page .slip-sign-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+@media print {
+  /* A4 with a tight uniform margin so the slip prints inside one sheet on  */
+  /* an office printer. */
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  .slip-print-page {
+    color: #000;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  /* The on-screen header would render alongside `.print-title`, doubling  */
+  /* the office name. Hide it so the print-title block is the single       */
+  /* header. */
+  .slip-print-page .staff-page-head {
+    display: none !important;
+  }
+
+  /* Show the inline reference suffix in the print-title only on print.    */
+  .slip-print-page .slip-print-ref {
+    display: inline;
+    color: #000;
+  }
+
+  .slip-print-page .print-title {
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .slip-print-page .print-title h1 {
+    font-size: 22px;
+    margin: 2px 0;
+  }
+
+  .slip-print-page .print-title p,
+  .slip-print-page .print-title .page-kicker {
+    color: #000;
+    margin: 0;
+  }
+
+  /* Cards: ink-only border, no background fill, tighter padding. */
+  .slip-print-page .card,
+  .slip-print-page .padded-card {
+    background: #fff !important;
+    border: 1px solid #000 !important;
+    box-shadow: none !important;
+    padding: 12px 14px !important;
+    gap: 8px !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .slip-print-page .card-section-head {
+    margin-bottom: 4px;
+  }
+
+  .slip-print-page .card-section-head h2 {
+    font-size: 14px;
+    margin: 0;
+  }
+
+  /* Status badge: drop the colored pill, render as plain "Status: word"   */
+  /* so we don't burn ink on a filled chip. */
+  .slip-print-page .status-badge {
+    background: #fff !important;
+    color: #000 !important;
+    border: 1px solid #000 !important;
+    padding: 0 6px;
+    font-weight: 600;
+  }
+
+  .slip-print-page .status-badge::before {
+    display: none;
+  }
+
+  .slip-print-page .detail-status-line {
+    margin: 0 0 4px;
+  }
+
+  /* CANCELLED stripe: keep it visible but ink-only — bold black text on a  */
+  /* white background with a 1pt black border. */
+  .slip-print-page .alert.error,
+  .slip-print-page .slip-cancelled-mark {
+    background: #fff !important;
+    color: #000 !important;
+    border: 1px solid #000 !important;
+    padding: 4px 8px !important;
+    text-align: center;
+  }
+
+  /* Two-column detail grid: the 13 rows lay out as ~7 paired rows on the  */
+  /* sheet, fitting comfortably above the signature block. */
+  .slip-print-page .slip-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 18px;
+    row-gap: 0;
+  }
+
+  .slip-print-page .slip-detail-grid .detail-row {
+    grid-template-columns: 110px minmax(0, 1fr);
+    gap: 8px;
+    padding: 4px 0;
+    border-bottom: 1px dotted #999;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .slip-print-page .slip-detail-grid dt {
+    color: #000;
+    font-size: 11px;
+  }
+
+  .slip-print-page .slip-detail-grid dd {
+    color: #000;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* Address tends to be the longest value; let it span both columns so it */
+  /* doesn't wrap to four lines. */
+  .slip-print-page .slip-detail-grid .detail-row:nth-child(4) {
+    grid-column: 1 / -1;
+  }
+
+  /* Acknowledgment block: two short signature lines side by side. */
+  .slip-print-page .slip-sign-card {
+    margin-top: 8px;
+  }
+
+  .slip-print-page .slip-sign-row {
+    gap: 32px;
+    margin-top: 4px;
+  }
+
+  .slip-print-page .slip-sign-line {
+    background: #000;
+    margin-top: 20px;
+  }
+
+  .slip-print-page .slip-sign-label {
+    color: #000;
+    font-size: 10px;
+  }
+}
+
+/* =========================================================================
+   DEPLOYMENT UI STABILIZATION PASS
+   ========================================================================= */
+
+/* --- Issue 2: Reservation modal footer button layout ------------------- */
+.reservation-drawer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.reservation-drawer-actions-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.reservation-drawer-actions-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.reservation-drawer-actions .btn {
+  min-width: 120px;
+}
+
+@media (max-width: 600px) {
+  .reservation-drawer-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .reservation-drawer-actions-main,
+  .reservation-drawer-actions-status {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .reservation-drawer-actions .btn {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* --- Issue 4: Status legend contrast improvements ---------------------- */
+/* Stronger, more distinct status badge colors for low-quality monitors */
+.status-available {
+  border-color: #3B9959;
+  background: #D4EDDA;
+  color: #1B6530;
+}
+
+.status-reserved {
+  border-color: #4A90B8;
+  background: #D6EAF5;
+  color: #0B4A6F;
+}
+
+.status-completed {
+  border-color: #6B8FB5;
+  background: #E3EEF7;
+  color: #1A4A6F;
+}
+
+.status-missed {
+  border-color: #C0665A;
+  background: #FCDBD6;
+  color: #7A2318;
+}
+
+.status-cancelled {
+  border-color: #A08050;
+  background: #F5ECD6;
+  color: #6B4C12;
+}
+
+.status-maintenance {
+  border-color: #C49530;
+  background: #FFF3D0;
+  color: #6D4A0D;
+}
+
+.status-barangay_event {
+  border-color: #7A5BAF;
+  background: #EDE5F7;
+  color: #4A2D7A;
+}
+
+.status-cleared_public_use {
+  border-color: #7A9A7A;
+  background: #E8F0E8;
+  color: #3A5A3A;
+}
+
+/* Legend swatches: match the stronger status badge colors */
+.calendar-legend-item.legend-available .legend-swatch {
+  border-color: #3B9959;
+  background: #D4EDDA;
+}
+
+.calendar-legend-item.legend-reserved .legend-swatch {
+  border-color: #4A90B8;
+  background: #D6EAF5;
+}
+
+.calendar-legend-item.legend-completed .legend-swatch {
+  border-color: #6B8FB5;
+  background: #E3EEF7;
+}
+
+.calendar-legend-item.legend-missed .legend-swatch {
+  border-color: #C0665A;
+  background: #FCDBD6;
+}
+
+.calendar-legend-item.legend-cancelled .legend-swatch {
+  border-color: #A08050;
+  background: #F5ECD6;
+}
+
+.calendar-legend-item.legend-maintenance .legend-swatch {
+  border-color: #C49530;
+  background: #FFF3D0;
+}
+
+.calendar-legend-item.legend-barangay .legend-swatch {
+  border-color: #7A5BAF;
+  background: #EDE5F7;
+}
+
+.calendar-legend-item.legend-cleared .legend-swatch {
+  border-color: #7A9A7A;
+  background: #E8F0E8;
+}
+
+/* --- Issue 5: "Who is booking?" spacing improvements ------------------- */
+.staff-reservation-form .form-section {
+  display: grid;
+  gap: var(--space-md);
+  padding: 28px;
+  border-bottom: 1px solid var(--border);
+}
+
+.staff-reservation-form .form-section:last-of-type {
+  border-bottom: 0;
+}
+
+.staff-reservation-form .form-section h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.staff-reservation-form .section-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+
+.staff-reservation-form .section-hint {
+  color: var(--ink-muted);
+  font-size: 14px;
+  font-style: italic;
+}
+
+.staff-reservation-form .slot-picker {
+  display: grid;
+  gap: 10px;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.staff-reservation-form .slot-picker .btn {
+  min-height: 52px;
+  padding: 0 24px;
+}
+
+/* --- Issue 6: Reservation list action button spacing ------------------- */
+.booking-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.booking-card-actions .btn {
+  min-width: 110px;
+}
+
+@media (max-width: 600px) {
+  .booking-card-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .booking-card-actions .btn {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* --- Issue 9: Today's Alerts/Notes compact layout ---------------------- */
+.dashboard-alerts-card {
+  padding: 16px 20px;
+}
+
+.dashboard-alerts-card .card-head {
+  padding: 0 0 12px;
+  border-bottom: 0;
+}
+
+.dashboard-alerts-card .card-title {
+  font-size: 18px;
+}
+
+.alerts-compact-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.alerts-compact-list .alert {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+/* --- Issue 10: Reports page density improvements ----------------------- */
+.report-page .page-stack {
+  gap: 24px;
+}
+
+.report-page .report-grid {
+  gap: 16px;
+}
+
+.report-page .padded-card {
+  padding: 20px;
+  gap: 16px;
+}
+
+.report-page .requester-list {
+  gap: 10px;
+}
+
+.report-page .requester-row {
+  min-height: 40px;
+  padding-bottom: 8px;
+}
+
+.report-page .bar-list {
+  gap: 10px;
+}
+
+.report-page .bar-row {
+  gap: 6px;
+}
+
+/* --- General polish: focus states, contrast, and spacing --------------- */
+.btn:focus-visible {
+  outline: 3px solid rgba(11, 74, 111, 0.4);
+  outline-offset: 2px;
+}
+
+.btn-danger:focus-visible {
+  outline-color: rgba(184, 59, 42, 0.4);
+}
+
+/* Ensure staff-detail-grid in modals has comfortable spacing */
+.staff-detail-grid .detail-row {
+  padding-bottom: 14px;
+}
+
+.staff-detail-grid .detail-row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+/* Attention panel compact improvements */
+.attention-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.attention-panel p {
+  max-width: 520px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.attention-count {
+  display: grid;
+  gap: 4px;
+  min-width: 80px;
+  padding: 14px 16px;
+  border: 2px solid var(--primary-soft);
+  border-radius: var(--radius);
+  background: var(--primary-softer);
+  color: var(--primary-dark);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.attention-count:hover,
+.attention-count:focus-visible {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.attention-count strong {
+  font-size: 28px;
+  font-family: var(--font-serif);
+  line-height: 1;
+}
+
+.attention-count span {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+
+/* --- Court Policy page layout overhaul --------------------------------- */
+/* Compact alerts strip replaces the oversized DashboardAlertsCard */
+.court-policy-alerts-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.policy-alert-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--primary-softer);
+  color: var(--primary-dark);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.policy-alert-chip strong {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.policy-alert-chip-warn {
+  background: var(--alert-warning-bg);
+  color: var(--alert-warning-text-strong);
+}
+
+/* Tighter form card spacing */
+.court-policy-form {
+  gap: 24px;
+  padding: 24px;
+}
+
+.court-policy-form .form-card-head {
+  gap: 4px;
+}
+
+.court-policy-form .form-card-head h2 {
+  font-size: 20px;
+}
+
+.court-policy-form .form-card-head .form-copy {
+  font-size: 14px;
+}
+
+/* Tighter group spacing within the form */
+.court-policy-group {
+  gap: 14px;
+  padding-top: 14px;
+}
+
+.court-policy-group-head h3 {
+  font-size: 12px;
+}
+
+.court-policy-group-head p {
+  font-size: 13px;
+}
+
+/* Smaller day option pills */
+.court-policy-day-option {
+  min-width: 64px;
+  min-height: 52px;
+  padding: 8px 14px;
+}
+
+.court-policy-day-option > span {
+  font-size: 14px;
+}
+
+/* Tighter preview panel */
+.court-policy-preview {
+  padding: 20px;
+  gap: 14px;
+}
+
+.court-policy-preview-head h2 {
+  font-size: 22px;
+}
+
+.court-policy-preview-head p {
+  font-size: 13px;
+}
+
+.court-policy-preview-section {
+  gap: 6px;
+  padding-top: 10px;
+}
+
+.court-policy-preview-daycell {
+  padding: 6px 2px;
+}
+
+.court-policy-preview-daylabel {
+  font-size: 12px;
+}
+
+.court-policy-preview-daystate {
+  font-size: 10px;
+}
+
+.court-policy-preview-slot {
+  padding: 3px 8px;
+  font-size: 12px;
+}
+
+/* Layout grid: form column slightly wider, preview narrower */
+.court-policy-layout {
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.6fr);
+  gap: 24px;
+}
+
+
+/* --- Court Policy typesetting refinements ------------------------------ */
+
+/* Form card heading: tighter, sentence-case approach */
+.court-policy-form .form-card-head h2 {
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--ink);
+}
+
+.court-policy-form .form-card-head .form-copy {
+  max-width: 540px;
+  color: var(--ink-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Section group headings: sentence-case, slightly larger, better weight.
+   The all-caps 12px was straining readability on office monitors. */
+.court-policy-group-head h3 {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--primary-dark);
+}
+
+.court-policy-group-head p {
+  max-width: 480px;
+  color: var(--ink-muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+/* Field labels within policy form: slightly bolder reading */
+.court-policy-form .field > label,
+.court-policy-form .field-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* Filipino helper inline spans: consistent italic muted style */
+.court-policy-form .fil,
+.court-policy-form .field .fil {
+  color: var(--ink-muted);
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* Field hint text: distinct from label, readable line height */
+.court-policy-form .field-hint {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  line-height: 1.4;
+}
+
+/* Preview aside: quieter heading, tighter secondary type */
+.court-policy-preview-head h2 {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--ink);
+}
+
+.court-policy-preview-head p {
+  font-size: 12px;
+  color: var(--ink-muted);
+  line-height: 1.4;
+}
+
+/* Preview section headings: quieter than the form headings */
+.court-policy-preview-section h3 {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* Preview rule and empty text */
+.court-policy-preview-rule {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-2);
+  line-height: 1.4;
+}
+
+.court-policy-preview-empty {
+  font-size: 12px;
+}
+
+/* Preview meta line (time range + slot count) */
+.court-policy-preview-meta {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* Day option pills: consistent weight and size */
+.court-policy-day-option > span {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.court-policy-day-option > span > .fil {
+  font-size: 11px;
+}
+
+/* Blocked dates picker: tighter type */
+.court-policy-blocked-label .field-label {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.court-policy-blocked-label .field-hint {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Compact alerts strip type */
+.court-policy-alerts-strip {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.policy-alert-chip {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.policy-alert-chip strong {
+  font-size: 15px;
+}

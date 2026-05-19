@@ -2,8 +2,10 @@ import process from "node:process";
 import { pathToFileURL } from "node:url";
 
 import { createApp } from "../src/app.js";
+import { hasStrongSessionSecret } from "../src/config/sessionSecret.js";
 
 const EXTERNAL_REFERENCE_PATTERN = /(?:src|href)=["'](https?:\/\/[^"']+)["']|@import\s+url\(["']?(https?:\/\/[^"')]+)["']?\)|url\(["']?(https?:\/\/[^"')]+)["']?\)/gi;
+const OFFLINE_RUNTIME_VERIFIER_SESSION_SECRET = "offline-runtime-verifier-session-secret-123456";
 
 export function findExternalResourceReferences(html) {
   const references = [];
@@ -39,7 +41,9 @@ export function verifyPrototypeOfflineHtml(html) {
 }
 
 export async function verifyOfflineRuntime(options = {}) {
-  const app = options.app || createApp();
+  const app = options.app || createApp({
+    env: buildOfflineRuntimeEnv(options.env || process.env)
+  });
   const listenPort = options.port || 0;
   const fetchFn = options.fetchFn || globalThis.fetch;
   const output = options.output || console;
@@ -75,6 +79,17 @@ export async function verifyOfflineRuntime(options = {}) {
       await app.locals.db.end();
     }
   }
+}
+
+export function buildOfflineRuntimeEnv(env = {}) {
+  if (hasStrongSessionSecret(env.APP_SESSION_SECRET)) {
+    return env;
+  }
+
+  return {
+    ...env,
+    APP_SESSION_SECRET: OFFLINE_RUNTIME_VERIFIER_SESSION_SECRET
+  };
 }
 
 function listen(app, port) {

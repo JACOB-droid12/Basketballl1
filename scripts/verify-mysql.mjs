@@ -371,10 +371,11 @@ export async function runMysqlVerification(options = {}) {
 
 async function fetchAuthenticatedSmokePages(baseUrl, sessionCookie, fetchFn) {
   const pages = [
-    { path: "/dashboard", expectedText: "Basketball Court Schedule" },
-    { path: "/schedule", expectedText: "Print Schedule" },
-    { path: "/reservations", expectedText: "Reservation Records" },
-    { path: "/activity-logs", expectedText: "Reservation Activity Monitoring" }
+    { path: "/dashboard", expectedText: "id=\"root\"" },
+    { path: "/schedule", expectedText: "id=\"root\"" },
+    { path: "/reservations", expectedText: "id=\"root\"" },
+    { path: "/activity-logs", expectedText: "id=\"root\"" },
+    { path: "/reports", expectedText: "id=\"root\"" }
   ];
   const results = [];
 
@@ -450,14 +451,16 @@ async function cleanupVerificationRows(pool, reservationId, representativeName) 
 }
 
 async function insertDirectReservation(connection, reservation) {
+  const referenceNo = await defaultRepository.reserveNextReservationReference(connection, reservation.reservationDate);
+
   await connection.execute(
     `
       INSERT INTO reservations
-        (resident_id, status_id, approved_by_user_id, created_by_user_id, reservation_date, start_time, end_time, purpose, remarks)
+        (reference_no, resident_id, status_id, approved_by_user_id, created_by_user_id, reservation_date, start_time, end_time, purpose, remarks)
       VALUES
-        (:residentId, 2, 1, 1, :reservationDate, :startTime, :endTime, :purpose, 'Temporary trigger verification record.')
+        (:referenceNo, :residentId, 2, 1, 1, :reservationDate, :startTime, :endTime, :purpose, 'Temporary trigger verification record.')
     `,
-    reservation
+    { ...reservation, referenceNo }
   );
 }
 

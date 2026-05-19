@@ -45,7 +45,7 @@ function Get-CommandOutput {
 
 function Test-NodeVersion {
   if (-not (Test-CommandAvailable "node")) {
-    Write-Check "FAIL" "Node.js 20+" "node was not found. Install Node.js 20 or newer from an offline installer."
+    Write-Check "FAIL" "Node.js 20+" "node was not found. Include runtime\node in the deployment package, or install Node.js 20+ with installer/admin support."
     return
   }
 
@@ -100,6 +100,33 @@ function Test-RequiredPath {
   }
 }
 
+function Test-OptionalPath {
+  param(
+    [string] $RelativePath,
+    [string] $Type,
+    [string] $Detail
+  )
+
+  $FullPath = Join-Path $ProjectRoot $RelativePath
+  $Exists = Test-Path -LiteralPath $FullPath
+
+  if ($Exists) {
+    if ($Type -eq "directory" -and -not (Get-Item -LiteralPath $FullPath).PSIsContainer) {
+      Write-Check "FAIL" $RelativePath "expected a folder. $Detail"
+      return
+    }
+
+    if ($Type -eq "file" -and (Get-Item -LiteralPath $FullPath).PSIsContainer) {
+      Write-Check "FAIL" $RelativePath "expected a file. $Detail"
+      return
+    }
+
+    Write-Check "OK" $RelativePath $Detail
+  } else {
+    Write-Check "WARN" $RelativePath "not bundled. $Detail"
+  }
+}
+
 Write-Host "Barangay Basketball Court Scheduling System"
 Write-Host "Office readiness check"
 Write-Host ""
@@ -107,41 +134,46 @@ Write-Host ""
 Set-Location -LiteralPath $ProjectRoot
 
 Test-NodeVersion
-Test-RequiredCommand "npm" "Install Node.js 20 or newer from an offline installer."
-Test-RequiredCommand "mysql" "Install local MySQL or MariaDB and add its bin folder to PATH."
-Test-RequiredCommand "mysqldump" "Install local MySQL or MariaDB and add its bin folder to PATH."
+Test-RequiredCommand "npm" "Include runtime\node in the deployment package, or install Node.js 20+ with installer/admin support."
+Test-RequiredCommand "mysql" "Use a bundled runtime\mariadb\bin folder, or install local MySQL/MariaDB."
+Test-RequiredCommand "mysqldump" "Use a bundled runtime\mariadb\bin folder, or install local MySQL/MariaDB."
 
 Test-RequiredPath "node_modules" "directory" "required for fully offline setup"
+Test-OptionalPath "runtime\node" "directory" "optional bundled Node runtime; avoids depending on global PATH"
+Test-OptionalPath "runtime\mariadb\bin" "directory" "optional bundled MariaDB tools; avoids manually editing PATH"
 Test-RequiredPath "package.json" "file" "required project manifest"
-Test-RequiredPath ".env.example" "file" "template used by setup-barangay-office.bat"
+Test-RequiredPath ".env.example" "file" "template used by first-time setup"
 Test-RequiredPath "START-HERE.bat" "file" "main staff-friendly launcher"
-Test-RequiredPath "backup-database.bat" "file" "staff-friendly local database backup"
-Test-RequiredPath "create-desktop-shortcut.bat" "file" "optional staff desktop shortcut helper"
+Test-RequiredPath "maintenance-tools\backup-database.bat" "file" "staff-friendly local database backup"
+Test-RequiredPath "maintenance-tools\restore-database.bat" "file" "guarded IT-support database restore"
+Test-RequiredPath "maintenance-tools\create-desktop-shortcut.bat" "file" "optional staff desktop shortcut helper"
 Test-RequiredPath "database\schema.sql" "file" "creates the local MySQL database and tables"
 Test-RequiredPath "database\seed.sql" "file" "adds starter admin, statuses, settings, and time slots"
 Test-RequiredPath "database\diagnostics.sql" "file" "checks the installed local database"
-Test-RequiredPath "setup-barangay-office.bat" "file" "main one-click setup"
-Test-RequiredPath "setup-database-only.bat" "file" "SQL-only fallback setup"
+Test-RequiredPath "maintenance-tools\setup-barangay-office.bat" "file" "main one-click setup implementation"
+Test-RequiredPath "maintenance-tools\setup-database-only.bat" "file" "SQL-only fallback setup"
 Test-RequiredPath "start-barangay-office.bat" "file" "starts the local app"
-Test-RequiredPath "run-office-signoff.bat" "file" "runs final local sign-off checks"
+Test-RequiredPath "maintenance-tools\run-office-signoff.bat" "file" "runs final local sign-off checks"
+Test-RequiredPath "maintenance-tools\load-runtime-env.bat" "file" "loads bundled runtime tools before checks"
 Test-RequiredPath "scripts\setup-barangay-office.ps1" "file" "setup implementation"
+Test-RequiredPath "scripts\ensure-local-database.ps1" "file" "starts bundled local MariaDB when available"
 Test-RequiredPath "scripts\verify-mysql.mjs" "file" "live MySQL verification"
 
 if (Test-Path -LiteralPath (Join-Path $ProjectRoot ".env")) {
   Write-Check "OK" ".env" "local configuration already exists"
 } else {
-  Write-Check "WARN" ".env" "not created yet. setup-barangay-office.bat will create it from .env.example."
+  Write-Check "WARN" ".env" "not created yet. START-HERE.bat first-time setup will create it from .env.example."
 }
 
 Write-Host ""
 
 if ($Failures -gt 0) {
-  Write-Host "Readiness check failed with $Failures issue(s). Fix the failed items before running setup-barangay-office.bat."
+  Write-Host "Readiness check failed with $Failures issue(s). Fix the failed items before using START-HERE.bat for first-time setup."
   exit 1
 }
 
 if ($Warnings -gt 0) {
-  Write-Host "Readiness check passed with $Warnings warning(s). You can run setup-barangay-office.bat next."
+  Write-Host "Readiness check passed with $Warnings warning(s). You can run START-HERE.bat first-time setup next."
 } else {
-  Write-Host "Readiness check passed. You can run setup-barangay-office.bat next."
+  Write-Host "Readiness check passed. You can run START-HERE.bat first-time setup next."
 }

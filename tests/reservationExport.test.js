@@ -6,6 +6,7 @@ import { toReservationCsv } from "../src/features/reservations/reservationExport
 test("exports reservation records as CSV with escaped fields", () => {
   const csv = toReservationCsv([
     {
+      referenceNo: "BCS-2026-000001",
       reservationDate: "2026-05-08",
       startTime: "07:00",
       endTime: "08:00",
@@ -21,8 +22,8 @@ test("exports reservation records as CSV with escaped fields", () => {
   assert.equal(
     csv,
     [
-      "Reservation Date,Start Time,End Time,Representative,Contact Number,Address,Purpose,Status,Encoded By",
-      "2026-05-08,07:00,08:00,Sto. Niño Youth Team,09171234567,\"Purok 3, Zone 2\",\"Practice \"\"finals\"\"\",Reserved,Admin User"
+      "Reference No,Reservation Date,Start Time,End Time,Representative,Contact Number,Address,Purpose,Status,Encoded By",
+      "BCS-2026-000001,2026-05-08,07:00,08:00,Sto. Niño Youth Team,09171234567,\"Purok 3, Zone 2\",\"Practice \"\"finals\"\"\",Reserved,Admin User"
     ].join("\r\n")
   );
 });

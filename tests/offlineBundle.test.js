@@ -23,28 +23,31 @@ test("offline bundle script copies runtime files and node_modules", () => {
   assert.match(script, /node_modules was not found/);
   assert.match(script, /START-HERE\.bat/);
   assert.match(script, /STAFF-DAILY-USE\.txt/);
+  assert.match(script, /DEPLOYMENT_READINESS_REPORT\.md/);
   assert.match(script, /README-FIRST-WINDOWS\.txt/);
   assert.match(script, /TROUBLESHOOT-WINDOWS\.txt/);
-  assert.match(script, /backup-database\.bat/);
-  assert.match(script, /create-desktop-shortcut\.bat/);
-  assert.match(script, /setup-database-only\.bat/);
-  assert.match(script, /check-office-readiness\.bat/);
-  assert.match(script, /run-office-signoff\.bat/);
-  assert.match(script, /setup-barangay-office\.bat/);
+  assert.match(script, /"maintenance-tools"/);
+  assert.match(script, /"runtime"/);
+  assert.match(script, /"installers"/);
   assert.match(script, /start-barangay-office\.bat/);
   assert.match(script, /"node_modules"/);
   assert.match(script, /"database"/);
+  assert.match(script, /data\\mariadb-data/);
   assert.match(script, /"src"/);
   assert.match(script, /"views"/);
   assert.match(script, /"public"/);
+  assert.match(script, /React staff console build was not found/);
+  assert.match(script, /public\\app\\\.vite\\manifest\.json/);
   assert.doesNotMatch(script, /\.env"/);
 });
 
-test("offline bundle script guards recursive deletion inside dist", () => {
+test("offline bundle script clears existing bundle contents without deleting the bundle root", () => {
   const script = readFileSync("scripts/create-offline-bundle.ps1", "utf8");
 
   assert.match(script, /Assert-ChildPath/);
-  assert.match(script, /Remove-Item -LiteralPath \$BundleRoot -Recurse -Force/);
+  assert.match(script, /Get-ChildItem -LiteralPath \$BundleRoot/);
+  assert.match(script, /Remove-Item -LiteralPath \$ExistingItem\.FullName -Recurse -Force/);
+  assert.doesNotMatch(script, /Remove-Item -LiteralPath \$BundleRoot -Recurse -Force/);
 });
 
 test("offline bundle verifier accepts a complete prepared bundle", () => {
@@ -54,6 +57,41 @@ test("offline bundle verifier accepts a complete prepared bundle", () => {
     const report = analyzeOfflineBundle(bundleRoot);
 
     assert.equal(report.ok, true);
+    assert.equal(report.mode, "candidate");
+    assert.equal(report.checks.some((check) => check.name === "required directory: public/app" && check.ok), true);
+    assert.equal(report.checks.some((check) => check.name === "required file: public/app/.vite/manifest.json" && check.ok), true);
+  } finally {
+    rmSync(bundleRoot, { recursive: true, force: true });
+  }
+});
+
+test("offline bundle verifier rejects strict one-stop mode when bundled runtime is missing", () => {
+  const bundleRoot = createTemporaryBundle();
+
+  try {
+    const report = analyzeOfflineBundle(bundleRoot, { mode: "strict" });
+    const formatted = formatOfflineBundleReport(report);
+
+    assert.equal(report.ok, false);
+    assert.equal(report.mode, "strict");
+    assert.match(formatted, /bundle verification mode - strict one-stop offline package/);
+    assert.match(formatted, /strict one-stop runtime: runtime\/node\/node\.exe/);
+    assert.match(formatted, /strict one-stop runtime: runtime\/mariadb\/bin\/mariadbd\.exe/);
+  } finally {
+    rmSync(bundleRoot, { recursive: true, force: true });
+  }
+});
+
+test("offline bundle verifier accepts strict one-stop mode with bundled runtime", () => {
+  const bundleRoot = createTemporaryBundle({
+    includeRuntime: true
+  });
+
+  try {
+    const report = analyzeOfflineBundle(bundleRoot, { mode: "strict" });
+
+    assert.equal(report.ok, true);
+    assert.equal(report.mode, "strict");
   } finally {
     rmSync(bundleRoot, { recursive: true, force: true });
   }
@@ -61,7 +99,7 @@ test("offline bundle verifier accepts a complete prepared bundle", () => {
 
 test("offline bundle verifier rejects missing dependencies and copied local secrets", () => {
   const bundleRoot = createTemporaryBundle({
-    omit: ["node_modules", "check-office-readiness.bat"],
+    omit: ["node_modules", "maintenance-tools/check-office-readiness.bat"],
     includeForbidden: [".env", "reports"]
   });
 
@@ -71,7 +109,7 @@ test("offline bundle verifier rejects missing dependencies and copied local secr
 
     assert.equal(report.ok, false);
     assert.match(formatted, /\[FAIL\] required directory: node_modules/);
-    assert.match(formatted, /\[FAIL\] required file: check-office-readiness\.bat/);
+    assert.match(formatted, /\[FAIL\] required file: maintenance-tools[\\/]check-office-readiness\.bat/);
     assert.match(formatted, /\[FAIL\] excluded local-only item: \.env/);
     assert.match(formatted, /\[FAIL\] excluded local-only item: reports/);
   } finally {
@@ -89,15 +127,18 @@ function createTemporaryBundle(options = {}) {
     ".env.example",
     "START-HERE.bat",
     "STAFF-DAILY-USE.txt",
+    "DEPLOYMENT_READINESS_REPORT.md",
     "README.md",
     "README-FIRST-WINDOWS.txt",
     "TROUBLESHOOT-WINDOWS.txt",
-    "backup-database.bat",
-    "create-desktop-shortcut.bat",
-    "setup-database-only.bat",
-    "check-office-readiness.bat",
-    "run-office-signoff.bat",
-    "setup-barangay-office.bat",
+    "maintenance-tools/backup-database.bat",
+    "maintenance-tools/restore-database.bat",
+    "maintenance-tools/create-desktop-shortcut.bat",
+    "maintenance-tools/setup-database-only.bat",
+    "maintenance-tools/check-office-readiness.bat",
+    "maintenance-tools/run-office-signoff.bat",
+    "maintenance-tools/setup-barangay-office.bat",
+    "maintenance-tools/load-runtime-env.bat",
     "start-barangay-office.bat",
     "src/server.js",
     "src/serverStartup.js",
@@ -108,6 +149,8 @@ function createTemporaryBundle(options = {}) {
     "views/account/password.ejs",
     "public/css/styles.css",
     "public/js/prototype-backend.js",
+    "public/app/",
+    "public/app/.vite/manifest.json",
     "public/prototype/sto-nino-court-reservation-system-prototype.html",
     "public/vendor/html2canvas.min.js",
     "public/vendor/jspdf.umd.min.js",
@@ -120,14 +163,28 @@ function createTemporaryBundle(options = {}) {
     "docs/DEPLOYMENT_GUIDE.md",
     "docs/OFFLINE_INSTALL_CHECKLIST.md",
     "scripts/check-runtime-database.mjs",
+    "scripts/ensure-local-database.ps1",
     "scripts/print-office-url.mjs",
     "scripts/verify-offline-runtime.mjs",
     "scripts/check-office-readiness.ps1",
     "scripts/create-desktop-shortcut.ps1",
     "scripts/run-office-signoff.ps1",
     "scripts/setup-barangay-office.ps1",
+    "scripts/verify-runtime-package.mjs",
     "scripts/verify-mysql.mjs"
   ];
+
+  if (options.includeRuntime) {
+    requiredItems.push(
+      "runtime/node/node.exe",
+      "runtime/node/npm.cmd",
+      "runtime/mariadb/bin/mariadbd.exe",
+      "runtime/mariadb/bin/mariadb-install-db.exe",
+      "runtime/mariadb/bin/mysql.exe",
+      "runtime/mariadb/bin/mysqldump.exe",
+      "data/mariadb-data/"
+    );
+  }
 
   for (const itemPath of requiredItems) {
     if (omit.has(itemPath)) {
@@ -135,7 +192,7 @@ function createTemporaryBundle(options = {}) {
     }
 
     const fullPath = path.join(bundleRoot, itemPath);
-    if (itemPath === "node_modules") {
+    if (itemPath === "node_modules" || itemPath.endsWith("/")) {
       mkdirSync(fullPath, { recursive: true });
     } else {
       mkdirSync(path.dirname(fullPath), { recursive: true });

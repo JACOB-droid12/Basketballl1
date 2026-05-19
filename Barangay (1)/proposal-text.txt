@@ -1,0 +1,81 @@
+Basketball Court Scheduling System for Barangay Sto. Niño
+A Proposal by:
+Roviklein P. Fabre
+Jacob Ethan R. Gabaldon
+Peter T. Guo
+Zedrick Lonzaga
+Benedict Riley D. Quizon
+Rhegille Gabriel L. Rodriguez
+I. Introduction
+The basketball court in Barangay Sto. Niño has long served as a place where residents gather,
+build friendships, and strengthen community ties. For many years, it has been a central venue for
+recreation and social interaction. However, as personal schedules have become busier due to
+work, school, and other responsibilities, the use of the court has become less organized and
+people often go only when it is convenient.
+Because of this, conflicts in scheduling and misunderstandings sometimes occur when multiple
+groups want to use the court at the same time. To address this concern, we propose the
+development of a Digital Basketball Court Scheduling System that will help organize court
+reservations and monitor availability.
+
+-- 1 of 4 --
+
+II. Objectives
+The proposed system aims to:
+1. Provide an organized reservation system for the barangay basketball court.
+2. The objective is to prevent scheduling overlaps, maximize facility utilization, and provide
+a clear, organized overview of reserved and available court time slots.
+3. Allow barangay personnel to record and manage court reservations efficiently.
+4. Maintain a systematic and updated record of basketball court schedules within the
+system.
+III. Proposed System Description
+The Digital Basketball Court Scheduling System will be a computer based offline system
+designed specifically for Barangay Sto. Niño. The system will be installed on a computer located
+in the barangay office where reservations can be managed and monitored.
+The basketball court in Barangay Sto. Niño is free for residents to use, therefore the barangay
+prefers to manage reservations directly to ensure that the court is used properly and fairly by the
+community. Because of this, the system will operate offline and will only be accessible through
+the barangay office.
+Residents or court users may visit the barangay office to check available time slots and request
+reservations. Authorized barangay personnel will encode reservation details into the system and
+update the court schedule.
+
+-- 2 of 4 --
+
+Barangay officials or authorized personnel will have administrative access to:
+• Monitor available time slots for the basketball court
+• Record and manage reservations for specific dates and times
+• Monitor scheduled activities and reservations
+•This system will provide a simple and organized way for the barangay to manage court
+reservations while keeping the use of the facility free and accessible to barangay officials.
+IV. Expected Benefits
+The implementation of this system will:
+• Reduce conflicts and double bookings of the basketball court
+• Efficient time for residents and barangay personnel when checking schedules
+• Ensure fair access to the basketball court for all residents
+• Support organized the management of the scheduling system
+V. Target Beneficiaries
+• Residents of Barangay Sto. Niño
+• Youth organizations and sports groups
+• Barangay officials and administrators
+
+-- 3 of 4 --
+
+VI. Scope of the Study
+The Digital Basketball Court Scheduling System will be developed specifically for the basketball
+court located in Barangay Sto. Niño. The system will operate offline and will be installed on a
+computer in the barangay office.
+The system will include the following functions:
+• Monitor available basketball court schedules
+• Reservation requests are submitted by residents and approved by the Barangay.
+• Displaying reserved and available time slots
+• Managing reservation records through an administrative interface
+• If no slot is available today, the system suggests the nearest available time; if the resident
+misses it, the request is marked as “Missed.”
+VII. Limitations of the Study
+• Although the system can be deployed online, the barangay officials prefer an offline setup, so it
+will only be accessible on the computer where it is installed.
+• Residents cannot reserve the court remotely and must coordinate with barangay personnel.
+• The scheduling of the basketball court will follow the policies set by Barangay Sto. Niño.
+
+-- 4 of 4 --
+

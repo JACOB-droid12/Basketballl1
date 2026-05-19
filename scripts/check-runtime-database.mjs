@@ -25,7 +25,7 @@ export async function assertRuntimeDatabaseReady(connection) {
     FROM reservation_statuses
   `);
   if (Number(statusCount?.count_value || 0) < 5) {
-    throw new Error("Local database check failed: reservation statuses are missing. Run setup-barangay-office.bat first.");
+    throw new Error("Local database check failed: reservation statuses are missing. Run START-HERE.bat first-time setup first.");
   }
 
   const [[slotCount]] = await connection.execute(`
@@ -33,7 +33,7 @@ export async function assertRuntimeDatabaseReady(connection) {
     FROM time_slots
   `);
   if (Number(slotCount?.count_value || 0) < 1) {
-    throw new Error("Local database check failed: time slots are missing. Run setup-barangay-office.bat first.");
+    throw new Error("Local database check failed: time slots are missing. Run START-HERE.bat first-time setup first.");
   }
 
   const [[adminCount]] = await connection.execute(`
@@ -43,7 +43,7 @@ export async function assertRuntimeDatabaseReady(connection) {
       AND account_status = 'ACTIVE'
   `);
   if (Number(adminCount?.count_value || 0) < 1) {
-    throw new Error("Local database check failed: no active Admin account was found. Create or reactivate an Admin account, or run setup-barangay-office.bat first.");
+    throw new Error("Local database check failed: no active Admin account was found. Create or reactivate an Admin account, or run START-HERE.bat first-time setup first.");
   }
 }
 
@@ -61,7 +61,7 @@ export async function checkRuntimeDatabase(options = {}) {
     });
   } catch (error) {
     throw new Error(
-      `Unable to connect to the local MySQL/MariaDB database at ${config.host}:${config.port}/${config.database}. Start local MySQL/MariaDB or run setup-barangay-office.bat, then try again.`,
+      `Unable to connect to the local MySQL/MariaDB database at ${config.host}:${config.port}/${config.database}. Start local MySQL/MariaDB or run START-HERE.bat first-time setup, then try again.`,
       { cause: error }
     );
   }

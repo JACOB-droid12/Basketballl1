@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-15T00:00:00+08:00",
+  "title": "Design System: Barangay Court Scheduling",
+  "extensions": {
+    "colorMeta": {
+      "civic-blue": {
+        "role": "primary",
+        "displayName": "Civic Blue",
+        "canonical": "#0B4A6F",
+        "tonalRamp": ["#062536", "#083A57", "#0B4A6F", "#1E668D", "#4A8AA9", "#88B6CB", "#DCEAF2", "#EFF5F8"]
+      },
+      "court-orange": {
+        "role": "secondary",
+        "displayName": "Court Orange",
+        "canonical": "#C85C1C",
+        "tonalRamp": ["#3B1807", "#74320D", "#A84B17", "#C85C1C", "#DD8048", "#EFAE82", "#FDEEDE", "#FFF7EE"]
+      },
+      "warm-office-bg": {
+        "role": "neutral",
+        "displayName": "Warm Office Background",
+        "canonical": "#F6F4EE",
+        "tonalRamp": ["#2A2822", "#5D574A", "#8B8372", "#B9B19E", "#DCD6C7", "#F0ECE3", "#F6F4EE", "#FFFFFF"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Staff-facing page titles and hero statements."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Readable office copy, labels, and reservation details."
+      }
+    },
+    "shadows": [
+      {
+        "name": "low",
+        "value": "0 1px 2px rgba(15,30,60,0.06)",
+        "purpose": "Subtle contained surfaces."
+      },
+      {
+        "name": "medium",
+        "value": "0 4px 14px rgba(15,30,60,0.10)",
+        "purpose": "Hover lift and active cards."
+      },
+      {
+        "name": "high",
+        "value": "0 24px 60px rgba(15,30,60,0.18)",
+        "purpose": "Dialogs, drawers, and blocking confirmations."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-fast",
+        "value": "120ms ease-out",
+        "purpose": "Buttons, navigation, tabs, and small feedback transitions."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "staff-desktop",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary staff action such as save, approve, or new reservation.",
+      "html": "<button class=\"ds-btn-primary\">Save Reservation</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 13px 22px; border-radius: 10px; border: 2px solid #0B4A6F; background: #0B4A6F; color: #FFFFFF; font: 600 16px Inter, system-ui, sans-serif; transition: background 120ms ease-out, border-color 120ms ease-out; } .ds-btn-primary:hover { background: #083A57; border-color: #083A57; } .ds-btn-primary:focus-visible { outline: 3px solid #DCEAF2; outline-offset: 2px; }"
+    },
+    {
+      "name": "Status Pill",
+      "kind": "chip",
+      "refersTo": "status-pill",
+      "description": "Readable reservation status indicator.",
+      "html": "<span class=\"ds-pill-approved\">Approved</span>",
+      "css": ".ds-pill-approved { display: inline-flex; align-items: center; min-height: 28px; padding: 4px 10px; border-radius: 100px; background: #DEF0E3; color: #1F7A43; font: 600 13px Inter, system-ui, sans-serif; }"
+    },
+    {
+      "name": "Office Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Default bordered paper surface for forms, summaries, and tables.",
+      "html": "<section class=\"ds-card\"><h3>Today's Schedule</h3><p>Review upcoming court reservations.</p></section>",
+      "css": ".ds-card { background: #FFFFFF; color: #1F2937; border: 1px solid #DCD6C7; border-radius: 14px; padding: 24px; font-family: Inter, system-ui, sans-serif; } .ds-card h3 { margin: 0 0 8px; font: 400 26px/1.1 Instrument Serif, Georgia, serif; } .ds-card p { margin: 0; color: #6B7280; font-size: 17px; line-height: 1.5; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Large staff-readable input for reservation forms.",
+      "html": "<input class=\"ds-input\" placeholder=\"Resident name\" />",
+      "css": ".ds-input { min-height: 48px; width: 100%; padding: 13px 14px; border: 2px solid #DCD6C7; border-radius: 10px; background: #FFFFFF; color: #1F2937; font: 400 17px/1.5 Inter, system-ui, sans-serif; } .ds-input:focus { outline: none; border-color: #0B4A6F; box-shadow: 0 0 0 3px #DCEAF2; }"
+    },
+    {
+      "name": "Sidebar Nav Row",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Large bilingual sidebar navigation target.",
+      "html": "<button class=\"ds-nav-row ds-nav-row-active\"><span class=\"ds-nav-icon\">+</span><span><strong>New Reservation</strong><small>Bagong reserbasyon</small></span></button>",
+      "css": ".ds-nav-row { display: grid; grid-template-columns: 44px 1fr; align-items: center; gap: 14px; width: 100%; min-height: 68px; padding: 14px 16px; border: 2px solid transparent; border-radius: 10px; background: transparent; color: #1F2937; text-align: left; font-family: Inter, system-ui, sans-serif; transition: background 120ms ease-out, border-color 120ms ease-out; } .ds-nav-row:hover { background: #F0ECE3; } .ds-nav-row-active { background: #EFF5F8; border-color: #DCEAF2; color: #0B4A6F; } .ds-nav-icon { width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; background: #0B4A6F; color: #FFFFFF; font-weight: 700; } .ds-nav-row strong { display: block; font-size: 16px; } .ds-nav-row small { display: block; margin-top: 2px; color: #6B7280; font-size: 13px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Barangay Desk Ledger",
+    "overview": "This system should feel like a well-organized office ledger translated into a modern screen: warm paper surfaces, clear blue official actions, large readable controls, and labels that speak to staff instead of software specialists.",
+    "keyCharacteristics": [
+      "Warm office-paper surfaces with civic blue as the primary action color.",
+      "17px body text and 48px minimum standard controls for staff readability.",
+      "Persistent sidebar navigation with large labeled targets.",
+      "Status colors paired with text labels for reservation state.",
+      "Short, functional motion only for hover, focus, dialogs, and confirmations."
+    ],
+    "rules": [
+      {
+        "name": "The Blue Means Action Rule",
+        "body": "Civic Blue is reserved for primary intent, active navigation, and confirmed selected states. Do not spend it on decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Status Must Read Rule",
+        "body": "Never rely on color alone for pending, approved, completed, missed, danger, or warning. Pair every status color with a word, icon, or both.",
+        "section": "colors"
+      },
+      {
+        "name": "The Staff Can Read It Rule",
+        "body": "Do not drop working text below 14px. Primary forms, cards, and navigation should stay at 16px or larger; the staff-friendly baseline is 17px.",
+        "section": "typography"
+      },
+      {
+        "name": "The Border First Rule",
+        "body": "Use borders and tonal layers for normal structure. Use shadows only when the surface floats, moves, or blocks the page.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep the product offline-first and staff-mediated in language and workflow.",
+      "Do use large target sizes for staff actions: 48px minimum, 64px for major task buttons.",
+      "Do pair English labels with Filipino helper text when it reduces confusion.",
+      "Do keep reservation status visible in lists, calendars, dialogs, and reports.",
+      "Do use warm paper backgrounds and civic blue primary actions consistently."
+    ],
+    "donts": [
+      "Don't make it look like a public startup landing page.",
+      "Don't make it look like a sports entertainment app.",
+      "Don't use a dark command-center dashboard as the default staff experience.",
+      "Don't use tiny admin-table typography for primary workflows.",
+      "Don't use jargon-heavy workflow labels.",
+      "Don't use decorative glassmorphism, neon gradients, or hidden controls.",
+      "Don't imply residents can reserve remotely unless that workflow is intentionally added."
+    ]
+  }
+}

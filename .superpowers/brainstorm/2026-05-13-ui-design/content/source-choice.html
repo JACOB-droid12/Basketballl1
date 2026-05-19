@@ -1,0 +1,84 @@
+<h2>Choose the design source of truth</h2>
+<p class="subtitle">The supplied folder contains two usable UI directions. Pick the one that should lead the real implementation.</p>
+
+<div class="cards">
+  <div class="card" data-choice="premium-admin" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="height:220px;background:#f8f7f4;border:1px solid #ded8cd;border-radius:12px;display:grid;grid-template-columns:74px 1fr;overflow:hidden;color:#202326;font-family:system-ui,sans-serif">
+        <div style="background:#fbfaf7;border-right:1px solid #ded8cd;padding:14px 10px;display:grid;gap:8px;align-content:start">
+          <div style="height:28px;width:28px;border-radius:8px;background:#173d78"></div>
+          <div style="height:22px;border-radius:6px;background:#e8edf5"></div>
+          <div style="height:22px;border-radius:6px;background:#173d78"></div>
+          <div style="height:22px;border-radius:6px;background:#e8edf5"></div>
+          <div style="height:22px;border-radius:6px;background:#e8edf5"></div>
+        </div>
+        <div style="padding:16px;display:grid;gap:12px">
+          <div style="display:flex;justify-content:space-between;gap:12px">
+            <div>
+              <div style="height:10px;width:115px;background:#999;border-radius:4px;margin-bottom:8px"></div>
+              <div style="height:26px;width:210px;background:#202326;border-radius:5px"></div>
+            </div>
+            <div style="height:32px;width:126px;border-radius:8px;background:#173d78"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+            <div style="height:50px;border-radius:8px;background:white;border:1px solid #ded8cd"></div>
+            <div style="height:50px;border-radius:8px;background:white;border:1px solid #ded8cd"></div>
+            <div style="height:50px;border-radius:8px;background:white;border:1px solid #ded8cd"></div>
+            <div style="height:50px;border-radius:8px;background:white;border:1px solid #ded8cd"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1.5fr .9fr;gap:10px">
+            <div style="height:72px;border-radius:8px;background:white;border:1px solid #ded8cd;padding:10px;display:grid;gap:6px">
+              <div style="height:10px;width:80%;background:#e5e7eb;border-radius:3px"></div>
+              <div style="height:10px;width:62%;background:#dbeafe;border-radius:3px"></div>
+              <div style="height:10px;width:72%;background:#fee2e2;border-radius:3px"></div>
+            </div>
+            <div style="height:72px;border-radius:8px;background:white;border:1px solid #ded8cd"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. Premium Admin Dashboard</h3>
+      <p>Closer to the fuller React mockup: compact sidebar, dashboard stats, timeline, reservations table, conflicts, reports, and drawer details. Best if the defense wants a polished administrative system with richer management screens.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="staff-friendly" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="height:220px;background:#f6f4ee;border:1px solid #ded8cd;border-radius:12px;display:grid;grid-template-rows:48px 1fr;overflow:hidden;color:#202326;font-family:system-ui,sans-serif">
+        <div style="background:#0b4a6f;color:white;padding:10px 14px;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="height:28px;width:28px;border-radius:50%;background:white;color:#0b4a6f"></div>
+            <div style="height:12px;width:150px;background:rgba(255,255,255,.85);border-radius:4px"></div>
+          </div>
+          <div style="height:22px;width:88px;background:rgba(255,255,255,.2);border-radius:8px"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:210px 1fr">
+          <div style="background:white;border-right:1px solid #ded8cd;padding:14px;display:grid;gap:10px;align-content:start">
+            <div style="height:45px;border-radius:10px;background:#eff5f8;border:1px solid #dceaf2"></div>
+            <div style="height:45px;border-radius:10px;background:#0b4a6f"></div>
+            <div style="height:45px;border-radius:10px;background:#eff5f8;border:1px solid #dceaf2"></div>
+          </div>
+          <div style="padding:18px;display:grid;gap:12px">
+            <div>
+              <div style="height:26px;width:230px;background:#202326;border-radius:5px;margin-bottom:6px"></div>
+              <div style="height:12px;width:190px;background:#7a746a;border-radius:4px"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+              <div style="height:66px;background:white;border:1px solid #ded8cd;border-radius:12px"></div>
+              <div style="height:66px;background:white;border:1px solid #ded8cd;border-radius:12px"></div>
+              <div style="height:66px;background:white;border:1px solid #ded8cd;border-radius:12px"></div>
+            </div>
+            <div style="height:54px;background:white;border:1px solid #ded8cd;border-radius:12px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. Staff-Friendly Bilingual</h3>
+      <p>Closer to the Staff Friendly HTML: larger controls, clearer pacing, English plus Filipino helper labels, confirmations for important actions, and simpler summary views. Best if barangay personnel usability is the top priority.</p>
+    </div>
+  </div>
+</div>
+
+<p class="subtitle">My recommendation: use B as the primary style, then fold in A's missing admin screens such as accounts, activity logs, and stronger reports so no backend requirement is lost.</p>

@@ -3,12 +3,15 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { createActivityLogRoutes } from "../src/features/activityLogs/activityLogRoutes.js";
+import { createApiRoutes } from "../src/features/api/apiRoutes.js";
+import { createReactAppRoutes } from "../src/features/frontend/reactAppRoutes.js";
 import { createPrototypeApiRoutes } from "../src/features/prototype/prototypeApiRoutes.js";
 import { createPrototypeRoutes } from "../src/features/prototype/prototypeRoutes.js";
 import { createReservationRoutes } from "../src/features/reservations/reservationRoutes.js";
 import { createDashboardRoutes } from "../src/features/schedule/dashboardRoutes.js";
 import { createScheduleRoutes } from "../src/features/schedule/scheduleRoutes.js";
 import { createAuthRoutes } from "../src/features/users/authRoutes.js";
+import { requireSignedIn } from "../src/features/users/sessionMiddleware.js";
 
 const PROJECT_ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const TODAY = "2026-05-08";
@@ -17,19 +20,26 @@ export function buildSmokePages() {
   return [
     { path: "/", expectedText: "Barangay Sto. Niño - Basketball Court Scheduling" },
     { path: "/prototype", expectedText: "/js/prototype-backend.js" },
+    { path: "/api/session", expectedText: "\"authenticated\":true" },
+    { path: "/api/dashboard", expectedText: "\"todaySchedule\"" },
+    { path: `/api/schedule?date=${TODAY}`, expectedText: "\"rows\"" },
+    { path: "/api/reservations", expectedText: "Sto. Nino Youth Team" },
+    { path: "/api/activity-logs", expectedText: "CREATE_RESERVATION" },
+    { path: "/api/reports", expectedText: "\"summary\"" },
+    { path: "/api/accounts", expectedText: "System Administrator" },
     { path: "/api/prototype/session", expectedText: "\"authenticated\":true" },
     { path: "/api/prototype/reservations", expectedText: "Sto. Nino Youth Team" },
-    { path: "/login", expectedText: "Login your account" },
-    { path: "/dashboard", expectedText: "Basketball Court Schedule" },
-    { path: "/schedule", expectedText: "Print Schedule" },
-    { path: "/reservations", expectedText: "Reservation Records" },
-    { path: "/reservations/new", expectedText: "Add Reservation" },
-    { path: "/reservations/10", expectedText: "Representative Personal information" },
-    { path: "/reservations/10/edit", expectedText: "Edit Reservation" },
-    { path: "/account", expectedText: "Account Management" },
-    { path: "/account/create", expectedText: "Create Account" },
-    { path: "/account/password", expectedText: "Change Password" },
-    { path: "/activity-logs", expectedText: "Reservation Activity Monitoring" }
+    { path: "/login", expectedText: "id=\"root\"" },
+    { path: "/dashboard", expectedText: "id=\"root\"" },
+    { path: "/schedule", expectedText: "id=\"root\"" },
+    { path: "/reservations", expectedText: "id=\"root\"" },
+    { path: "/reservations/new", expectedText: "id=\"root\"" },
+    { path: "/reservations/10", expectedText: "id=\"root\"" },
+    { path: "/reservations/10/edit", expectedText: "id=\"root\"" },
+    { path: "/account", expectedText: "id=\"root\"" },
+    { path: "/account/password", expectedText: "id=\"root\"" },
+    { path: "/activity-logs", expectedText: "id=\"root\"" },
+    { path: "/reports", expectedText: "id=\"root\"" }
   ];
 }
 
@@ -55,6 +65,12 @@ export function buildOfficeSmokeApp() {
   });
 
   app.use(createPrototypeRoutes());
+  app.use(createReactAppRoutes({ routes: ["/login"] }));
+  app.use(createApiRoutes({
+    db: {},
+    todayProvider: () => TODAY,
+    repositories
+  }));
   app.use(createPrototypeApiRoutes({
     db: {},
     todayProvider: () => TODAY,
@@ -63,6 +79,7 @@ export function buildOfficeSmokeApp() {
       createUser: repositories.createUser,
       findUserByUsername: repositories.findUserByUsername,
       getReservationById: repositories.getReservationById,
+      listScheduleBlocks: repositories.listScheduleBlocks,
       listReservations: repositories.listReservations,
       listUsers: repositories.listUsers,
       updateReservation: repositories.updateReservation,
@@ -71,6 +88,7 @@ export function buildOfficeSmokeApp() {
   }));
   app.use(createAuthRoutes({
     db: {},
+    enableLegacyAccountUi: false,
     repositories: {
       createUser: repositories.createUser,
       findUserByUsername: repositories.findUserByUsername,
@@ -79,6 +97,8 @@ export function buildOfficeSmokeApp() {
       updateUserPassword: repositories.updateUserPassword
     }
   }));
+  app.use(requireSignedIn);
+  app.use(createReactAppRoutes());
   app.use(createDashboardRoutes({
     db: {},
     todayProvider: () => TODAY,
@@ -244,6 +264,24 @@ function buildSmokeRepositories() {
 
       return reservations;
     },
+    listScheduleBlocks: async () => [],
+    getBackupStatus: async () => ({
+      lastBackupAt: "2026-05-08 08:00:00",
+      daysSinceBackup: 0,
+      reminderThresholdDays: 7,
+      backupDue: false
+    }),
+    getCourtPolicySettings: async () => ({
+      openingTime: "07:00",
+      closingTime: "21:00",
+      minimumReservationMinutes: 30,
+      maximumReservationMinutes: 240,
+      allowedDays: [0, 1, 2, 3, 4, 5, 6],
+      blockedDays: [],
+      gracePeriodBeforeMissedMinutes: 15,
+      defaultSlotMinutes: 60
+    }),
+    listResidents: async () => [],
     listUsers: async () => users,
     updateReservation: async () => {},
     updateReservationStatus: async () => {},

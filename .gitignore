@@ -6,5 +6,11 @@ coverage/
 dist/
 backups/
 reports/
+runtime/
+installers/
+.superpowers/
+data/mariadb-data/
+data/logs/
+.impeccable/screenshots/
 .DS_Store
 Thumbs.db

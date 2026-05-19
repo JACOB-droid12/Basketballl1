@@ -11,8 +11,8 @@ import {
   startServer
 } from "../src/serverStartup.js";
 
-test("buildOfficeUrl points staff to the prototype after the local server is ready", () => {
-  assert.equal(buildOfficeUrl(3000), "http://localhost:3000/prototype");
+test("buildOfficeUrl points staff to the React dashboard after the local server is ready", () => {
+  assert.equal(buildOfficeUrl(3000), "http://localhost:3000/dashboard");
   assert.equal(buildOfficeUrl(3188, "prototype"), "http://localhost:3188/prototype");
 });
 
@@ -95,8 +95,8 @@ test("handleStartupError reuses the running office app on duplicate daily startu
 
   assert.deepEqual(events, [
     "The local app is already running at http://localhost:3000.",
-    "Opening http://localhost:3000/prototype",
-    "open:http://localhost:3000/prototype",
+    "Opening http://localhost:3000/dashboard",
+    "open:http://localhost:3000/dashboard",
     "exit:0"
   ]);
 });
@@ -146,8 +146,8 @@ test("startServer opens the browser from the listen callback only when requested
   assert.deepEqual(events, [
     "listen:3000",
     "Basketball court scheduler listening at http://localhost:3000",
-    "Opening http://localhost:3000/prototype",
-    "open:http://localhost:3000/prototype"
+    "Opening http://localhost:3000/dashboard",
+    "open:http://localhost:3000/dashboard"
   ]);
 });
 

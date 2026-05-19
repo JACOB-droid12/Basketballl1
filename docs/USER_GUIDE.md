@@ -12,7 +12,7 @@ This guide is for authorized barangay personnel who encode and monitor basketbal
 4. Use Home for today's schedule summary.
 5. Use Schedule to check available and reserved court slots.
 6. Use Reservations to add, edit, cancel, mark missed, or mark completed reservations.
-7. Use Activity Logs to review recent reservation actions.
+7. Use Activity Logs to review recent reservation and account actions.
 
 ## Starter Admin Login
 
@@ -135,6 +135,10 @@ Use Activity Logs to monitor important actions such as:
 - Creating reservations
 - Editing reservations
 - Marking reservations missed, cancelled, or completed
+- Creating, activating, or deactivating staff/admin accounts
+- Changing a signed-in user's password
+
+Login/logout and backup/restore maintenance events are not part of the current activity-log screen.
 
 Filters are available for date, action, and user/details search.
 

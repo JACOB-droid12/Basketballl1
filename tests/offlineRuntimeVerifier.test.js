@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  buildOfflineRuntimeEnv,
   findExternalResourceReferences,
   verifyPrototypeOfflineHtml
 } from "../scripts/verify-offline-runtime.mjs";
@@ -46,4 +47,18 @@ test("package exposes an offline runtime verification command", async () => {
   ));
 
   assert.equal(packageJson.scripts["verify:offline-runtime"], "node scripts/verify-offline-runtime.mjs");
+});
+
+test("offline runtime verifier uses an explicit verifier-only session secret when local env is missing", () => {
+  const missingSecretEnv = buildOfflineRuntimeEnv({});
+  const placeholderSecretEnv = buildOfflineRuntimeEnv({
+    APP_SESSION_SECRET: "development-only-change-me"
+  });
+  const validSecretEnv = buildOfflineRuntimeEnv({
+    APP_SESSION_SECRET: "12345678901234567890123456789012"
+  });
+
+  assert.equal(missingSecretEnv.APP_SESSION_SECRET.length >= 32, true);
+  assert.notEqual(placeholderSecretEnv.APP_SESSION_SECRET, "development-only-change-me");
+  assert.equal(validSecretEnv.APP_SESSION_SECRET, "12345678901234567890123456789012");
 });

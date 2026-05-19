@@ -4,16 +4,43 @@ WINDOWS OFFLINE TROUBLESHOOTING
 Use this file on the barangay office computer when a setup, startup, or
 sign-off check prints an error.
 
+PACKAGE MODES
+
+Deployment candidate mode means the folder may work if Node.js and
+MySQL/MariaDB are already installed locally, or if bundled runtime folders are
+present.
+
+True one-stop offline package mode means the folder must include:
+
+runtime\node\node.exe
+runtime\node\npm.cmd
+runtime\mariadb\bin\mariadbd.exe
+runtime\mariadb\bin\mariadb-install-db.exe
+runtime\mariadb\bin\mariadb.exe or runtime\mariadb\bin\mysql.exe
+runtime\mariadb\bin\mysqldump.exe
+data\mariadb-data
+node_modules or a built backend output
+database schema files
+START-HERE.bat
+Barangay Court Scheduler daily launcher
+Maintenance Tools launcher
+
+If the runtime verifier says "Runtime package verification failed", the package
+is incomplete for true one-stop offline package mode. Add the missing
+runtime\node or runtime\mariadb files, then rebuild or recopy the folder.
+
 1. "Node.js was not found" or "npm was not found"
 
-Install Node.js 20 or newer using the offline Windows installer. Close and
-reopen the Command Prompt or PowerShell window after installation.
+The launcher first looks for bundled Node at runtime\node. If that folder is
+missing, use an offline Node.js 20+ installer. Installing it may require
+administrator permission. Close and reopen START-HERE.bat after installation.
 
 2. "mysql was not found" or "mysqldump was not found"
 
-Install local MySQL or MariaDB using the offline Windows installer. Add the
-MySQL or MariaDB bin folder to PATH, then reopen the terminal or double-click
-check-office-readiness.bat again.
+The launcher first looks for bundled MariaDB tools at runtime\mariadb\bin. If
+that folder is missing, use an offline MySQL/MariaDB installer. Installing it
+may require administrator permission. You should not need to manually edit PATH
+when the bundled runtime is present.
 
 3. "node_modules was not found"
 
@@ -26,16 +53,24 @@ npm run verify:bundle
 Then copy the refreshed dist\barangay-court-scheduler-offline folder to the
 barangay office computer.
 
+If runtime\node or runtime\mariadb is also expected but missing, the deployment
+package was prepared without the bundled runtime. Rebuild the package with the
+runtime folders included, or install Node.js/MySQL/MariaDB with administrator
+permission.
+
 4. ".env was not found"
 
-Run setup-barangay-office.bat first. It creates the local .env file and asks
-for the local MySQL password.
+Open START-HERE.bat and choose "First-time setup on this computer". It creates
+the local .env file. If runtime\mariadb is included, setup generates the local
+database password automatically and saves it privately in .env. If the package
+does not include runtime\mariadb and uses an already-installed MySQL/MariaDB
+service, the installer/admin must enter that local database password.
 
 5. "Local database check failed"
 
-Start MySQL or MariaDB, then try start-barangay-office.bat again. If the same
-message appears, run setup-barangay-office.bat again so schema.sql and seed.sql
-are applied to the local database.
+Start MySQL or MariaDB, then double-click Barangay Court Scheduler again. If the
+same message appears, open START-HERE.bat and choose "First-time setup on this
+computer" so schema.sql and seed.sql are applied to the local database.
 
 6. Login does not work after setup
 
@@ -54,8 +89,8 @@ Confirm MySQL or MariaDB is running. Then run:
 
 npm run check:database
 
-If it fails, run setup-barangay-office.bat or ask the local technical staff to
-check the .env database settings.
+If it fails, open START-HERE.bat and choose "First-time setup on this computer",
+or ask the local technical staff to check the .env database settings.
 
 8. Port 3000 is already in use
 
@@ -67,12 +102,79 @@ using the same port. Close the other program, restart the computer if needed,
 then double-click Barangay Court Scheduler again. If the same message appears,
 ask technical support to change APP_PORT in .env.
 
+This is a port conflict. It does not mean the system needs internet.
+
+8A. Windows blocks executables
+
+If Windows blocks executables from runtime\node or runtime\mariadb, right-click
+the copied folder or blocked file, open Properties, choose Unblock if available,
+then run START-HERE.bat again. If the PC is managed by an administrator, ask the
+administrator to allow the local offline runtime folder.
+
+8B. Database fails to start
+
+If the database fails to start, check that runtime\mariadb\bin\mariadbd.exe and
+runtime\mariadb\bin\mariadb-install-db.exe exist. Also check that the copied
+folder is in a writable location because the local data folder must be created
+under data\mariadb-data or the configured runtime data folder.
+
+If data\mariadb-data was copied from another computer with old test data, ask
+the installer/admin to rebuild a clean offline package. A normal prepared
+package should contain an empty data\mariadb-data folder before first setup.
+
 9. Sign-off report fails
 
 Open the report under reports\office-signoff and fix the first failed step.
 Most failures are missing MySQL tools, MySQL not running, or setup not finished.
 
-10. Keep records private
+The sign-off report is under START-HERE.bat > Maintenance/admin tools >
+"Create final office sign-off report".
+
+10. Maintenance/admin tools
+
+Ordinary daily users should click the Desktop shortcut named Barangay Court
+Scheduler. Use START-HERE.bat for setup and support. Files inside
+maintenance-tools are support wrappers used by START-HERE.bat; staff should not
+open them directly unless the installer, admin, or IT support asks them to.
+
+11. "The system is offline or the office network is down. Try again once the
+network is back."
+
+This message appears on the staff console when a screen tries to reach the
+local backend on this computer and the request does not get through. The
+wording is the same wherever it shows, so staff can recognize it as a
+connection problem rather than a data error.
+
+The screens that show this message are the reservation slip print view, the
+daily schedule print view, the resident directory page, the resident
+reservation history page, the reports page, any CSV export button (daily,
+weekly, monthly, activity logs, missed, cancelled, reports), the dashboard
+alerts card, the backup reminder card, the court policy settings page, the
+schedule block (maintenance) modal, and the Clear for Public Use modal.
+
+The rest of the screen stays usable while the message is shown, so other
+actions can continue while the connection is restored.
+
+If the message appears, confirm the Barangay Court Scheduler launcher is
+still running. If the launcher window was closed, double-click the Desktop
+shortcut named Barangay Court Scheduler again.
+
+Confirm MySQL or MariaDB is still running. If the database service stopped,
+start it again. See section 5 ("Local database check failed") if it does not
+come back.
+
+Wait a few seconds and try the action again. The same button or link works
+once the local backend responds.
+
+If the message keeps appearing on every screen, run npm run check:database
+from START-HERE.bat, or follow section 7 ("Browser opens but the app shows a
+database error").
+
+The system runs from this computer's local backend only. The message does not
+mean the system needs the internet; it means the local backend is not
+answering yet.
+
+12. Keep records private
 
 Do not share .env, backups, or reports publicly. These files may contain local
 deployment details or resident-related records.

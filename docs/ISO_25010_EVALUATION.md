@@ -19,7 +19,7 @@ Evidence:
 - Schedule view shows available and reserved slots.
 - Dashboard summarizes today’s schedule, upcoming reservations, missed reservations, and nearest available slot suggestion logic.
 - Admin account management supports listing users, role display, duplicate username validation, account creation, and active/inactive status changes.
-- Activity logs record and display reservation actions.
+- Activity logs record and display reservation actions plus account creation, account activation/deactivation, and password-change actions.
 - Filtered reservation records can be exported as CSV for reports and presentation evidence.
 - Reservation and schedule screens include print controls with print-friendly layout rules.
 
@@ -35,7 +35,7 @@ Suggested evaluation tasks:
 
 Evidence:
 
-- Server-rendered EJS pages keep the UI simple for an office computer.
+- The React staff console is built into local static assets and uses Express API routes, keeping normal office use local and browser-based.
 - Query builders use targeted filters for date, status, purpose, action, and search.
 - Activity log list is limited to recent records.
 
@@ -63,7 +63,7 @@ Suggested evaluation tasks:
 
 Evidence:
 
-- UI follows the provided mockups: red header, gold sidebar, tan workspace, large rounded navigation controls, and table-based schedule.
+- The normal React staff UI follows the Barangay (1) staff-friendly reference: warm workspace, civic-blue sidebar/topbar, large readable actions, card-based schedule/reservation surfaces, status pills, and simple office wording.
 - Main navigation includes Home, Schedule, Reservations, Activity Logs, and Account.
 - Validation messages are shown for missing or invalid fields.
 - Available and reserved schedule slots are clickable.
@@ -137,7 +137,7 @@ Suggested evaluation tasks:
 
 ## Current Evidence Gaps
 
-- Live MySQL end-to-end verification is still required on a computer with MySQL installed.
+- Live MySQL end-to-end verification should be repeated on the actual barangay office computer before turnover.
 - Database backup and restore are documented but not automated inside the app.
 - Live browser print output should still be checked on the barangay office printer because printer margins and browser settings can vary.
 
