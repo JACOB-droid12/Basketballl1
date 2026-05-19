@@ -82,13 +82,7 @@ export function CalendarWeekToolbar({
           />
         </label>
 
-        <button className="btn btn-light calendar-print-action" type="button" onClick={onDailyPrint}>
-          <Icon name="print" size={16} />
-          <span>Daily print</span>
-        </button>
-
-        {/* "More actions" now carries admin-only exceptions. Daily print
-          stays directly visible because it is a routine staff task. */}
+        {/* "More actions" carries admin-only exceptions. */}
         <CalendarOverflowMenu
           isAdmin={isAdmin}
           onAddMaintenance={onAddMaintenance}

@@ -686,7 +686,7 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
         <section className="form-section">
           <h3><span className="section-num">3</span>Any notes?</h3>
           <div className="section-hint">Mga paalala</div>
-          <Field id="remarks" label="Remarks" filipino="Paalala" error={state.fieldErrors.remarks} wide>
+          <Field id="remarks" label="Remarks (optional)" filipino="Paalala" error={state.fieldErrors.remarks} wide>
             <textarea
               autoComplete="off"
               maxLength={MAX_REMARKS}
@@ -695,19 +695,6 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
               rows="4"
             />
           </Field>
-
-          {/* Recurring reservations were deferred at the backend layer
-            (Req. 14). No surface is rendered here so the staff member
-            does not encode a recurrence the backend cannot atomically
-            support. No recurring backend route is called and no
-            frontend-only recurrence schedule is stored
-            (Req. 14.3, 14.4). The note is rendered as a quiet field
-            hint instead of a prominent info banner so it does not
-            read like an unfinished feature next to the rest of the
-            form (UI-AUD-016). */}
-          <p className="form-copy form-copy-muted recurring-not-available-note" role="note">
-            Recurring reservations: not yet available. Encode each booking on its own date.
-          </p>
         </section>
 
         <div className="form-footer">
@@ -869,7 +856,7 @@ function AvailabilityNotice({ availability, canCheck, isEdit, hasEditedTimeChang
         <div className="b-ic"><Icon name="check" /></div>
         <div>
           <h4>This time is available</h4>
-          <p>Final save will still be checked by the backend.</p>
+          <p>Available. The system will confirm once the reservation is saved.</p>
         </div>
       </div>
     );

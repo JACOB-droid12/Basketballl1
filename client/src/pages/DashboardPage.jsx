@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 
 import { apiRequest } from "../api/client.js";
 import { formatDate, formatTime } from "../api/mappers.js";
+import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { EmptyState } from "../components/EmptyState.jsx";
 import { Icon } from "../components/Icon.jsx";
 import { LoadingState } from "../components/LoadingState.jsx";
+import { buildStatusDialog, ReservationDetailDrawer } from "../components/ReservationDetailDrawer.jsx";
 import { StatusBadge } from "../components/StatusBadge.jsx";
 
 const OFFLINE_MESSAGE =
@@ -28,6 +30,49 @@ const OFFLINE_MESSAGE =
  */
 export function DashboardPage({ onNavigate, user }) {
   const [dashboardState, setDashboardState] = useState({ loading: true, data: null, error: "" });
+  const [selectedReservation, setSelectedReservation] = useState(null);
+  const [statusDialog, setStatusDialog] = useState(null);
+  const [actionError, setActionError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  function openReservationDetail(reservation) {
+    if (!reservation) return;
+    setActionError("");
+    setSelectedReservation(reservation);
+  }
+
+  function closeReservationDetail() {
+    setSelectedReservation(null);
+    setStatusDialog(null);
+    setActionError("");
+  }
+
+  async function updateReservationStatus() {
+    if (!statusDialog) return;
+    const action = statusDialog;
+    setStatusDialog(null);
+    setBusy(true);
+    setActionError("");
+
+    try {
+      const data = await apiRequest(`/api/reservations/${action.reservation.reservationId}/status`, {
+        method: "POST",
+        body: JSON.stringify({ statusCode: action.statusCode })
+      });
+      const updated = data.reservation;
+      if (updated?.reservationId) {
+        setSelectedReservation(updated);
+      }
+      // Refresh dashboard data after status change
+      apiRequest("/api/dashboard")
+        .then((freshData) => setDashboardState({ loading: false, data: freshData, error: "" }))
+        .catch(() => {});
+    } catch (error) {
+      setActionError(error.message);
+    } finally {
+      setBusy(false);
+    }
+  }
 
 
   useEffect(() => {
@@ -47,6 +92,18 @@ export function DashboardPage({ onNavigate, user }) {
     return () => {
       active = false;
     };
+  }, []);
+
+  // Refresh dashboard data every 5 minutes so the nearest-available
+  // banner and today's schedule do not go stale when the page stays
+  // open at the barangay office all day.
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      apiRequest("/api/dashboard")
+        .then((data) => setDashboardState({ loading: false, data, error: "" }))
+        .catch(() => {});
+    }, 5 * 60 * 1000);
+    return () => window.clearInterval(intervalId);
   }, []);
 
 
@@ -156,7 +213,7 @@ export function DashboardPage({ onNavigate, user }) {
                       key={slotKey}
                       className={`booking-row ${String(slot.statusCode || reservation?.statusCode || "").toLowerCase()}`}
                       type="button"
-                      onClick={() => onNavigate(`/reservations/${reservation.reservationId}`)}
+                      onClick={() => openReservationDetail(reservation)}
                     >
                       <div className="b-time">
                         {displayCompactRange(slot.startTime, slot.endTime)}
@@ -180,6 +237,29 @@ export function DashboardPage({ onNavigate, user }) {
             )}
           </div>
         </>
+      )}
+
+      {actionError && <div className="alert error" role="alert">{actionError}</div>}
+
+      <ReservationDetailDrawer
+        reservation={selectedReservation}
+        busy={busy}
+        onClose={closeReservationDetail}
+        onEdit={() => selectedReservation && onNavigate(`/reservations/${selectedReservation.reservationId}/edit`)}
+        onRequestStatus={(action) => selectedReservation && setStatusDialog(buildStatusDialog(selectedReservation, action))}
+        suspendEscape={Boolean(statusDialog)}
+      />
+
+      {statusDialog && (
+        <ConfirmDialog
+          title={statusDialog.title}
+          body={statusDialog.body}
+          confirmLabel={statusDialog.confirmLabel}
+          danger={statusDialog.danger}
+          onConfirm={updateReservationStatus}
+          onCancel={() => setStatusDialog(null)}
+          busy={busy}
+        />
       )}
     </section>
   );

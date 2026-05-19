@@ -11,6 +11,7 @@ import {
 export function createDashboardRoutes({
   db,
   todayProvider = getTodayDate,
+  currentTimeProvider = getCurrentManilaTime,
   repositories = { getTimeSlots, listReservations }
 } = {}) {
   const router = Router();
@@ -51,7 +52,8 @@ export function createDashboardRoutes({
         startDate: today,
         timeSlots,
         reservations: suggestionReservations,
-        searchDays: 14
+        searchDays: 14,
+        currentTime: currentTimeProvider()
       });
 
       response.render("dashboard", {
@@ -113,6 +115,17 @@ function getTodayDate() {
 
   const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return `${values.year}-${values.month}-${values.day}`;
+}
+
+function getCurrentManilaTime() {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Manila",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.hour}:${values.minute}`;
 }
 
 function addDays(dateString, days) {

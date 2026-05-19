@@ -455,10 +455,10 @@ test("CsvExportButton consumers reference the correct CSV endpoint and avoid PDF
 test("no active recurring-reservation control is rendered under client/src/", () => {
   const reservationFormPage = readSourceFile("client/src/pages/ReservationFormPage.jsx");
 
-  // The legacy series-creation control is replaced by the literal
-  // deferral note (Req. 14.2, 20.1.16). The note itself is the only
-  // sanctioned mention of "Recurring" anywhere in the staff console.
-  assert.match(reservationFormPage, /Recurring reservations: not yet available/);
+  // The recurring note was removed from the form UI because it
+  // surfaced an unimplemented feature to staff (deployment polish).
+  // Verify it is absent (Req. 14.2, 20.1.16 — hidden per deploy pass).
+  assert.doesNotMatch(reservationFormPage, /Recurring reservations: not yet available/);
 
   // No recurring/recurrence form control, state hook, or recurring
   // backend route is wired anywhere (Req. 14.1, 14.3, 14.4, 20.1.16).

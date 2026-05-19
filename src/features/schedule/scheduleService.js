@@ -89,11 +89,16 @@ export function buildWeeklySchedule({ weekStartDate, timeSlots = [], reservation
   };
 }
 
-export function findNearestAvailableSlot({ startDate, timeSlots = [], reservations = [], blocks = [], searchDays = 14 }) {
+export function findNearestAvailableSlot({ startDate, timeSlots = [], reservations = [], blocks = [], searchDays = 14, currentTime = null }) {
   for (let offset = 0; offset < searchDays; offset += 1) {
     const date = addDays(startDate, offset);
     const schedule = buildDailySchedule({ date, timeSlots, reservations, blocks });
-    const availableSlot = schedule.find((slot) => slot.isAvailableForBooking);
+    const availableSlot = schedule.find((slot) => {
+      if (!slot.isAvailableForBooking) return false;
+      // On the first day (today), exclude slots whose end time has already passed
+      if (offset === 0 && currentTime && slot.endTime <= currentTime) return false;
+      return true;
+    });
 
     if (availableSlot) {
       return {

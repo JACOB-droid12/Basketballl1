@@ -439,7 +439,8 @@ export function createApiRoutes({
         timeSlots,
         reservations: suggestionReservations,
         blocks: suggestionBlocks,
-        searchDays: 14
+        searchDays: 14,
+        currentTime: currentTimeProvider()
       });
 
       response.json({

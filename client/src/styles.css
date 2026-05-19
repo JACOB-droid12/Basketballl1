@@ -6718,3 +6718,350 @@ button.booking-card.history-row:focus-visible {
     font-size: 10px;
   }
 }
+
+/* =========================================================================
+   DEPLOYMENT UI STABILIZATION PASS
+   ========================================================================= */
+
+/* --- Issue 2: Reservation modal footer button layout ------------------- */
+.reservation-drawer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.reservation-drawer-actions-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.reservation-drawer-actions-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.reservation-drawer-actions .btn {
+  min-width: 120px;
+}
+
+@media (max-width: 600px) {
+  .reservation-drawer-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .reservation-drawer-actions-main,
+  .reservation-drawer-actions-status {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .reservation-drawer-actions .btn {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* --- Issue 4: Status legend contrast improvements ---------------------- */
+/* Stronger, more distinct status badge colors for low-quality monitors */
+.status-available {
+  border-color: #3B9959;
+  background: #D4EDDA;
+  color: #1B6530;
+}
+
+.status-reserved {
+  border-color: #4A90B8;
+  background: #D6EAF5;
+  color: #0B4A6F;
+}
+
+.status-completed {
+  border-color: #6B8FB5;
+  background: #E3EEF7;
+  color: #1A4A6F;
+}
+
+.status-missed {
+  border-color: #C0665A;
+  background: #FCDBD6;
+  color: #7A2318;
+}
+
+.status-cancelled {
+  border-color: #A08050;
+  background: #F5ECD6;
+  color: #6B4C12;
+}
+
+.status-maintenance {
+  border-color: #C49530;
+  background: #FFF3D0;
+  color: #6D4A0D;
+}
+
+.status-barangay_event {
+  border-color: #7A5BAF;
+  background: #EDE5F7;
+  color: #4A2D7A;
+}
+
+.status-cleared_public_use {
+  border-color: #7A9A7A;
+  background: #E8F0E8;
+  color: #3A5A3A;
+}
+
+/* Legend swatches: match the stronger status badge colors */
+.calendar-legend-item.legend-available .legend-swatch {
+  border-color: #3B9959;
+  background: #D4EDDA;
+}
+
+.calendar-legend-item.legend-reserved .legend-swatch {
+  border-color: #4A90B8;
+  background: #D6EAF5;
+}
+
+.calendar-legend-item.legend-completed .legend-swatch {
+  border-color: #6B8FB5;
+  background: #E3EEF7;
+}
+
+.calendar-legend-item.legend-missed .legend-swatch {
+  border-color: #C0665A;
+  background: #FCDBD6;
+}
+
+.calendar-legend-item.legend-cancelled .legend-swatch {
+  border-color: #A08050;
+  background: #F5ECD6;
+}
+
+.calendar-legend-item.legend-maintenance .legend-swatch {
+  border-color: #C49530;
+  background: #FFF3D0;
+}
+
+.calendar-legend-item.legend-barangay .legend-swatch {
+  border-color: #7A5BAF;
+  background: #EDE5F7;
+}
+
+.calendar-legend-item.legend-cleared .legend-swatch {
+  border-color: #7A9A7A;
+  background: #E8F0E8;
+}
+
+/* --- Issue 5: "Who is booking?" spacing improvements ------------------- */
+.staff-reservation-form .form-section {
+  display: grid;
+  gap: var(--space-md);
+  padding: 28px;
+  border-bottom: 1px solid var(--border);
+}
+
+.staff-reservation-form .form-section:last-of-type {
+  border-bottom: 0;
+}
+
+.staff-reservation-form .form-section h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.staff-reservation-form .section-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+
+.staff-reservation-form .section-hint {
+  color: var(--ink-muted);
+  font-size: 14px;
+  font-style: italic;
+}
+
+.staff-reservation-form .slot-picker {
+  display: grid;
+  gap: 10px;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.staff-reservation-form .slot-picker .btn {
+  min-height: 52px;
+  padding: 0 24px;
+}
+
+/* --- Issue 6: Reservation list action button spacing ------------------- */
+.booking-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.booking-card-actions .btn {
+  min-width: 110px;
+}
+
+@media (max-width: 600px) {
+  .booking-card-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .booking-card-actions .btn {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* --- Issue 9: Today's Alerts/Notes compact layout ---------------------- */
+.dashboard-alerts-card {
+  padding: 16px 20px;
+}
+
+.dashboard-alerts-card .card-head {
+  padding: 0 0 12px;
+  border-bottom: 0;
+}
+
+.dashboard-alerts-card .card-title {
+  font-size: 18px;
+}
+
+.alerts-compact-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.alerts-compact-list .alert {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+/* --- Issue 10: Reports page density improvements ----------------------- */
+.report-page .page-stack {
+  gap: 24px;
+}
+
+.report-page .report-grid {
+  gap: 16px;
+}
+
+.report-page .padded-card {
+  padding: 20px;
+  gap: 16px;
+}
+
+.report-page .requester-list {
+  gap: 10px;
+}
+
+.report-page .requester-row {
+  min-height: 40px;
+  padding-bottom: 8px;
+}
+
+.report-page .bar-list {
+  gap: 10px;
+}
+
+.report-page .bar-row {
+  gap: 6px;
+}
+
+/* --- General polish: focus states, contrast, and spacing --------------- */
+.btn:focus-visible {
+  outline: 3px solid rgba(11, 74, 111, 0.4);
+  outline-offset: 2px;
+}
+
+.btn-danger:focus-visible {
+  outline-color: rgba(184, 59, 42, 0.4);
+}
+
+/* Ensure staff-detail-grid in modals has comfortable spacing */
+.staff-detail-grid .detail-row {
+  padding-bottom: 14px;
+}
+
+.staff-detail-grid .detail-row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+/* Attention panel compact improvements */
+.attention-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.attention-panel p {
+  max-width: 520px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.attention-count {
+  display: grid;
+  gap: 4px;
+  min-width: 80px;
+  padding: 14px 16px;
+  border: 2px solid var(--primary-soft);
+  border-radius: var(--radius);
+  background: var(--primary-softer);
+  color: var(--primary-dark);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.attention-count:hover,
+.attention-count:focus-visible {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.attention-count strong {
+  font-size: 28px;
+  font-family: var(--font-serif);
+  line-height: 1;
+}
+
+.attention-count span {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
