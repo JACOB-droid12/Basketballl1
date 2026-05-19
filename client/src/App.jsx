@@ -8,11 +8,16 @@ import { AccountPasswordPage } from "./pages/AccountPasswordPage.jsx";
 import { AccountsPage } from "./pages/AccountsPage.jsx";
 import { ActivityLogsPage } from "./pages/ActivityLogsPage.jsx";
 import { CalendarPage } from "./pages/CalendarPage.jsx";
+import { CourtPolicyPage } from "./pages/CourtPolicyPage.jsx";
+import { DailySchedulePrintPage } from "./pages/DailySchedulePrintPage.jsx";
 import { DashboardPage } from "./pages/DashboardPage.jsx";
 import { LoginPage } from "./pages/LoginPage.jsx";
 import { ReportsPage } from "./pages/ReportsPage.jsx";
 import { ReservationFormPage } from "./pages/ReservationFormPage.jsx";
+import { ReservationHistoryPage } from "./pages/ReservationHistoryPage.jsx";
+import { ReservationSlipPrintPage } from "./pages/ReservationSlipPrintPage.jsx";
 import { ReservationsPage } from "./pages/ReservationsPage.jsx";
+import { ResidentDirectoryPage } from "./pages/ResidentDirectoryPage.jsx";
 
 const ROUTES = {
   "/dashboard": {
@@ -106,8 +111,31 @@ export function App() {
     );
   }
 
-  if (!sessionState.user || isLoginPath) {
+  if (sessionState.user && isLoginPath) {
+    // Redirect signed-in users away from the login form within the same render
+    // tick. We replace the URL so the back button does not trap the user on
+    // the login page (Req. 13.1, 13.2).
+    window.history.replaceState({}, "", "/dashboard");
+    return (
+      <AppShell user={sessionState.user} path="/dashboard" onNavigate={handleNavigate} onLogout={handleLogout}>
+        {renderPage("/dashboard", handleNavigate, sessionState.user)}
+      </AppShell>
+    );
+  }
+
+  if (!sessionState.user) {
     return <LoginPage onLogin={handleLogin} />;
+  }
+
+  // Print routes render without `AppShell` chrome so the printed page is
+  // ink-friendly and does not include navigation, sidebars, or session
+  // banners (Requirements 2.1, 7.1, 18.1).
+  const slipMatch = path.match(/^\/reservations\/(\d+)\/slip$/);
+  if (slipMatch) {
+    return <ReservationSlipPrintPage reservationId={slipMatch[1]} />;
+  }
+  if (path === "/schedule/daily-print") {
+    return <DailySchedulePrintPage />;
   }
 
   return (
@@ -123,7 +151,10 @@ function renderPage(path, navigate, user) {
   if (path.startsWith("/account")) return <AccountsPage user={user} />;
   if (path.startsWith("/activity-logs")) return <ActivityLogsPage />;
   if (path.startsWith("/reports")) return <ReportsPage />;
+  if (path.startsWith("/residents")) return <ResidentDirectoryPage onNavigate={navigate} />;
+  if (path === "/settings/court-policy") return <CourtPolicyPage user={user} onNavigate={navigate} />;
   if (path === "/reservations/new") return <ReservationFormPage onNavigate={navigate} />;
+  if (path === "/reservations/history") return <ReservationHistoryPage onNavigate={navigate} />;
   const editMatch = path.match(/^\/reservations\/(\d+)\/edit$/);
   if (editMatch) return <ReservationFormPage reservationId={editMatch[1]} onNavigate={navigate} />;
   const reservationMatch = path.match(/^\/reservations\/(\d+)$/);

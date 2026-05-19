@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { apiRequest } from "../api/client.js";
+import { formatBackendDateTime, getManilaDateKey, getManilaDateRange } from "../api/mappers.js";
+import { formatReferenceNo } from "../api/referenceNo.js";
+import { CsvExportButton } from "../components/CsvExportButton.jsx";
 import { EmptyState } from "../components/EmptyState.jsx";
 import { LoadingState } from "../components/LoadingState.jsx";
+import { StaffPageHeader } from "../components/StaffPageHeader.jsx";
 
 const ACTION_GROUPS = [
   {
@@ -37,7 +41,7 @@ const ACTION_LABELS = {
 
 export function ActivityLogsPage() {
   const [state, setState] = useState({ loading: true, logs: [], error: "" });
-  const [filters, setFilters] = useState({ search: "", action: "", date: "" });
+  const [filters, setFilters] = useState({ search: "", action: "", date: "", from: "", to: "" });
   const [appliedFilters, setAppliedFilters] = useState(filters);
   const [datePreset, setDatePreset] = useState("all");
   const [showAll, setShowAll] = useState(false);
@@ -69,7 +73,7 @@ export function ActivityLogsPage() {
   }, [appliedFilters]);
 
   const hasFilters = useMemo(() => {
-    return Boolean(appliedFilters.search || appliedFilters.action || appliedFilters.date);
+    return Boolean(appliedFilters.search || appliedFilters.action || appliedFilters.date || appliedFilters.from || appliedFilters.to);
   }, [appliedFilters]);
   const groupedActionOptions = useMemo(() => {
     const loadedActions = state.logs.map((log) => String(log.action || "").toUpperCase()).filter(Boolean);
@@ -81,30 +85,45 @@ export function ActivityLogsPage() {
     ];
   }, [state.logs]);
 
+  // Mirror the trimmed filters that the activity-logs JSON request sends
+  // so the CSV export downloads exactly what the staff sees on screen.
+  // `buildCsvExportUrl` (called inside `CsvExportButton`) already skips
+  // empty values, so no further conditional logic is needed.
+  const exportParams = useMemo(() => ({
+    action: appliedFilters.action.trim(),
+    date: appliedFilters.date,
+    from: appliedFilters.from,
+    to: appliedFilters.to,
+    search: appliedFilters.search.trim()
+  }), [appliedFilters]);
+
   function applyDatePreset(preset) {
     setDatePreset(preset);
-    const today = new Date();
     if (preset === "all") {
-      const next = { ...filters, date: "" };
+      const next = { ...filters, date: "", from: "", to: "" };
       setFilters(next);
       setAppliedFilters(next);
     } else if (preset === "today") {
-      const date = today.toISOString().slice(0, 10);
-      const next = { ...filters, date };
+      const date = getManilaDateKey();
+      const next = { ...filters, date, from: "", to: "" };
       setFilters(next);
       setAppliedFilters(next);
     } else if (preset === "week") {
-      // The backend's date filter takes a single date; for "this week" we
-      // clear the date filter and rely on a search hint. A real range filter
-      // is a backend follow-up — flag the limitation in the UI.
-      const next = { ...filters, date: "" };
+      const range = getManilaDateRange("week");
+      const next = { ...filters, date: "", from: range.from, to: range.to };
       setFilters(next);
       setAppliedFilters(next);
     }
   }
 
   function updateFilter(field, value) {
-    setFilters((current) => ({ ...current, [field]: value }));
+    setFilters((current) => {
+      if (field === "date") {
+        return { ...current, date: value, from: "", to: "" };
+      }
+
+      return { ...current, [field]: value };
+    });
     if (field === "date") {
       setDatePreset(value ? "custom" : "all");
     }
@@ -117,7 +136,7 @@ export function ActivityLogsPage() {
   }
 
   function clearFilters() {
-    const nextFilters = { search: "", action: "", date: "" };
+    const nextFilters = { search: "", action: "", date: "", from: "", to: "" };
     setFilters(nextFilters);
     setAppliedFilters(nextFilters);
     setDatePreset("all");
@@ -125,14 +144,12 @@ export function ActivityLogsPage() {
 
   return (
     <section className="page">
-      <div className="page-header page-head staff-page-head">
-        <div>
-          <p className="page-kicker">Audit trail</p>
-          <h1 className="page-title">Activity logs</h1>
-          <div className="page-sub">Search staff actions recorded by the local system.</div>
-          <div className="page-sub-fil">Tala ng ginawa sa opisina.</div>
-        </div>
-      </div>
+      <StaffPageHeader
+        kicker="Audit trail"
+        title="Activity logs"
+        subtitle="Search staff actions recorded by the local system."
+        filipino="Tala ng ginawa sa opisina."
+      />
 
       <form className="card filter-card staff-filter-card" onSubmit={applyFilters}>
         <div className="staff-filter-head">
@@ -203,6 +220,11 @@ export function ActivityLogsPage() {
                 <h2>Recorded actions</h2>
                 <span>{state.logs.length} log row{state.logs.length === 1 ? "" : "s"} from the local audit table</span>
               </div>
+              <CsvExportButton
+                endpoint="activity-logs"
+                params={exportParams}
+                label="Export CSV"
+              />
             </div>
 
             {state.logs.length === 0 ? (
@@ -225,10 +247,17 @@ export function ActivityLogsPage() {
                     <tbody>
                       {(showAll ? state.logs : state.logs.slice(0, VISIBLE_LIMIT)).map((log) => (
                         <tr key={log.logId}>
-                          <td>{formatDateTime(log.createdAt)}</td>
+                          <td>{formatBackendDateTime(log.createdAt)}</td>
                           <td>{log.userName || "System"}</td>
                           <td><span className="action-code">{formatAction(log.action)}</span></td>
-                          <td>{log.details || "No details recorded."}</td>
+                          <td>
+                            <span>{log.details || "No details recorded."}</span>
+                            {hasReservationReference(log) && (
+                              <small className="log-reference">
+                                Reservation reference: {formatReferenceNo(log.referenceNo)}
+                              </small>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -251,12 +280,6 @@ export function ActivityLogsPage() {
   );
 }
 
-function formatDateTime(value) {
-  if (!value) return "Date unavailable";
-  const [date = "", time = ""] = String(value).split(" ");
-  return `${date}${time ? ` ${time.slice(0, 5)}` : ""}`;
-}
-
 function formatAction(value) {
   const code = String(value || "").toUpperCase();
   if (!code) return "Unknown action";
@@ -271,7 +294,25 @@ function buildLogsPath(filters) {
   if (filters.search.trim()) params.set("search", filters.search.trim());
   if (filters.action.trim()) params.set("action", filters.action.trim());
   if (filters.date) params.set("date", filters.date);
+  if (filters.from) params.set("from", filters.from);
+  if (filters.to) params.set("to", filters.to);
 
   const query = params.toString();
   return `/api/activity-logs${query ? `?${query}` : ""}`;
+}
+
+// An activity log row is considered to reference a reservation when the
+// backend payload links it to one AND that link is a real reference
+// the staff can read. The repository sets `reservationId` from the
+// joined `activity_logs.reservation_id` column, but on existing rows
+// the join may not surface a `referenceNo` — in that case the row
+// would render "Reservation reference: No reference number", which
+// is a fail-state repeated as noise. We only render the line when
+// the referenceNo is present and non-empty; logs for non-reservation
+// actions (account changes, password resets, etc.) keep the original
+// details-only layout.
+function hasReservationReference(log) {
+  if (!log) return false;
+  if (typeof log.referenceNo !== "string") return false;
+  return log.referenceNo.trim() !== "";
 }

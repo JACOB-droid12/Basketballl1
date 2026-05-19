@@ -137,7 +137,44 @@ Scheduler. Use START-HERE.bat for setup and support. Files inside
 maintenance-tools are support wrappers used by START-HERE.bat; staff should not
 open them directly unless the installer, admin, or IT support asks them to.
 
-11. Keep records private
+11. "The system is offline or the office network is down. Try again once the
+network is back."
+
+This message appears on the staff console when a screen tries to reach the
+local backend on this computer and the request does not get through. The
+wording is the same wherever it shows, so staff can recognize it as a
+connection problem rather than a data error.
+
+The screens that show this message are the reservation slip print view, the
+daily schedule print view, the resident directory page, the resident
+reservation history page, the reports page, any CSV export button (daily,
+weekly, monthly, activity logs, missed, cancelled, reports), the dashboard
+alerts card, the backup reminder card, the court policy settings page, the
+schedule block (maintenance) modal, and the Clear for Public Use modal.
+
+The rest of the screen stays usable while the message is shown, so other
+actions can continue while the connection is restored.
+
+If the message appears, confirm the Barangay Court Scheduler launcher is
+still running. If the launcher window was closed, double-click the Desktop
+shortcut named Barangay Court Scheduler again.
+
+Confirm MySQL or MariaDB is still running. If the database service stopped,
+start it again. See section 5 ("Local database check failed") if it does not
+come back.
+
+Wait a few seconds and try the action again. The same button or link works
+once the local backend responds.
+
+If the message keeps appearing on every screen, run npm run check:database
+from START-HERE.bat, or follow section 7 ("Browser opens but the app shows a
+database error").
+
+The system runs from this computer's local backend only. The message does not
+mean the system needs the internet; it means the local backend is not
+answering yet.
+
+12. Keep records private
 
 Do not share .env, backups, or reports publicly. These files may contain local
 deployment details or resident-related records.

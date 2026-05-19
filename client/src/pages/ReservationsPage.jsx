@@ -2,11 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 
 import { apiRequest } from "../api/client.js";
 import { formatDate, formatTime, STATUS_LABELS } from "../api/mappers.js";
+import { formatReferenceNo, matchesReferenceNo } from "../api/referenceNo.js";
 import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
+import { CsvExportButton } from "../components/CsvExportButton.jsx";
 import { EmptyState } from "../components/EmptyState.jsx";
 import { Icon } from "../components/Icon.jsx";
 import { LoadingState } from "../components/LoadingState.jsx";
 import { buildStatusDialog, ReservationDetailDrawer } from "../components/ReservationDetailDrawer.jsx";
+import { StaffPageHeader } from "../components/StaffPageHeader.jsx";
 import { StatusBadge } from "../components/StatusBadge.jsx";
 
 const SCOPE_OPTIONS = ["all", "attention", "past"];
@@ -15,7 +18,7 @@ const STATUS_FILTER_OPTIONS = [
   { value: "RESERVED", label: "Reserved" },
   { value: "MISSED", label: "Did not show up" },
   { value: "CANCELLED", label: "Cancelled" },
-  { value: "COMPLETED", label: "Done" }
+  { value: "COMPLETED", label: "Completed" }
 ];
 
 export function ReservationsPage({ onNavigate, initialReservationId = null }) {
@@ -29,6 +32,7 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
   const [actionError, setActionError] = useState("");
   const [busy, setBusy] = useState(false);
   const [todayKey, setTodayKey] = useState(getManilaDateKey);
+  const [statusToast, setStatusToast] = useState(null);
 
   useEffect(() => {
     loadReservations(initialSelectedId);
@@ -96,8 +100,16 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
         }));
         setSelectedId(updated.reservationId);
         setTodayKey(getManilaDateKey());
+        setStatusToast({
+          message: `Status changed to ${STATUS_LABELS[updated.statusCode] || updated.statusCode}.`,
+          reservationId: updated.reservationId
+        });
       } else {
         await loadReservations(action.reservation.reservationId);
+        setStatusToast({
+          message: `Status changed to ${STATUS_LABELS[action.statusCode] || action.statusCode}.`,
+          reservationId: action.reservation.reservationId
+        });
       }
     } catch (error) {
       setActionError(error.message);
@@ -120,22 +132,49 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
 
   return (
     <section className="page staff-bookings-page">
-      <div className="page-header page-head staff-page-head">
-        <div>
-          <h1 className="page-title">All Bookings</h1>
-          <div className="page-sub">Search any reservation, past or upcoming.</div>
-          <div className="page-sub-fil">Lahat ng reserbasyon, nakaraan at paparating.</div>
-        </div>
+      <StaffPageHeader
+        title="All Bookings"
+        subtitle="Search any reservation, past or upcoming."
+        filipino="Lahat ng reserbasyon, nakaraan at paparating."
+        actions={
         <div className="button-row bookings-actions">
-          <a className="btn btn-light btn-big" href="/reservations/export.csv">Export CSV</a>
+          <CsvExportButton
+            url="/reservations/export.csv"
+            label="Export all reservations (CSV)"
+            className="btn btn-light btn-big"
+          />
           <button className="btn btn-primary btn-big" type="button" onClick={() => onNavigate("/reservations/new")}>
             New Reservation
           </button>
         </div>
-      </div>
+        }
+      />
 
       {state.error && <div className="alert error" role="alert">{state.error}</div>}
       {actionError && <div className="alert error" role="alert">{actionError}</div>}
+      {statusToast && (
+        <div className="alert success status-toast" role="status" aria-live="polite" aria-atomic="true">
+          <span>{statusToast.message}</span>
+          <button
+            className="btn btn-light btn-small"
+            type="button"
+            onClick={() => {
+              setStatusToast(null);
+              setSelectedId(statusToast.reservationId);
+            }}
+          >
+            View record
+          </button>
+          <button
+            className="btn btn-light btn-small btn-icon"
+            type="button"
+            onClick={() => setStatusToast(null)}
+            aria-label="Dismiss"
+          >
+            <Icon name="x" size={16} />
+          </button>
+        </div>
+      )}
 
       {!state.error && reservations.length === 0 ? (
         <EmptyState
@@ -168,26 +207,27 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
             <div className="bookings-toolbar">
               <label className="search-input" aria-label="Search bookings">
                 <span className="search-mark"><Icon name="search" size={20} /></span>
-                <input id="reservation-search" name="search" className="input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by name, purpose, phone, or ID" />
+                <input id="reservation-search" name="search" className="input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by name, purpose, phone, ID, or reference no." />
               </label>
-              <div className="filter-tabs" role="radiogroup" aria-label="Reservation scope">
+              <div className="filter-tabs" role="group" aria-label="Reservation scope">
                 {SCOPE_OPTIONS.map((option) => (
                   <button
                     key={option}
                     type="button"
                     className={`filter-tab ${scope === option ? "on" : ""}`}
                     onClick={() => setScope(option)}
-                    role="radio"
-                    aria-checked={scope === option}
+                    aria-pressed={scope === option}
                   >
                     {getScopeLabel(option)}
                     <span>({counts[option] || 0})</span>
                   </button>
                 ))}
               </div>
-              <label className="status-filter-select">
+              <label className="status-filter-select" htmlFor="reservations-status-filter">
                 <span className="status-filter-label">Status</span>
                 <select
+                  id="reservations-status-filter"
+                  name="status"
                   value={statusFilter}
                   onChange={(event) => setStatusFilter(event.target.value)}
                   aria-label="Filter by status"
@@ -202,17 +242,26 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
             {filteredReservations.length === 0 ? (
               <EmptyState title="No matching bookings" body={getEmptyMessage(scope)} />
             ) : (
-              <div className="booking-card-list">
-                {filteredReservations.map((reservation) => (
-                  <ReservationCard
-                    key={reservation.reservationId}
-                    reservation={reservation}
-                    attentionReason={scope === "attention" ? getAttentionReason(reservation, todayKey) : ""}
-                    selected={reservation.reservationId === selectedId}
-                    onOpen={() => openReservation(reservation)}
-                  />
-                ))}
-              </div>
+              <ul className="booking-card-list" aria-label="Reservation records">
+                {filteredReservations.map((reservation) => {
+                  const isSelected = reservation.reservationId === selectedId;
+                  return (
+                    <li
+                      key={reservation.reservationId}
+                      className="booking-card-item"
+                      aria-current={isSelected ? "true" : undefined}
+                    >
+                      <ReservationCard
+                        reservation={reservation}
+                        attentionReason={scope === "attention" ? getAttentionReason(reservation, todayKey) : ""}
+                        selected={isSelected}
+                        onOpen={() => openReservation(reservation)}
+                        onPrintSlip={() => onNavigate(`/reservations/${reservation.reservationId}/slip`)}
+                      />
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </div>
         )
@@ -242,14 +291,17 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
   );
 }
 
-function ReservationCard({ reservation, selected, onOpen, attentionReason = "" }) {
+function ReservationCard({ reservation, selected, onOpen, onPrintSlip, attentionReason = "" }) {
+  // The card is a semantic <article> with no click handler, no
+  // role="button", and no aria-pressed. Two sibling <button> actions
+  // (Open record / Print slip) live in the body. The attentionReason
+  // tooltip moves to the Open record button via `title`. Selected
+  // styling is driven by the parent <li>'s `aria-current` plus the
+  // existing `.selected` class on this article (UI-AUD-007, Req 6.2-6.5).
+  const reservationLabel = reservation.referenceNo || reservation.reservationId;
   return (
-    <button
+    <article
       className={`booking-card ${selected ? "selected" : ""} ${attentionReason ? "needs-attention" : ""}`}
-      type="button"
-      onClick={onOpen}
-      aria-pressed={selected}
-      title={attentionReason || undefined}
     >
       <div className="booking-card-time">
         <strong>{displayRange(reservation.startTime, reservation.endTime)}</strong>
@@ -258,13 +310,32 @@ function ReservationCard({ reservation, selected, onOpen, attentionReason = "" }
       <div className="booking-card-main">
         <strong>{reservation.representativeName}</strong>
         <span>{reservation.purpose}</span>
-        <small>{reservation.contactNo} · #{reservation.reservationId}</small>
+        <small>{reservation.contactNo} · {formatReferenceNo(reservation.referenceNo)}</small>
       </div>
       <div className="booking-card-meta">
         <StatusBadge statusCode={reservation.statusCode} />
         {attentionReason && <span className="attention-reason">{attentionReason}</span>}
+        <div className="booking-card-actions">
+          <button
+            className="btn btn-light btn-small"
+            type="button"
+            onClick={onOpen}
+            title={attentionReason || undefined}
+            aria-label={`Open reservation ${reservationLabel}`}
+          >
+            {selected ? "Viewing" : "Open record"}
+          </button>
+          <button
+            className="btn btn-light btn-small"
+            type="button"
+            onClick={onPrintSlip}
+            aria-label={`Print slip for ${reservationLabel}`}
+          >
+            Print slip
+          </button>
+        </div>
       </div>
-    </button>
+    </article>
   );
 }
 
@@ -299,7 +370,11 @@ function filterReservations(reservations, query, scope, statusFilter, todayKey) 
         STATUS_LABELS[reservation.statusCode] || reservation.statusCode
       ].join(" ").toLowerCase();
 
-      return matchesScope && matchesStatus && (!needle || searchable.includes(needle));
+      const matchesSearch = !needle
+        || searchable.includes(needle)
+        || matchesReferenceNo(reservation, query);
+
+      return matchesScope && matchesStatus && matchesSearch;
     })
     .sort((left, right) => {
       const dateCompare = String(right.reservationDate || "").localeCompare(String(left.reservationDate || ""));

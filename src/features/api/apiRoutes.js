@@ -19,8 +19,10 @@ import {
 } from "../reservations/reservationRepository.js";
 import {
   createResidentDirectoryEntry,
+  deleteResidentDirectoryEntry,
   DuplicateResidentError,
   listResidents,
+  ResidentInUseError,
   ResidentNotFoundError,
   updateResidentDirectoryEntry
 } from "../residents/residentRepository.js";
@@ -39,7 +41,8 @@ import {
   deactivateScheduleBlock,
   listScheduleBlocks,
   ScheduleBlockConflictError,
-  ScheduleBlockNotFoundError
+  ScheduleBlockNotFoundError,
+  ScheduleBlockReservationConflictError
 } from "../schedule/scheduleBlockRepository.js";
 import {
   CourtPolicyValidationError,
@@ -75,6 +78,7 @@ const defaultRepositories = {
   createScheduleBlock,
   createUser,
   deactivateScheduleBlock,
+  deleteResidentDirectoryEntry,
   findUserByUsername,
   getBackupStatus,
   getCourtPolicySettings,
@@ -97,6 +101,8 @@ const defaultRepositories = {
 };
 const AVAILABILITY_SUGGESTION_SEARCH_DAYS = 14;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const RESERVATION_FILTER_STATUS_CODES = new Set(["RESERVED", "MISSED", "CANCELLED", "COMPLETED"]);
+const SCHEDULE_BLOCK_REASON_MAX_LENGTH = 255;
 
 export function createApiRoutes({
   db,
@@ -213,8 +219,15 @@ export function createApiRoutes({
   });
 
   router.get("/api/reservations", async (request, response) => {
+    const filters = cleanReservationFilters(request.query);
+
+    if (!filters.valid) {
+      sendValidationError(response, filters.errors);
+      return;
+    }
+
     try {
-      const reservations = await repo.listReservations(db, cleanReservationFilters(request.query));
+      const reservations = await repo.listReservations(db, filters.value);
       response.json({ reservations: reservations.map(toApiReservation) });
     } catch (error) {
       sendDatabaseError(response, error);
@@ -542,8 +555,15 @@ export function createApiRoutes({
   });
 
   router.get("/api/exports/activity-logs.csv", async (request, response) => {
+    const activityLogFilters = cleanActivityLogFilters(request.query);
+
+    if (!activityLogFilters.valid) {
+      sendValidationError(response, activityLogFilters.errors);
+      return;
+    }
+
     try {
-      const logs = await repo.listActivityLogs(db, cleanActivityLogFilters(request.query));
+      const logs = await repo.listActivityLogs(db, activityLogFilters.value);
       sendCsv(response, `activity-logs-${buildExportTimestamp(todayProvider(), currentTimeProvider())}.csv`, buildActivityLogsCsv(logs));
     } catch (error) {
       sendDatabaseError(response, error);
@@ -679,6 +699,8 @@ export function createApiRoutes({
       rawEndTime: request.query.endTime,
       startTime,
       endTime,
+      today: todayProvider(),
+      currentTime: currentTimeProvider(),
       excludeReservationIdText,
       excludeReservationId
     });
@@ -780,6 +802,24 @@ export function createApiRoutes({
     }
   });
 
+  router.delete("/api/residents/:residentId", async (request, response) => {
+    const residentId = parsePositiveIntegerParam(request.params.residentId);
+
+    if (!residentId) {
+      response.status(400).json({ error: "Resident ID must be a positive integer." });
+      return;
+    }
+
+    try {
+      const resident = await repo.deleteResidentDirectoryEntry(db, residentId, {
+        userId: request.session.user.userId
+      });
+      response.json({ resident });
+    } catch (error) {
+      sendResidentMutationError(response, error);
+    }
+  });
+
   router.get("/api/accounts", requireApiAdmin, async (_request, response) => {
     try {
       const accounts = await repo.listUsers(db);
@@ -848,8 +888,15 @@ export function createApiRoutes({
   });
 
   router.get("/api/activity-logs", async (request, response) => {
+    const activityLogFilters = cleanActivityLogFilters(request.query);
+
+    if (!activityLogFilters.valid) {
+      sendValidationError(response, activityLogFilters.errors);
+      return;
+    }
+
     try {
-      const logs = await repo.listActivityLogs(db, cleanActivityLogFilters(request.query));
+      const logs = await repo.listActivityLogs(db, activityLogFilters.value);
       response.json({ logs });
     } catch (error) {
       sendDatabaseError(response, error);
@@ -927,11 +974,28 @@ function requireApiAdmin(request, response, next) {
 }
 
 function cleanReservationFilters(query) {
-  return {
-    reservationDate: clean(query.reservationDate || query.date),
-    statusCode: clean(query.statusCode || query.status).toUpperCase(),
+  const reservationDate = clean(query.reservationDate || query.date);
+  const statusCode = clean(query.statusCode || query.status).toUpperCase();
+  const errors = {};
+  const value = {
+    reservationDate,
+    statusCode,
     search: clean(query.search),
     purpose: clean(query.purpose)
+  };
+
+  if (reservationDate && !isValidDateString(reservationDate)) {
+    errors.date = "Date must use YYYY-MM-DD format.";
+  }
+
+  if (statusCode && !RESERVATION_FILTER_STATUS_CODES.has(statusCode)) {
+    errors.status = "Status must be RESERVED, MISSED, CANCELLED, or COMPLETED.";
+  }
+
+  return {
+    valid: Object.keys(errors).length === 0,
+    errors,
+    value
   };
 }
 
@@ -968,10 +1032,40 @@ function cleanResidentFilters(query) {
 }
 
 function cleanActivityLogFilters(query) {
-  return {
+  const date = clean(query.date);
+  const from = clean(query.from);
+  const to = clean(query.to);
+  const errors = {};
+  const value = {
     action: clean(query.action).toUpperCase(),
-    date: clean(query.date),
+    date: "",
     search: clean(query.search)
+  };
+
+  if (date && !isValidDateString(date)) {
+    errors.date = "Date must use YYYY-MM-DD format.";
+  } else if (date) {
+    value.date = date;
+  }
+
+  if (from && !isValidDateString(from)) {
+    errors.from = "From date must use YYYY-MM-DD format.";
+  } else if (from) {
+    value.fromDate = from;
+  }
+
+  if (to && !isValidDateString(to)) {
+    errors.to = "To date must use YYYY-MM-DD format.";
+  } else if (to) {
+    value.toDate = to;
+  }
+
+  addDateRangeOrderError(errors, value.fromDate, value.toDate);
+
+  return {
+    valid: Object.keys(errors).length === 0,
+    errors,
+    value
   };
 }
 
@@ -992,6 +1086,8 @@ function cleanReportFilters(query) {
   } else if (to) {
     value.toDate = to;
   }
+
+  addDateRangeOrderError(errors, value.fromDate, value.toDate);
 
   return {
     valid: Object.keys(errors).length === 0,
@@ -1023,6 +1119,8 @@ function validateScheduleBlockInput(input = {}) {
 
   if (!reason) {
     errors.reason = "Reason is required.";
+  } else if (reason.length > SCHEDULE_BLOCK_REASON_MAX_LENGTH) {
+    errors.reason = "Reason must be 255 characters or fewer.";
   }
 
   if (mode !== "WHOLE_DAY") {
@@ -1072,6 +1170,8 @@ function validateClearPublicUseInput(input = {}) {
 
   if (!reason) {
     errors.reason = "Reason is required.";
+  } else if (reason.length > SCHEDULE_BLOCK_REASON_MAX_LENGTH) {
+    errors.reason = "Reason must be 255 characters or fewer.";
   }
 
   if (mode !== "WHOLE_DAY" && !normalizeTime(input.startTime)) {
@@ -1101,6 +1201,12 @@ function validateClearPublicUseInput(input = {}) {
 
 function clean(value) {
   return String(value ?? "").trim();
+}
+
+function addDateRangeOrderError(errors, fromDate, toDate) {
+  if (fromDate && toDate && fromDate > toDate) {
+    errors.dateRange = "From date must be on or before to date.";
+  }
 }
 
 function sendReservationMutationError(response, error) {
@@ -1142,6 +1248,14 @@ function sendScheduleBlockMutationError(response, error) {
     return;
   }
 
+  if (error instanceof ScheduleBlockReservationConflictError) {
+    response.status(409).json({
+      error: error.message,
+      overlap: toApiReservation(error.overlap)
+    });
+    return;
+  }
+
   if (error instanceof ScheduleBlockNotFoundError) {
     response.status(404).json({ error: error.message });
     return;
@@ -1162,6 +1276,11 @@ function sendResidentMutationError(response, error) {
 
   if (error instanceof ResidentNotFoundError) {
     response.status(404).json({ error: error.message });
+    return;
+  }
+
+  if (error instanceof ResidentInUseError) {
+    response.status(409).json({ error: error.message });
     return;
   }
 
@@ -1506,13 +1625,15 @@ function findScheduleBlockOverlap({ date, startTime, endTime, blocks = [] }) {
     .find((block) => timeRangesOverlap(startTime, endTime, block.startTime, block.endTime)) || null;
 }
 
-function buildAvailabilityValidationErrors({ date, rawStartTime, rawEndTime, startTime, endTime, excludeReservationIdText = "", excludeReservationId = null }) {
+function buildAvailabilityValidationErrors({ date, rawStartTime, rawEndTime, startTime, endTime, today = "", currentTime = "", excludeReservationIdText = "", excludeReservationId = null }) {
   const errors = {};
 
   if (!date) {
     errors.date = "Date is required.";
   } else if (!isValidDateString(date)) {
     errors.date = "Date must use YYYY-MM-DD format.";
+  } else if (today && date < today) {
+    errors.date = "Reservation date cannot be before today.";
   }
 
   if (!clean(rawStartTime)) {
@@ -1531,6 +1652,11 @@ function buildAvailabilityValidationErrors({ date, rawStartTime, rawEndTime, sta
 
   if (excludeReservationIdText && !excludeReservationId) {
     errors.reservationId = "Reservation ID must be a positive integer.";
+  }
+
+  const normalizedCurrentTime = normalizeTime(currentTime);
+  if (!errors.date && !errors.startTime && today && date === today && normalizedCurrentTime && timeToMinutes(startTime) <= timeToMinutes(normalizedCurrentTime)) {
+    errors.startTime = "Start time must be later than the current time for today's reservations.";
   }
 
   return errors;

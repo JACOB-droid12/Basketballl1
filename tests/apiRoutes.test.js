@@ -6,6 +6,7 @@ import test from "node:test";
 import { createApiRoutes } from "../src/features/api/apiRoutes.js";
 import { ReservationConflictError, ReservationNotFoundError, ReservationPolicyError, ReservationUnavailableError } from "../src/features/reservations/reservationRepository.js";
 import { DuplicateResidentError } from "../src/features/residents/residentRepository.js";
+import { ScheduleBlockReservationConflictError } from "../src/features/schedule/scheduleBlockRepository.js";
 import { DuplicateUsernameError } from "../src/features/users/userRepository.js";
 
 test("GET /api/session returns signed-out state", async () => {
@@ -302,6 +303,35 @@ test("GET /api/reservations passes cleaned filters and maps reservation rows", a
         createdByName: "Admin User"
       }
     ]);
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/reservations rejects invalid filter values before querying reservations", async () => {
+  let listCalled = false;
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      listReservations: async () => {
+        listCalled = true;
+        return [];
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/reservations?date=2026-02-30&status=pending");
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(response.body, {
+      errors: {
+        date: "Date must use YYYY-MM-DD format.",
+        status: "Status must be RESERVED, MISSED, CANCELLED, or COMPLETED."
+      }
+    });
+    assert.equal(listCalled, false);
   } finally {
     await closeServer(server);
   }
@@ -779,6 +809,87 @@ test("POST /api/schedule/blocks is admin-only and creates a maintenance block", 
   }
 });
 
+test("POST /api/schedule/blocks rejects overlong reasons before storage", async () => {
+  let createCalled = false;
+  const app = buildApiTestApp({
+    session: buildSession({ userId: 10, role: "ADMIN" }),
+    repositories: {
+      createScheduleBlock: async () => {
+        createCalled = true;
+        return {};
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await postJson(server, "/api/schedule/blocks", {
+      date: "2026-05-14",
+      startTime: "08:00",
+      endTime: "09:00",
+      blockType: "REPAIRS",
+      reason: "x".repeat(256)
+    });
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(response.body, {
+      errors: {
+        reason: "Reason must be 255 characters or fewer."
+      }
+    });
+    assert.equal(createCalled, false);
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("POST /api/schedule/blocks maps active reservation overlap to 409 with reservation details", async () => {
+  const app = buildApiTestApp({
+    session: buildSession({ userId: 10, role: "ADMIN" }),
+    repositories: {
+      createScheduleBlock: async () => {
+        throw new ScheduleBlockReservationConflictError(
+          "Maintenance block overlaps an active reservation. Cancel or clear the reservation before blocking this time.",
+          buildReservation({ reservationId: 88, referenceNo: "BCS-2026-000088" })
+        );
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await postJson(server, "/api/schedule/blocks", {
+      date: "2026-05-14",
+      startTime: "08:00",
+      endTime: "09:00",
+      blockType: "REPAIRS",
+      reason: "Ring repair"
+    });
+
+    assert.equal(response.status, 409);
+    assert.deepEqual(response.body, {
+      error: "Maintenance block overlaps an active reservation. Cancel or clear the reservation before blocking this time.",
+      overlap: {
+        reservationId: 88,
+        referenceNo: "BCS-2026-000088",
+        reservationDate: "2026-05-14",
+        startTime: "08:00",
+        endTime: "09:00",
+        representativeName: "Team Alpha",
+        contactNo: "09171234567",
+        address: "Purok 3",
+        purpose: "Practice",
+        remarks: "",
+        statusCode: "RESERVED",
+        statusName: "Reserved",
+        createdByName: "Admin User"
+      }
+    });
+  } finally {
+    await closeServer(server);
+  }
+});
+
 test("DELETE /api/schedule/blocks/:blockId deactivates a block as admin", async () => {
   let received = null;
   const app = buildApiTestApp({
@@ -862,6 +973,38 @@ test("POST /api/schedule/clear-public-use persists a clear range and returns can
     assert.deepEqual(receivedPayload.options, { userId: 10 });
     assert.equal(response.body.block.statusCode, "CLEARED_PUBLIC_USE");
     assert.equal(response.body.cancelledReservations[0].referenceNo, "BCS-2026-000001");
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("POST /api/schedule/clear-public-use rejects overlong reasons before storage", async () => {
+  let clearCalled = false;
+  const app = buildApiTestApp({
+    session: buildSession({ userId: 10, role: "ADMIN" }),
+    repositories: {
+      clearPublicUseRange: async () => {
+        clearCalled = true;
+        return {};
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await postJson(server, "/api/schedule/clear-public-use", {
+      date: "2026-05-14",
+      mode: "WHOLE_DAY",
+      reason: "x".repeat(256)
+    });
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(response.body, {
+      errors: {
+        reason: "Reason must be 255 characters or fewer."
+      }
+    });
+    assert.equal(clearCalled, false);
   } finally {
     await closeServer(server);
   }
@@ -1318,6 +1461,28 @@ test("GET /api/availability validates date, time, and requested range", async ()
   }
 });
 
+test("GET /api/availability rejects same-day slots that final reservation save would reject", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    todayProvider: () => "2026-05-14",
+    currentTimeProvider: () => "08:30"
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/availability?date=2026-05-14&startTime=08:00&endTime=09:00");
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(response.body, {
+      errors: {
+        startTime: "Start time must be later than the current time for today's reservations."
+      }
+    });
+  } finally {
+    await closeServer(server);
+  }
+});
+
 test("GET /api/availability rejects ranges outside active court hours", async () => {
   const app = buildApiTestApp({
     session: buildSession(),
@@ -1692,6 +1857,92 @@ test("GET /api/activity-logs passes normalized filters and returns log rows", as
       search: "Team"
     });
     assert.equal(response.body.logs[0].logId, 1);
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/activity-logs passes inclusive from and to date filters", async () => {
+  let receivedFilters = null;
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      listActivityLogs: async (_db, filters) => {
+        receivedFilters = filters;
+        return [];
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/activity-logs?from=2026-05-10&to=2026-05-16&search=%20Cruz%20");
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(receivedFilters, {
+      action: "",
+      date: "",
+      fromDate: "2026-05-10",
+      toDate: "2026-05-16",
+      search: "Cruz"
+    });
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/activity-logs rejects invalid date range filters before querying logs", async () => {
+  let listCalled = false;
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      listActivityLogs: async () => {
+        listCalled = true;
+        return [];
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/activity-logs?from=2026-02-30&to=not-a-date");
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(response.body, {
+      errors: {
+        from: "From date must use YYYY-MM-DD format.",
+        to: "To date must use YYYY-MM-DD format."
+      }
+    });
+    assert.equal(listCalled, false);
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/activity-logs rejects reversed date ranges before querying logs", async () => {
+  let listCalled = false;
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      listActivityLogs: async () => {
+        listCalled = true;
+        return [];
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/activity-logs?from=2026-05-16&to=2026-05-10");
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(response.body, {
+      errors: {
+        dateRange: "From date must be on or before to date."
+      }
+    });
+    assert.equal(listCalled, false);
   } finally {
     await closeServer(server);
   }
@@ -2107,6 +2358,34 @@ test("GET /api/reports rejects invalid date filters before querying reservations
       errors: {
         from: "From date must use YYYY-MM-DD format.",
         to: "To date must use YYYY-MM-DD format."
+      }
+    });
+    assert.equal(listCalled, false);
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/reports rejects reversed date ranges before querying reservations", async () => {
+  let listCalled = false;
+  const app = buildApiTestApp({
+    session: buildSession(),
+    repositories: {
+      listReservations: async () => {
+        listCalled = true;
+        return [];
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/reports?from=2026-05-16&to=2026-05-10");
+
+    assert.equal(response.status, 400);
+    assert.deepEqual(response.body, {
+      errors: {
+        dateRange: "From date must be on or before to date."
       }
     });
     assert.equal(listCalled, false);

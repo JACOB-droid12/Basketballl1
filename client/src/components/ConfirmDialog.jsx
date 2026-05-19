@@ -1,106 +1,77 @@
-import { useEffect, useRef } from "react";
-
 import { Icon } from "./Icon.jsx";
+import { ModalShell } from "./ModalShell.jsx";
 
+/**
+ * Ceremonial confirm dialog used across the staff console for
+ * destructive and high-stakes confirmations (e.g. cancelling a
+ * reservation, deactivating an account, removing a resident).
+ *
+ * The component now renders through the shared `ModalShell` so every
+ * overlay shares one set of layout, focus-trap, and Escape rules
+ * (Req. 3.1, 3.7). The local focus-trap loop and the
+ * `dialog-backdrop` / `dialog` markup that used to live here have been
+ * consolidated into `ModalShell`; this file only owns the ceremonial
+ * body (centered icon + body copy) and the action buttons in the
+ * footer slot.
+ *
+ * Props (unchanged from the previous implementation so callers do not
+ * need to be updated, Req. 3.10):
+ *   - `title`         -> rendered as the modal heading.
+ *   - `body`          -> wired to `aria-describedby` via the shell's
+ *                        subtitle slot and rendered as the centered
+ *                        body copy beneath the icon.
+ *   - `confirmLabel`  -> label of the primary action button.
+ *   - `danger`        -> when truthy, swaps the icon variant and
+ *                        renders the primary action with `btn-danger`;
+ *                        otherwise the action uses `btn-primary`.
+ *   - `onConfirm`     -> primary action click handler.
+ *   - `onCancel`      -> secondary action click handler; also wired to
+ *                        the shell's `onClose` so backdrop click and
+ *                        Escape (when not busy) dismiss the dialog
+ *                        through the same path.
+ *   - `busy`          -> while truthy, both buttons are disabled, the
+ *                        primary button shows "Saving...", and the
+ *                        shell suppresses Escape / backdrop dismissal
+ *                        so the dialog cannot be closed mid-save.
+ */
 export function ConfirmDialog({ title, body, confirmLabel, danger, onConfirm, onCancel, busy }) {
-  const dialogRef = useRef(null);
-  const cancelButtonRef = useRef(null);
-  const onCancelRef = useRef(onCancel);
-
-  useEffect(() => {
-    onCancelRef.current = onCancel;
-  }, [onCancel]);
-
-  useEffect(() => {
-    if (typeof document === "undefined") return undefined;
-
-    const previouslyFocusedElement = document.activeElement;
-    const focusTimer = window.setTimeout(() => {
-      cancelButtonRef.current?.focus();
-    }, 0);
-
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape" && !busy) {
-        event.preventDefault();
-        onCancelRef.current?.();
-        return;
-      }
-
-      if (event.key !== "Tab" || !dialogRef.current) return;
-
-      const focusable = getFocusableElements(dialogRef.current);
-      if (focusable.length === 0) return;
-
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      const active = document.activeElement;
-
-      if (event.shiftKey && (active === first || !dialogRef.current.contains(active))) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && (active === last || !dialogRef.current.contains(active))) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.clearTimeout(focusTimer);
-      document.removeEventListener("keydown", handleKeyDown);
-      if (previouslyFocusedElement && typeof previouslyFocusedElement.focus === "function") {
-        previouslyFocusedElement.focus();
-      }
-    };
-  }, [busy]);
-
   const iconVariant = danger ? "danger" : "ok";
   const iconName = danger ? "warn" : "check";
 
   return (
-    <div className="dialog-backdrop" role="presentation">
-      <section
-        className="dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="confirm-title"
-        ref={dialogRef}
-      >
-        <div className="confirm-body">
-          <div className={`confirm-icon ${iconVariant}`} aria-hidden="true">
-            <Icon name={iconName} size={36} />
-          </div>
-          <h2 id="confirm-title">{title}</h2>
-          <p>{body}</p>
-        </div>
-        <div className="dialog-foot">
-          <button className="btn btn-light" type="button" onClick={onCancel} disabled={busy} ref={cancelButtonRef}>
+    <ModalShell
+      open
+      onClose={onCancel}
+      title={title}
+      subtitle={body}
+      busy={busy}
+      footer={
+        <>
+          <button
+            className="btn btn-light"
+            type="button"
+            onClick={onCancel}
+            disabled={busy}
+          >
             Go back
           </button>
-          <button className={`btn ${danger ? "btn-danger" : "btn-primary"}`} type="button" onClick={onConfirm} disabled={busy}>
+          <button
+            className={"btn " + (danger ? "btn-danger" : "btn-primary")}
+            type="button"
+            onClick={onConfirm}
+            disabled={busy}
+          >
             {busy ? "Saving..." : confirmLabel}
           </button>
+        </>
+      }
+    >
+      <div className="confirm-body">
+        <div className={`confirm-icon ${iconVariant}`} aria-hidden="true">
+          <Icon name={iconName} size={36} />
         </div>
-      </section>
-    </div>
+        <p>{body}</p>
+      </div>
+    </ModalShell>
   );
-}
-
-const FOCUSABLE_SELECTORS = [
-  "a[href]",
-  "button:not([disabled])",
-  "input:not([disabled])",
-  "select:not([disabled])",
-  "textarea:not([disabled])",
-  '[tabindex]:not([tabindex="-1"])'
-].join(", ");
-
-function getFocusableElements(container) {
-  if (!container) return [];
-  return Array.from(container.querySelectorAll(FOCUSABLE_SELECTORS)).filter((element) => {
-    if (element.hasAttribute("disabled")) return false;
-    if (element.getAttribute("aria-hidden") === "true") return false;
-    return element.offsetParent !== null || element === document.activeElement;
-  });
 }

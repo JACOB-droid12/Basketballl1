@@ -7,7 +7,8 @@ import {
   deactivateScheduleBlock,
   findActiveScheduleBlockOverlap,
   mapScheduleBlockRow,
-  ScheduleBlockConflictError
+  ScheduleBlockConflictError,
+  ScheduleBlockReservationConflictError
 } from "../src/features/schedule/scheduleBlockRepository.js";
 
 test("maps schedule block rows to API-ready block models", () => {
@@ -96,6 +97,11 @@ test("createScheduleBlock stores an admin block and writes an activity log", asy
         return [[]];
       }
 
+      if (sql.includes("FROM reservations") && sql.includes("rs.status_code = 'RESERVED'")) {
+        calls.push("check-reservations");
+        return [[]];
+      }
+
       if (sql.includes("INSERT INTO schedule_blocks")) {
         calls.push(["insert-block", params]);
         return [{ insertId: 15 }];
@@ -142,11 +148,74 @@ test("createScheduleBlock stores an admin block and writes an activity log", asy
     "begin",
     "lock",
     "check-overlap",
+    "check-reservations",
     "insert-block",
     "insert-log",
     "read-block",
     "commit",
     "unlock",
+    "release"
+  ]);
+});
+
+test("createScheduleBlock rejects overlap with an active reserved reservation", async () => {
+  const calls = [];
+  const connection = buildConnection({
+    calls,
+    execute: async (sql) => {
+      if (sql.includes("GET_LOCK")) return [[{ lock_result: 1 }]];
+      if (sql.includes("RELEASE_LOCK")) return [[{ release_result: 1 }]];
+      if (sql.includes("FROM schedule_blocks") && sql.includes("sb.is_active = 1")) {
+        calls.push("check-block-overlap");
+        return [[]];
+      }
+      if (sql.includes("FROM reservations") && sql.includes("rs.status_code = 'RESERVED'")) {
+        calls.push("check-reservation-overlap");
+        return [[{
+          reservation_id: 88,
+          reference_no: "BCS-2026-000088",
+          reservation_date: "2026-05-14",
+          start_time: "08:00:00",
+          end_time: "09:00:00",
+          purpose: "Practice",
+          remarks: "",
+          status_code: "RESERVED",
+          status_name: "Reserved",
+          resident_name: "Team Alpha",
+          contact_no: "09171234567",
+          address: "Purok 3",
+          created_by_name: "Admin User"
+        }]];
+      }
+      if (sql.includes("INSERT INTO schedule_blocks")) {
+        throw new Error("Maintenance block should not be inserted over an active reservation.");
+      }
+      throw new Error(`Unexpected SQL: ${sql}`);
+    }
+  });
+  const db = { getConnection: async () => connection };
+
+  await assert.rejects(
+    () => createScheduleBlock(db, {
+      date: "2026-05-14",
+      startTime: "08:30",
+      endTime: "09:30",
+      category: "MAINTENANCE",
+      type: "REPAIRS",
+      mode: "TIME_RANGE",
+      reason: "Ring repair"
+    }, { userId: 10 }),
+    (error) => {
+      assert.equal(error instanceof ScheduleBlockReservationConflictError, true);
+      assert.equal(error.overlap.referenceNo, "BCS-2026-000088");
+      return true;
+    }
+  );
+  assert.deepEqual(calls.filter((call) => typeof call === "string"), [
+    "begin",
+    "check-block-overlap",
+    "check-reservation-overlap",
+    "rollback",
     "release"
   ]);
 });

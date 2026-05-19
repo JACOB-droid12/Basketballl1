@@ -35,18 +35,121 @@ The starter password should be changed before regular office use.
 
 NORMAL OFFICE TASKS
 
-Home
-  Check today's court schedule and upcoming reservations.
+Home (Dashboard)
+  Check today's reservation count, the next reservation, the number of
+  missed reservations still pending, and any system alerts. Labeled
+  notices for "Cleared for public use today" and "Maintenance active
+  today" appear on this page when they apply. The backup reminder
+  card also shows on this page when a backup is due or overdue, and
+  it stays as a calm card so the rest of the page keeps working.
 
 Schedule
-  View available and reserved time slots.
+  View available and reserved time slots for the week. Reserved,
+  missed, cancelled, completed, maintenance, barangay event, and
+  cleared-for-public-use slots each show a written status label
+  beside the color, so staff never have to read color alone. To
+  print the day's slot list, open the chosen date on the schedule
+  and click "Daily print". The printout lists the day's slots,
+  maintenance ranges, and cleared-for-public-use ranges in clearly
+  separated sections, with totals at the bottom.
 
 Reservations
-  Add reservations, edit records, cancel reservations, and mark missed or
-  completed reservations.
+  Add reservations, edit records, cancel reservations, and mark
+  missed or completed reservations. Every reservation row, the
+  reservation drawer, and the saved-confirmation surface show the
+  reservation reference number issued by the system. The search
+  box also matches reference numbers, so staff can pull up a
+  reservation by its number alone. Click "Print slip" on a
+  reservation row or in the drawer to open the printable slip for
+  the resident; the slip shows the reference number, name, contact
+  number, address, date, time, purpose, status, the staff who
+  encoded it, and the issued-at stamp, with a signature line below.
+  When a slip's reservation is cancelled, the slip prints with a
+  visible "CANCELLED" mark.
+
+  When encoding a new reservation, click "Choose from directory"
+  to pick a saved resident from the resident directory; the form
+  fills in the representative name, contact number, and address
+  from the chosen record.
+
+Resident Directory
+  Search saved residents by name, contact number, address, group,
+  or notes. Add or edit a resident record from the same page. The
+  "Use" action returns to the reservation form with the chosen
+  resident's name, contact number, and address already filled in.
+  This list is the office's internal contact directory; residents
+  still coordinate with barangay personnel in person.
+
+Reservation History
+  Look up a resident's reservation history by contact number or by
+  name. The page shows the total reservations, missed count,
+  cancelled count, completed count, active count, and the date of
+  the resident's last reservation, with two lists below for past
+  and upcoming reservations. Each row in the history lists shows
+  its reference number.
+
+Reports
+  View the office's reservation reports for the selected date
+  range (all, this week, this month, this year, or a custom
+  from/to range). Sections cover the summary, status counts, top
+  requesters, most-used days, most-used time slots, monthly
+  reservation counts, missed reservations, cancelled reservations,
+  reservations by purpose, reservations encoded by each staff
+  member, cleared-for-public-use ranges, and maintenance blocks.
+  Empty sections show a clear note instead of a blank panel.
+
+CSV Export
+  The Schedule, Activity Logs, Missed and Cancelled lists, and
+  Reports pages each have a button labeled "CSV" that downloads a
+  spreadsheet of the current view. The label always says "CSV" so
+  the file format is clear before clicking. The daily, weekly, and
+  monthly schedule exports use the date or month currently shown
+  on the page; the activity logs export carries the current
+  action, date, and search filters; the reports export uses the
+  selected date range. If the office network or the system is
+  down, the page shows the standard offline message and the file
+  is not downloaded.
+
+Activity Logs
+  Review what was added, changed, or cancelled in the system, with
+  filters for the action type, date, and a free-text search.
+  Reservation entries include the reference number for the
+  reservation they refer to. The same page has a CSV button for
+  exporting the filtered list.
 
 Account
   Change your own password. Admin users can also manage accounts.
+
+ADMIN-ONLY TASKS
+
+The actions below are only visible to Admin accounts. Staff
+accounts do not see these buttons or this menu entry.
+
+Maintenance / Unavailable Blocks
+  From the Schedule page, "Add maintenance block" lets an admin
+  record a cleaning, barangay event, repair, tournament, meeting,
+  emergency use, or maintenance range for a date. The block can
+  cover the whole day or a specific time range. "Deactivate block"
+  removes a recorded block. The schedule on screen only updates
+  after the system confirms the change.
+
+Clear for Public Use
+  From the Schedule page, "Clear for public use" lets an admin
+  open the court for open play. The mode can be the whole day, a
+  time range, or from a chosen time onward. Before the change is
+  sent, the modal shows a confirmation step stating that
+  overlapping active reservations will be cancelled but their
+  records will be kept, and asks for an explicit second confirm.
+  After clearing, the panel lists the reference numbers of any
+  reservations that were cancelled by the action.
+
+Court Policy Settings
+  Admins can open the court policy settings page from the side
+  menu to view and update the opening time, closing time, minimum
+  and maximum reservation length, allowed days, blocked dates,
+  grace period before a reservation is marked missed, and default
+  slot length. Staff accounts do not see this menu entry; staff
+  follow the policy values set by the admin.
 
 BACKUPS, SETUP, OR SUPPORT
 
@@ -54,11 +157,16 @@ Do not use the daily shortcut for setup or maintenance.
 Do not open maintenance-tools unless the installer, admin, or IT support asks
 you to.
 
-For setup, backups, database checks, sign-off, or support, double-click:
+When a backup is due or overdue, the Home page shows a backup
+reminder card with the same instruction printed below:
 
-Barangay Court Scheduler - Maintenance
+Run a backup from the maintenance launcher option: double-click
+Barangay Court Scheduler - Maintenance and choose the backup
+option from the menu.
 
-Then choose the needed option from the menu.
+For setup, backups, database checks, sign-off, or support, use
+the same Barangay Court Scheduler - Maintenance launcher and
+choose the needed option from the menu.
 
 Copy the backups folder to a USB drive once a week. Keep one copy in the
 barangay office and one off-site.

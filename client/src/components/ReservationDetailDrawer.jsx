@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
 import { formatDate, formatTime, STATUS_LABELS } from "../api/mappers.js";
-import { Icon } from "./Icon.jsx";
+import { formatReferenceNo } from "../api/referenceNo.js";
+import { ModalShell } from "./ModalShell.jsx";
 import { StatusBadge } from "./StatusBadge.jsx";
 
 const STATUS_ACTIONS = [
@@ -24,133 +24,125 @@ const STATUS_ACTIONS = [
   }
 ];
 
-export function ReservationDetailDrawer({ reservation, busy, onClose, onEdit, onRequestStatus, suspendEscape = false }) {
-  const drawerRef = useRef(null);
-  const closeButtonRef = useRef(null);
-  const headingRef = useRef(null);
-  const onCloseRef = useRef(onClose);
-  const suspendEscapeRef = useRef(suspendEscape);
-
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-
-  useEffect(() => {
-    suspendEscapeRef.current = suspendEscape;
-  }, [suspendEscape]);
-
-  useEffect(() => {
-    if (!reservation || typeof document === "undefined") return undefined;
-
-    const previouslyFocusedElement = document.activeElement;
-
-    const focusTimer = window.setTimeout(() => {
-      const target = closeButtonRef.current || headingRef.current;
-      target?.focus();
-    }, 0);
-
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape" && !suspendEscapeRef.current) {
-        event.preventDefault();
-        onCloseRef.current();
-        return;
-      }
-
-      if (event.key !== "Tab" || !drawerRef.current) return;
-
-      const focusable = getFocusableElements(drawerRef.current);
-      if (focusable.length === 0) return;
-
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      const active = document.activeElement;
-
-      if (event.shiftKey && (active === first || !drawerRef.current.contains(active))) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && (active === last || !drawerRef.current.contains(active))) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.clearTimeout(focusTimer);
-      document.removeEventListener("keydown", handleKeyDown);
-      if (previouslyFocusedElement && typeof previouslyFocusedElement.focus === "function") {
-        previouslyFocusedElement.focus();
-      }
-    };
-  }, [reservation?.reservationId]);
-
+/**
+ * Reservation detail drawer for the reservation list.
+ *
+ * The drawer now renders through the shared `ModalShell` so every
+ * overlay shares one set of layout, focus-trap, Escape, and
+ * backdrop-dismissal rules (Req. 3.1, 3.7, 3.10). The local
+ * `FOCUSABLE_SELECTORS` list, `getFocusableElements` helper, and
+ * focus-trap loop that used to live in this file have been
+ * consolidated into `ModalShell`.
+ *
+ * Layout:
+ *   - The shell is sized `lg` (max 720px on desktop) so the wider
+ *     surface the drawer needed is preserved across Supported_Viewports.
+ *   - The action row (Edit / Print slip / Mark missed / Cancel /
+ *     Mark done) lives in the shell's `footer` slot so the buttons
+ *     stay pinned and visible (Req. 3.7, 3.8).
+ *
+ * Props (unchanged from the previous implementation so callers do not
+ * need to be updated, Req. 3.10):
+ *   - `reservation`     -> when null/undefined the drawer is unmounted
+ *                          (the shell receives `open={false}`).
+ *   - `busy`            -> while truthy, every footer button is
+ *                          disabled.
+ *   - `onClose`         -> invoked by the shell on close (button click,
+ *                          Escape when not suspended, backdrop click
+ *                          when not suspended).
+ *   - `onEdit`          -> Edit action click handler.
+ *   - `onRequestStatus` -> invoked with the chosen `STATUS_ACTIONS`
+ *                          entry when the staff member requests a
+ *                          status change.
+ *   - `suspendEscape`   -> when `true`, suppress the shell's Escape
+ *                          close (used by `ReservationsPage` while a
+ *                          `ConfirmDialog` is open on top of the
+ *                          drawer). Forwarded to `ModalShell` via the
+ *                          `busy` prop semantics: while suspended,
+ *                          Escape and backdrop dismissal are blocked.
+ *
+ * The detail body keeps the existing `Reference number` row (rendered
+ * through `formatReferenceNo`) and the `STATUS_ACTIONS` set is still
+ * filtered by `reservation.statusCode === "RESERVED"` so cancel/missed/
+ * mark-done only appear for in-flight reservations.
+ *
+ * Requirements: 3.7, 3.10
+ */
+export function ReservationDetailDrawer({
+  reservation,
+  busy,
+  onClose,
+  onEdit,
+  onRequestStatus,
+  suspendEscape = false
+}) {
+  // Unmount the drawer body when no reservation is selected so the
+  // detail state cannot leak between sessions and the shared
+  // ModalShell focus trap is torn down cleanly.
   if (!reservation) return null;
 
   const availableStatusActions = reservation.statusCode === "RESERVED" ? STATUS_ACTIONS : [];
 
+  // Forward `suspendEscape` to the shell as `busy` so Escape and
+  // backdrop dismissal are suppressed while the confirm dialog stack
+  // is open on top of the drawer (the original `suspendEscape`
+  // semantics, now expressed through the shared shell's `busy` prop).
+  const shellBusy = Boolean(suspendEscape);
+
   return (
-    <div className="drawer-backdrop open" role="presentation" onClick={onClose}>
-      <section
-        className="reservation-drawer"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="reservation-detail-title"
-        onClick={(event) => event.stopPropagation()}
-        ref={drawerRef}
-      >
-        <div className="dialog-head">
-          <div>
-            <p className="page-kicker">Reservation #{reservation.reservationId}</p>
-            <h2 id="reservation-detail-title" ref={headingRef} tabIndex="-1">
-              {reservation.representativeName}
-            </h2>
-            <div className="d-sub">{reservation.purpose}</div>
-          </div>
-          <button
-            className="dialog-close"
-            type="button"
-            onClick={onClose}
-            aria-label="Close reservation details"
-            ref={closeButtonRef}
-          >
-            <Icon name="x" size={20} />
-          </button>
-        </div>
-
-        <div className="dialog-body">
-          <div className="detail-status-line">
-            <StatusBadge statusCode={reservation.statusCode} />
-          </div>
-          <dl className="detail-grid staff-detail-grid">
-            <DetailRow label="Date" value={formatDate(reservation.reservationDate)} />
-            <DetailRow label="Time" value={displayRange(reservation.startTime, reservation.endTime)} />
-            <DetailRow label="Requester or group" value={reservation.representativeName} />
-            <DetailRow label="Contact" value={reservation.contactNo} />
-            <DetailRow label="Address" value={reservation.address} />
-            <DetailRow label="Purpose" value={reservation.purpose} />
-            <DetailRow label="Remarks" value={reservation.remarks || "No remarks recorded."} />
-          </dl>
-        </div>
-
-        <div className="dialog-foot reservation-drawer-actions">
-          <button className="btn btn-light" type="button" onClick={onEdit} disabled={busy}>
-            Edit
-          </button>
-          {availableStatusActions.map((action) => (
+    <ModalShell
+      open
+      onClose={onClose}
+      kicker={`Reservation #${reservation.reservationId}`}
+      title={reservation.representativeName}
+      subtitle={reservation.purpose}
+      size="lg"
+      busy={shellBusy}
+      footer={
+        <div className="reservation-drawer-actions">
+          <div className="reservation-drawer-actions-main">
+            <button className="btn btn-light" type="button" onClick={onEdit} disabled={busy}>
+              Edit
+            </button>
             <button
-              className={`btn ${action.danger ? "btn-danger" : "btn-primary"}`}
+              className="btn btn-light"
               type="button"
-              key={action.statusCode}
-              onClick={() => onRequestStatus(action)}
+              onClick={() => navigateToSlip(reservation.reservationId)}
               disabled={busy}
             >
-              {action.label}
+              Print slip
             </button>
-          ))}
+          </div>
+          <div className="reservation-drawer-actions-status">
+            {orderStatusActions(availableStatusActions).map((action) => (
+              <button
+                className={`btn ${action.danger ? "btn-danger" : "btn-primary"}`}
+                type="button"
+                key={action.statusCode}
+                onClick={() => onRequestStatus(action)}
+                disabled={busy}
+              >
+                {action.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </section>
-    </div>
+      }
+    >
+      <div className="detail-status-line">
+        <StatusBadge statusCode={reservation.statusCode} />
+      </div>
+      <dl className="detail-grid staff-detail-grid">
+        <DetailRow label="Reference number" value={formatReferenceNo(reservation.referenceNo)} />
+        <DetailRow label="Date" value={formatDate(reservation.reservationDate)} />
+        <DetailRow label="Time" value={displayRange(reservation.startTime, reservation.endTime)} />
+        <DetailRow label="Requester or group" value={reservation.representativeName} />
+        <DetailRow label="Contact" value={reservation.contactNo} />
+        <DetailRow label="Address" value={reservation.address} />
+        <DetailRow label="Purpose" value={reservation.purpose} />
+        <DetailRow label="Remarks" value={reservation.remarks || "No remarks recorded."} />
+      </dl>
+    </ModalShell>
   );
 }
 
@@ -163,28 +155,31 @@ function DetailRow({ label, value }) {
   );
 }
 
-const FOCUSABLE_SELECTORS = [
-  "a[href]",
-  "button:not([disabled])",
-  "input:not([disabled])",
-  "select:not([disabled])",
-  "textarea:not([disabled])",
-  '[tabindex]:not([tabindex="-1"])'
-].join(", ");
-
-function getFocusableElements(container) {
-  if (!container) return [];
-  return Array.from(container.querySelectorAll(FOCUSABLE_SELECTORS)).filter((element) => {
-    if (element.hasAttribute("disabled")) return false;
-    if (element.getAttribute("aria-hidden") === "true") return false;
-    if (element.tabIndex === -1 && !element.hasAttribute("tabindex")) return false;
-    return element.offsetParent !== null || element === document.activeElement;
+function orderStatusActions(actions) {
+  return [...actions].sort((first, second) => {
+    if (first.statusCode === "COMPLETED") return -1;
+    if (second.statusCode === "COMPLETED") return 1;
+    return 0;
   });
 }
 
 function displayRange(startTime, endTime) {
   if (!startTime || !endTime) return "Time unavailable";
   return `${formatTime(startTime)} - ${formatTime(endTime)}`;
+}
+
+/**
+ * Navigates the staff console to the print-slip route for the given reservation
+ * using the same client-side routing pattern as the rest of the app: push the
+ * URL onto history, then dispatch a synthetic `popstate` so `App.jsx`'s router
+ * picks up the new path without a full page reload.
+ */
+function navigateToSlip(reservationId) {
+  if (reservationId === null || reservationId === undefined) return;
+  if (typeof window === "undefined") return;
+  const target = `/reservations/${reservationId}/slip`;
+  window.history.pushState({}, "", target);
+  window.dispatchEvent(new PopStateEvent("popstate"));
 }
 
 export function buildStatusDialog(reservation, action) {

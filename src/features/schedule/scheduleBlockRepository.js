@@ -6,6 +6,17 @@ export class ScheduleBlockConflictError extends Error {
   }
 }
 
+export class ScheduleBlockReservationConflictError extends Error {
+  constructor(
+    message = "Maintenance block overlaps an active reservation. Cancel or clear the reservation before blocking this time.",
+    overlap = null
+  ) {
+    super(message);
+    this.name = "ScheduleBlockReservationConflictError";
+    this.overlap = overlap;
+  }
+}
+
 export class ScheduleBlockNotFoundError extends Error {
   constructor(message = "Schedule block was not found.") {
     super(message);
@@ -71,6 +82,15 @@ export async function createScheduleBlock(db, payload, options = {}) {
 
     if (overlap) {
       throw new ScheduleBlockConflictError("Schedule block overlaps an existing unavailable court range.", overlap);
+    }
+
+    const reservedOverlaps = await listOverlappingReservedReservations(connection, payload);
+
+    if (reservedOverlaps.length > 0) {
+      throw new ScheduleBlockReservationConflictError(
+        "Maintenance block overlaps an active reservation. Cancel or clear the reservation before blocking this time.",
+        reservedOverlaps[0]
+      );
     }
 
     const [result] = await connection.execute(

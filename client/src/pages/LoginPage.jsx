@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
 import { login } from "../api/client.js";
+import { OFFICIAL_HEADER } from "../api/officialHeader.js";
 import { Icon } from "../components/Icon.jsx";
 
 /* Time-of-day greeting (Asia/Manila). Returns the italic emphasis word that  */
@@ -196,7 +197,7 @@ export function LoginPage({ onLogin }) {
         <div className="login-side-grain" aria-hidden="true" />        <div className="login-mark">
           <span className="login-republic">Republika ng Pilipinas</span>
           <SealImage />
-          <strong className="login-barangay">Barangay Sto. Niño</strong>
+          <strong className="login-barangay">{OFFICIAL_HEADER.barangayName}</strong>
           <span className="login-locale">City of Parañaque</span>
         </div>
         <div className="login-headline">
@@ -310,8 +311,8 @@ export function LoginPage({ onLogin }) {
   );
 }
 
-/* Seal renderer: tries to load the real Barangay Sto. Niño image. If it   */
-/* isn't installed yet (the operator drops it in client/public later) we   */
+/* Seal renderer: tries to load the real official barangay seal image. If */
+/* it isn't installed yet (the operator drops it in client/public later)  */
 /* render a geometric civic mark — a red 12-tooth cog with the council     */
 /* lettering on a thin ring. Strictly geometry + type, no figurative       */
 /* imagery; the real seal is the only thing that should ever carry the    */
@@ -325,7 +326,7 @@ function SealImage() {
     <img
       className="login-seal"
       src={SEAL_IMAGE_SRC}
-      alt="Barangay Sto. Niño official seal"
+      alt={`${OFFICIAL_HEADER.barangayName} official seal`}
       width="132"
       height="132"
       decoding="async"
@@ -356,7 +357,7 @@ function SealFallback() {
       height="132"
       viewBox="0 0 132 132"
       role="img"
-      aria-label="Barangay Sto. Niño placeholder seal"
+      aria-label={`${OFFICIAL_HEADER.barangayName} placeholder seal`}
     >
       <defs>
         <path id="seal-arc-top" d="M 26 66 A 40 40 0 0 1 106 66" fill="none" />

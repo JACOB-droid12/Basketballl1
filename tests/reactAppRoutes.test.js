@@ -26,12 +26,17 @@ test("main staff routes render the React app shell", async () => {
       "/login",
       "/dashboard",
       "/schedule",
+      "/schedule/daily-print",
       "/reservations",
       "/reservations/new",
+      "/reservations/history",
       "/reservations/1",
       "/reservations/1/edit",
+      "/reservations/1/slip",
+      "/residents",
       "/account",
       "/account/password",
+      "/settings/court-policy",
       "/activity-logs",
       "/reports"
     ];

@@ -12,6 +12,13 @@ export class ResidentNotFoundError extends Error {
   }
 }
 
+export class ResidentInUseError extends Error {
+  constructor(message = "This resident is referenced by one or more reservations and cannot be removed.") {
+    super(message);
+    this.name = "ResidentInUseError";
+  }
+}
+
 export function buildResidentListQuery(filters = {}) {
   const where = [];
   const params = {};
@@ -134,6 +141,57 @@ export async function updateResidentDirectoryEntry(db, residentId, resident, opt
     const updated = await getResidentById(connection, numericResidentId);
     await connection.commit();
     return updated;
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+export async function deleteResidentDirectoryEntry(db, residentId, options = {}) {
+  const userId = requireAuthenticatedUserId(options.userId);
+  const numericResidentId = Number(residentId);
+  const connection = await db.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    // Read the resident first so the activity log can carry the name
+    // (the row is gone after DELETE) and so a 404 surfaces consistently
+    // for unknown ids.
+    const existing = await getResidentById(connection, numericResidentId);
+    if (!existing) {
+      throw new ResidentNotFoundError();
+    }
+
+    try {
+      const [result] = await connection.execute(
+        "DELETE FROM residents WHERE resident_id = :residentId",
+        { residentId: numericResidentId }
+      );
+      if (result.affectedRows === 0) {
+        throw new ResidentNotFoundError();
+      }
+    } catch (error) {
+      // The reservations.resident_id FK is `ON DELETE RESTRICT`. MySQL
+      // surfaces the violation as ER_ROW_IS_REFERENCED_2 (errno 1451);
+      // we translate it into the in-use sentinel so the route can
+      // return a clean 409.
+      if (error && (error.errno === 1451 || error.code === "ER_ROW_IS_REFERENCED_2")) {
+        throw new ResidentInUseError();
+      }
+      throw error;
+    }
+
+    await writeActivityLog(connection, {
+      userId,
+      action: "DELETE_RESIDENT_DIRECTORY_ENTRY",
+      details: `Deleted resident directory entry for ${existing.name}.`
+    });
+
+    await connection.commit();
+    return existing;
   } catch (error) {
     await connection.rollback();
     throw error;

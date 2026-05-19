@@ -61,6 +61,7 @@ export function AccountPasswordPage({ user }) {
 
       <form className="form-card password-form-card" onSubmit={handleSubmit} noValidate>
         <input
+          id="account-password-username"
           type="text"
           name="username"
           autoComplete="username"
@@ -75,7 +76,7 @@ export function AccountPasswordPage({ user }) {
         </div>
 
         {formError && <div className="alert error" role="alert">{formError}</div>}
-        {formSuccess && <div className="alert success" role="alert">{formSuccess}</div>}
+        {formSuccess && <div className="alert success" role="status" aria-live="polite" aria-atomic="true">{formSuccess}</div>}
 
         <label className="field">
           <span>Current password</span>

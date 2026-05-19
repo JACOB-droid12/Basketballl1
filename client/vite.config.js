@@ -1,16 +1,21 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const clientRoot = fileURLToPath(new URL(".", import.meta.url));
+const projectRoot = path.resolve(clientRoot, "..");
 
 export default defineConfig({
-  root: "client",
+  root: clientRoot,
   base: "/app/",
   plugins: [react()],
   build: {
-    outDir: "../public/app",
+    outDir: path.join(projectRoot, "public", "app"),
     emptyOutDir: true,
     manifest: true,
     rollupOptions: {
-      input: "index.html"
+      input: path.join(clientRoot, "index.html")
     }
   },
   server: {

@@ -21,7 +21,7 @@ if (testFiles.length === 0) {
 
 const testProcess = spawn(
   process.execPath,
-  ["--test", "--experimental-test-isolation=none", ...testFiles],
+  ["--import", "tsx", "--test", "--experimental-test-isolation=none", ...testFiles],
   {
     cwd: rootDir,
     stdio: "inherit",

@@ -11,12 +11,17 @@ const MAIN_ROUTES = [
   "/login",
   "/dashboard",
   "/schedule",
+  "/schedule/daily-print",
   "/reservations",
   "/reservations/new",
+  "/reservations/history",
   "/reservations/:reservationId(\\d+)",
   "/reservations/:reservationId(\\d+)/edit",
+  "/reservations/:reservationId(\\d+)/slip",
+  "/residents",
   "/account",
   "/account/password",
+  "/settings/court-policy",
   "/activity-logs",
   "/reports"
 ];

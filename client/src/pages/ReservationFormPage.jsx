@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 
 import { apiRequest } from "../api/client.js";
 import { formatDate, formatTime } from "../api/mappers.js";
+import { formatReferenceNo } from "../api/referenceNo.js";
 import { Field } from "../components/Field.jsx";
 import { Icon } from "../components/Icon.jsx";
 import { LoadingState } from "../components/LoadingState.jsx";
+import { ResidentPickerDialog } from "../components/ResidentPickerDialog.jsx";
 
 const TIME_OPTIONS = [
   "07:00",
@@ -24,6 +26,29 @@ const TIME_OPTIONS = [
   "21:00"
 ];
 
+// Group the start-time chips by time of day so the staff scans for a
+// shorter list of options at once instead of a 14-chip grid (Req.
+// OPUS-UI-002). Backend validation rules and the underlying
+// `TIME_OPTIONS` array do not change — this is presentation-only,
+// so any time the backend allows is still selectable here.
+const TIME_PERIODS = [
+  {
+    id: "morning",
+    label: "Morning",
+    match: (time) => time < "12:00"
+  },
+  {
+    id: "afternoon",
+    label: "Afternoon",
+    match: (time) => time >= "12:00" && time < "17:00"
+  },
+  {
+    id: "evening",
+    label: "Evening",
+    match: (time) => time >= "17:00"
+  }
+];
+
 const EMPTY_FORM = {
   representativeName: "",
   contactNo: "",
@@ -36,6 +61,39 @@ const EMPTY_FORM = {
   statusCode: "RESERVED"
 };
 
+// Pick the first start time on the standard hourly grid that has not
+// already passed in Manila. Used to seed the New Reservation form with
+// a slot the staff can actually book today (UI-AUD-002). When every
+// slot for today is already in the past, leave startTime/endTime
+// empty so a disabled chip is never the active selection — the staff
+// member must explicitly pick a non-disabled slot before Save enables.
+function buildInitialForm() {
+  const date = getManilaDate();
+  const currentTime = getManilaTime();
+  const startCandidates = TIME_OPTIONS.slice(0, -1);
+  const firstFuture = startCandidates.find((time) => time > currentTime);
+
+  let startTime = "";
+  let endTime = "";
+  if (firstFuture) {
+    startTime = firstFuture;
+    const startIndex = TIME_OPTIONS.indexOf(firstFuture);
+    endTime = TIME_OPTIONS[startIndex + 1] || "";
+  }
+
+  return {
+    representativeName: "",
+    contactNo: "",
+    address: "",
+    purpose: "",
+    reservationDate: date,
+    startTime,
+    endTime,
+    remarks: "",
+    statusCode: "RESERVED"
+  };
+}
+
 // Field length caps mirror the DB columns in database/schema.sql so we never
 // let the user type past what the server can store. Remarks is TEXT in the DB
 // but we cap it at 1000 chars on the client to keep the form printable and
@@ -45,19 +103,65 @@ const MAX_CONTACT_NO = 30;
 const MAX_ADDRESS = 255;
 const MAX_PURPOSE = 120;
 const MAX_REMARKS = 1000;
+const CONTACT_NUMBER_PATTERN = String.raw`[0-9+\x2d\(\)\s]{7,30}`;
 
 export function ReservationFormPage({ reservationId, onNavigate }) {
   const isEdit = Boolean(reservationId);
-  const [form, setForm] = useState(EMPTY_FORM);
+  const [form, setForm] = useState(() => (isEdit ? EMPTY_FORM : buildInitialForm()));
   const [originalSlot, setOriginalSlot] = useState(null);
   const [state, setState] = useState({ loading: isEdit, saving: false, error: "", fieldErrors: {} });
   const [availability, setAvailability] = useState({ loading: false, data: null, error: "", errors: {} });
   const [timeTouched, setTimeTouched] = useState(false);
   const [endTimeOverride, setEndTimeOverride] = useState(false);
+  // The saved reservation returned by the backend after a successful create
+  // or edit. We hold it locally so the staff member can read the freshly
+  // assigned `referenceNo` from the saved-confirmation surface (Req. 1.1)
+  // before navigating back to the reservations list.
+  const [savedReservation, setSavedReservation] = useState(null);
+  // Toggles the resident directory picker. The picker is mounted only when
+  // open so its mount-time fetch (`GET /api/residents`) doesn't fire on
+  // every form load — it should only run when the staff actively asks
+  // to "Choose from directory" (Req. 9.3).
+  const [residentPickerOpen, setResidentPickerOpen] = useState(false);
   // Bumping availabilityRetry retriggers the availability check after a
   // network or server error without the user having to re-touch a time field.
   const [availabilityRetry, setAvailabilityRetry] = useState(0);
-  const todayInManila = useMemo(() => getManilaDate(), []);
+  const [todayInManila, setTodayInManila] = useState(getManilaDate);
+  const [currentManilaTime, setCurrentManilaTime] = useState(getManilaTime);
+  // Court_Policy_Settings loaded once when the form mounts so the Save
+  // button can be gated against the same min/max-duration policy the
+  // backend enforces (UI-AUD-002, Req. 1.4). On a load failure we leave
+  // `policy` as null and let the backend stay authoritative — the
+  // existing 4xx flow already surfaces a duration error inline.
+  const [policy, setPolicy] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    apiRequest("/api/settings/court-policy")
+      .then((data) => {
+        if (!active) return;
+        if (data && data.policy) setPolicy(data.policy);
+      })
+      .catch(() => {
+        // Fail open: the backend remains the authoritative validator.
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Keep the "is this slot in the past?" check fresh while the form is
+  // open. The previous version memoized these once at mount, so a clerk
+  // who let the form sit open for a few minutes could still pick a slot
+  // that had quietly slipped into the past (UI-AUD-011). A 30-second
+  // tick is more than fine for hour-grid slots.
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setTodayInManila(getManilaDate());
+      setCurrentManilaTime(getManilaTime());
+    }, 30_000);
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   useEffect(() => {
     if (!isEdit) return;
@@ -118,6 +222,47 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
 
   const hasKnownConflict = Boolean(availability.data && availability.data.available === false);
 
+  // Same-day past-time guard. The backend already rejects today-with-
+  // a-past-start, but the staff should not be able to press Save and
+  // wait for a 400. We disable the Save button as soon as the form
+  // points at today and the chosen start time has already passed,
+  // and we surface the reason as a tooltip so the clerk knows why
+  // (UI-AUD-002, UI-AUD-011).
+  // Set of start-time values rendered as disabled chips for today's
+  // form. Used by the chip render loop below so a disabled chip is
+  // never marked as the active selection (UI-AUD-002, Req. 1.2) and
+  // by `cannotSaveReason` so the Save button stays disabled while
+  // `form.startTime` is one of those past values (Req. 1.3).
+  const disabledStartTimes = useMemo(() => {
+    if (form.reservationDate !== todayInManila) return new Set();
+    return new Set(TIME_OPTIONS.filter((time) => time <= currentManilaTime));
+  }, [currentManilaTime, form.reservationDate, todayInManila]);
+
+  const cannotSaveReason = (() => {
+    // Order matters: surface the most specific reason first so the
+    // tooltip matches the field the staff member needs to fix.
+    if (!form.startTime) return "Pick a start time before saving.";
+    if (disabledStartTimes.has(form.startTime)) {
+      return "This time has already passed today. Pick a later start time.";
+    }
+    if (!isValidDate(form.reservationDate)) {
+      return "Pick a date before saving";
+    }
+    if (!isValidTimeRange(form.startTime, form.endTime)) {
+      return "Pick a valid start and end time before saving";
+    }
+    if (durationOutsidePolicy(form, policy)) {
+      const min = Number(policy?.minimumReservationMinutes);
+      const max = Number(policy?.maximumReservationMinutes);
+      if (Number.isFinite(min) && Number.isFinite(max)) {
+        return `End time is outside the policy's min/max duration (${min} to ${max} minutes).`;
+      }
+      return "End time is outside the policy's min/max duration.";
+    }
+    if (hasKnownConflict) return "Pick a different time before saving";
+    return "";
+  })();
+
   useEffect(() => {
     if (!canCheckAvailability) {
       setAvailability({ loading: false, data: null, error: "", errors: {} });
@@ -165,7 +310,29 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
   }, [canCheckAvailability, form.endTime, form.reservationDate, form.startTime, isEdit, reservationId, availabilityRetry]);
 
   function updateField(field, value) {
-    setForm((current) => ({ ...current, [field]: value }));
+    setForm((current) => {
+      const next = { ...current, [field]: value };
+      // If the staff member moved the reservation onto today's date and
+      // the saved start time has already passed, gently bump the start
+      // forward to the next future slot so the form does not re-enter
+      // the disabled-past-time state. End time follows the existing
+      // duration so the duration controls below stay accurate
+      // (UI-AUD-002).
+      if (field === "reservationDate" && value === todayInManila) {
+        if (TIME_OPTIONS.includes(current.startTime) && current.startTime <= currentManilaTime) {
+          const startCandidates = TIME_OPTIONS.slice(0, -1);
+          const firstFuture = startCandidates.find((time) => time > currentManilaTime);
+          if (firstFuture) {
+            const startIndex = TIME_OPTIONS.indexOf(firstFuture);
+            const currentDuration = Math.max(1, durationHours(current.startTime, current.endTime) || 1);
+            const nextEnd = TIME_OPTIONS[startIndex + currentDuration] || TIME_OPTIONS[TIME_OPTIONS.length - 1];
+            next.startTime = firstFuture;
+            next.endTime = nextEnd;
+          }
+        }
+      }
+      return next;
+    });
     setState((current) => ({
       ...current,
       fieldErrors: { ...current.fieldErrors, [field]: "" },
@@ -214,15 +381,36 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
     // while saving, but this catches the rare Enter-key path where the focus
     // lands on a non-button element.
     if (state.saving) return;
+    // Enter-key safeguard for the disabled-Save state (Req. 1.6, UI-AUD-002).
+    // The Save button is already wired with `disabled={state.saving ||
+    // Boolean(cannotSaveReason)}`, but a stray Enter from inside an input
+    // can still trigger form submission. When `cannotSaveReason` is set we
+    // keep the form open, surface the reason in the existing inline alert,
+    // and preserve any backend-supplied per-field errors so the staff sees
+    // the blocking field by name without sending a request.
+    if (cannotSaveReason) {
+      setState((current) => ({
+        ...current,
+        saving: false,
+        error: cannotSaveReason,
+        fieldErrors: { ...current.fieldErrors }
+      }));
+      return;
+    }
     setState((current) => ({ ...current, saving: true, error: "", fieldErrors: {} }));
 
     try {
       const payload = isEdit ? { ...form } : { ...form, statusCode: "RESERVED" };
-      await apiRequest(isEdit ? `/api/reservations/${reservationId}` : "/api/reservations", {
+      const response = await apiRequest(isEdit ? `/api/reservations/${reservationId}` : "/api/reservations", {
         method: isEdit ? "PUT" : "POST",
         body: JSON.stringify(payload)
       });
-      onNavigate("/reservations");
+      // Surface the just-saved reservation so the staff member can read the
+      // backend-assigned `referenceNo` before navigating away (Req. 1.1).
+      // The list page is still one click away via the confirmation panel.
+      const reservation = response && response.reservation ? response.reservation : null;
+      setSavedReservation(reservation);
+      setState((current) => ({ ...current, saving: false, error: "", fieldErrors: {} }));
     } catch (error) {
       setState((current) => ({
         ...current,
@@ -233,7 +421,42 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
     }
   }
 
+  function handleResidentSelect(prefill) {
+    // The dialog hands us only the three fields the reservation form needs
+    // to prefill — representativeName, contactNo, and address (Req. 9.3).
+    // We update each field through the existing `updateField` path so
+    // per-field error state and the form's "edited" markers clear in
+    // the same way as a manual edit.
+    if (!prefill) return;
+    if (prefill.representativeName) updateField("representativeName", prefill.representativeName);
+    if (prefill.contactNo) updateField("contactNo", prefill.contactNo);
+    if (prefill.address) updateField("address", prefill.address);
+  }
+
   if (state.loading) return <LoadingState label="Loading reservation..." />;
+
+  if (savedReservation) {
+    // Saved-confirmation surface: shows the backend-assigned `referenceNo`
+    // (Req. 1.1) so the clerk can write it on the resident's slip before
+    // moving on. Reuses the existing `.banner.banner-ok`/`alert` markup
+    // and the `EmptyState`-style state card so we don't introduce any new
+    // CSS class vocabulary (Req. 18.1).
+    return (
+      <ReservationSavedPanel
+        reservation={savedReservation}
+        isEdit={isEdit}
+        onNavigate={onNavigate}
+        onCreateAnother={() => {
+          setSavedReservation(null);
+          setForm(buildInitialForm());
+          setOriginalSlot(null);
+          setTimeTouched(false);
+          setEndTimeOverride(false);
+          setAvailability({ loading: false, data: null, error: "", errors: {} });
+        }}
+      />
+    );
+  }
 
   return (
     <section className="page staff-form-page">
@@ -259,6 +482,21 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
         <section className="form-section">
           <h3><span className="section-num">1</span>Who is booking?</h3>
           <div className="section-hint">Sino ang magpapa-reserba?</div>
+          <div className="slot-picker" aria-label="Resident directory shortcut">
+            <span className="field-hint">
+              Pick a saved resident or group to prefill the requester fields.
+            </span>
+            <div>
+              <button
+                type="button"
+                className="btn btn-light"
+                onClick={() => setResidentPickerOpen(true)}
+              >
+                <Icon name="info" size={16} />
+                <span>Choose from directory</span>
+              </button>
+            </div>
+          </div>
           <div className="form-grid">
             <Field
               id="representativeName"
@@ -281,7 +519,7 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
                 autoComplete="tel"
                 inputMode="tel"
                 maxLength={MAX_CONTACT_NO}
-                pattern="[0-9+\-()\s]{7,30}"
+                pattern={CONTACT_NUMBER_PATTERN}
                 value={form.contactNo}
                 onChange={(event) => updateField("contactNo", event.target.value)}
                 required
@@ -323,7 +561,7 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
             id="reservationDate"
             label="Date"
             filipino="Petsa"
-            hint={isPastDate(form.reservationDate, todayInManila) ? "Heads up: this date is in the past. Save anyway only if you are encoding a walk-in that already happened." : undefined}
+            hint={isPastDate(form.reservationDate, todayInManila) ? "This date is in the past. Use this only when recording a walk-in that already happened." : undefined}
             error={state.fieldErrors.reservationDate}
           >
             <input
@@ -352,27 +590,44 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
             </span>
             <span className="field-hint">Tap when the court time begins. The end time is calculated from the duration below.</span>
             <div
-              className="time-grid"
+              className="time-period-groups"
               role="radiogroup"
               aria-label="Start time"
               onKeyDown={(event) => handleTimeChipKeyDown(event, form.startTime, applyStartTime)}
             >
-              {TIME_OPTIONS.slice(0, -1).map((time) => {
-                const selected = form.startTime === time;
+              {TIME_PERIODS.map((period) => {
+                const periodTimes = TIME_OPTIONS.slice(0, -1).filter((time) => period.match(time));
+                if (periodTimes.length === 0) return null;
                 return (
-                  <button
-                    key={time}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    aria-pressed={selected}
-                    tabIndex={selected ? 0 : -1}
-                    data-time={time}
-                    className={`time-chip ${selected ? "selected" : ""}`}
-                    onClick={() => applyStartTime(time)}
-                  >
-                    {formatTime(time)}
-                  </button>
+                  <div className="time-period-group" key={period.id}>
+                    <div className="time-period-label" aria-hidden="true">
+                      {period.label}
+                    </div>
+                    <div className="time-grid">
+                      {periodTimes.map((time) => {
+                        const selected = form.startTime === time;
+                        const disabled = disabledStartTimes.has(time);
+                        const activeSelection = selected && !disabled;
+                        return (
+                          <button
+                            key={time}
+                            type="button"
+                            role="radio"
+                            aria-checked={activeSelection}
+                            aria-pressed={selected}
+                            tabIndex={selected ? 0 : -1}
+                            data-time={time}
+                            className={`time-chip ${activeSelection ? "selected" : ""}`}
+                            onClick={() => applyStartTime(time)}
+                            disabled={disabled}
+                            title={disabled ? "This time has already passed today" : undefined}
+                          >
+                            {formatTime(time)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -440,6 +695,19 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
               rows="4"
             />
           </Field>
+
+          {/* Recurring reservations were deferred at the backend layer
+            (Req. 14). No surface is rendered here so the staff member
+            does not encode a recurrence the backend cannot atomically
+            support. No recurring backend route is called and no
+            frontend-only recurrence schedule is stored
+            (Req. 14.3, 14.4). The note is rendered as a quiet field
+            hint instead of a prominent info banner so it does not
+            read like an unfinished feature next to the rest of the
+            form (UI-AUD-016). */}
+          <p className="form-copy form-copy-muted recurring-not-available-note" role="note">
+            Recurring reservations: not yet available. Encode each booking on its own date.
+          </p>
         </section>
 
         <div className="form-footer">
@@ -449,13 +717,86 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
           <button
             className="btn btn-primary btn-big"
             type="submit"
-            disabled={state.saving || hasKnownConflict}
-            title={hasKnownConflict ? "Pick a different time before saving" : undefined}
+            disabled={state.saving || Boolean(cannotSaveReason)}
+            title={cannotSaveReason || undefined}
           >
             {state.saving ? "Saving..." : isEdit ? "Save Changes" : "Save Reservation"}
           </button>
         </div>
       </form>
+
+      <ResidentPickerDialog
+        open={residentPickerOpen}
+        onClose={() => setResidentPickerOpen(false)}
+        onSelect={handleResidentSelect}
+      />
+    </section>
+  );
+}
+
+function ReservationSavedPanel({ reservation, isEdit, onNavigate, onCreateAnother }) {
+  // The backend is the only source of truth for the reference number — we
+  // render whatever it returned via `formatReferenceNo`, which falls back
+  // to a clear placeholder if the field is missing rather than throwing
+  // (Req. 1.1, 1.2, 1.4).
+  const referenceNo = formatReferenceNo(reservation && reservation.referenceNo);
+  const representativeName = (reservation && reservation.representativeName) || "";
+  const reservationDate = (reservation && reservation.reservationDate) || "";
+  const startTime = (reservation && reservation.startTime) || "";
+  const endTime = (reservation && reservation.endTime) || "";
+
+  return (
+    <section className="page staff-form-page">
+      <div className="page-header page-head staff-page-head">
+        <div>
+          <h1 className="page-title">{isEdit ? "Reservation updated" : "Reservation saved"}</h1>
+          <div className="page-sub">Hand the reference number to the resident.</div>
+          <div className="page-sub-fil">Ibigay ang reference number sa residente.</div>
+        </div>
+        <button
+          className="btn btn-light btn-big"
+          type="button"
+          onClick={() => onNavigate("/reservations")}
+        >
+          Back to Bookings
+        </button>
+      </div>
+
+      <div className="banner banner-ok availability-panel" role="status" aria-live="polite" aria-atomic="true">
+        <div className="b-ic"><Icon name="check" /></div>
+        <div>
+          <h4>Reference number</h4>
+          <p>
+            <strong>{referenceNo}</strong>
+          </p>
+          {representativeName && (
+            <p>
+              {representativeName}
+              {reservationDate && ` · ${formatDate(reservationDate)}`}
+              {startTime && endTime && ` · ${formatTime(startTime)} to ${formatTime(endTime)}`}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="form-footer">
+        <button
+          className="btn btn-light btn-big"
+          type="button"
+          onClick={() => onNavigate("/reservations")}
+        >
+          View bookings
+        </button>
+        {!isEdit && (
+          <button
+            className="btn btn-primary btn-big"
+            type="button"
+            onClick={onCreateAnother}
+          >
+            Encode another reservation
+          </button>
+        )}
+      </div>
     </section>
   );
 }
@@ -524,7 +865,7 @@ function AvailabilityNotice({ availability, canCheck, isEdit, hasEditedTimeChang
 
   if (availability.data.available) {
     return (
-      <div className="banner banner-ok availability-panel" role="status">
+      <div className="banner banner-ok availability-panel" role="status" aria-live="polite" aria-atomic="true">
         <div className="b-ic"><Icon name="check" /></div>
         <div>
           <h4>This time is available</h4>
@@ -646,7 +987,7 @@ function friendlyAvailabilityError(error) {
   }
 
   if (error?.status >= 500) {
-    return "The schedule check did not respond. Tap Try again, or save anyway and the backend will still confirm.";
+    return "The schedule check did not respond. Tap Try again before saving.";
   }
 
   return error?.message || "Availability could not be confirmed.";
@@ -701,6 +1042,33 @@ function durationHours(startTime, endTime) {
   return end - start;
 }
 
+// Returns true when the form's start/end times produce a duration that
+// the loaded `Court_Policy_Settings` rejects (under min, over max).
+// Returns false when the policy hasn't loaded yet, when the times don't
+// parse, or when the duration is within the policy bounds — the
+// backend remains authoritative on save (Req. 1.4, 24.1).
+function durationOutsidePolicy(form, policy) {
+  if (!policy) return false;
+  const min = Number(policy.minimumReservationMinutes);
+  const max = Number(policy.maximumReservationMinutes);
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return false;
+  const startMinutes = parseTimeToMinutes(form.startTime);
+  const endMinutes = parseTimeToMinutes(form.endTime);
+  if (startMinutes === null || endMinutes === null) return false;
+  const duration = endMinutes - startMinutes;
+  if (duration <= 0) return false;
+  return duration < min || duration > max;
+}
+
+function parseTimeToMinutes(value) {
+  const match = /^(\d{2}):(\d{2})$/.exec(String(value || ""));
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
+  return hours * 60 + minutes;
+}
+
 function handleTimeChipKeyDown(event, currentStart, applyStart) {
   // ARIA radiogroup: arrows cycle, Home/End jump to ends.
   // Only the available start times (TIME_OPTIONS minus the last slot) participate.
@@ -748,4 +1116,16 @@ function getManilaDate() {
   const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
 
   return `${values.year}-${values.month}-${values.day}`;
+}
+
+function getManilaTime() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+
+  return `${values.hour}:${values.minute}`;
 }

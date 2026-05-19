@@ -10,16 +10,22 @@ test("builds activity log list query with parameterized filters", () => {
   const query = buildActivityLogListQuery({
     action: "UPDATE_RESERVATION",
     date: "2026-05-08",
+    fromDate: "2026-05-01",
+    toDate: "2026-05-31",
     search: "Admin"
   });
 
   assert.match(query.sql, /al\.action = :action/);
   assert.match(query.sql, /DATE\(al\.created_at\) = :date/);
+  assert.match(query.sql, /DATE\(al\.created_at\) >= :fromDate/);
+  assert.match(query.sql, /DATE\(al\.created_at\) <= :toDate/);
   assert.match(query.sql, /user\.full_name LIKE :searchLike/);
   assert.doesNotMatch(query.sql, /Admin/);
   assert.deepEqual(query.params, {
     action: "UPDATE_RESERVATION",
     date: "2026-05-08",
+    fromDate: "2026-05-01",
+    toDate: "2026-05-31",
     searchLike: "%Admin%"
   });
 });

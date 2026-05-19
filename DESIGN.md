@@ -233,6 +233,18 @@ The system is flat-by-default with bordered surfaces. Shadows are reserved for s
 - **Construction:** A 8x8px filled circle (`::before`) precedes a 12px/600 label word. Color comes from the variant, label always present.
 - **Variants:** `status-available` (success), `status-reserved` (civic-blue-soft on civic-blue-soft border, civic-blue-deep text), `status-missed` and `status-cancelled` (danger), `status-completed` (civic-blue-softer surface, civic-blue text), `status-account-active`, `status-account-inactive`.
 
+### Staff Page Header
+- **Component:** `client/src/components/StaffPageHeader.jsx`.
+- **Construction:** Renders the shared `page-header page-head staff-page-head` wrapper, optional `page-kicker`, required `page-title`, optional `page-sub`, optional Filipino helper copy, and an optional action cluster.
+- **Use When:** A staff task page needs the standard orientation block at the top of the screen. Right-side actions should be passed as a `button-row`, preserving the 48px / 64px button vocabulary.
+- **Do Not Use For:** Print-only document headers that need semantic `<header>` markup, modal headers, or compact card headings.
+
+### Card Section Header
+- **Component:** `client/src/components/CardSectionHeader.jsx`.
+- **Construction:** Renders the shared `card-section-head` wrapper with an `h2`, optional id, and optional caption span.
+- **Use When:** A `card padded-card` starts with a section title plus one supporting sentence. This is the default for report cards and other repeated analysis sections.
+- **Do Not Use For:** Dense table column labels, filter-card heads, modal titles, or one-off hero/stat blocks.
+
 ### Cards / Containers
 - **Corner Style:** 10px radius for standard cards (`.card`, `.stat-card`, `.padded-card`); 12px for staff day cards and calendar toolbar; 14px for hero cards and dialogs.
 - **Background:** Paper Surface for primary cards; Muted Paper for grouped inner zones (table headers, dialog feet, form footers, attention-count rest state); Civic Blue for hero card and active calendar day-head.

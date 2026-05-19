@@ -53,6 +53,8 @@ Reservation object:
 
 Reservation create/update server-side validation now also enforces court policy settings and persisted unavailable blocks. Policy validation returns `400 { "errors": { ... } }`. Reservation overlap and unavailable block conflicts return `409`.
 
+Reservation list filters accept real `YYYY-MM-DD` dates and `RESERVED`, `MISSED`, `CANCELLED`, or `COMPLETED` statuses. Invalid filter values return `400 { "errors": { ... } }` before storage is queried.
+
 ## Printable Reservation Slip
 
 `GET /api/reservations/:reservationId/slip`
@@ -149,6 +151,8 @@ Allowed `mode`: `WHOLE_DAY`, `TIME_RANGE`.
 
 Allowed `blockType`: `CLEANING`, `BARANGAY_EVENT`, `REPAIRS`, `TOURNAMENT`, `MEETING`, `EMERGENCY_USE`, `MAINTENANCE`.
 
+`reason` is required and must be 255 characters or fewer.
+
 Response:
 
 ```json
@@ -156,6 +160,7 @@ Response:
 ```
 
 Blocks do not delete reservations. They block new reservations and display separately from resident reservations.
+Maintenance blocks cannot be created over active `RESERVED` reservations; the backend returns `409` with the overlapping reservation so staff/admin can cancel or use the Clear for Public Use workflow first.
 
 ### Deactivate Block
 
@@ -192,6 +197,8 @@ Modes:
 - `WHOLE_DAY`: backend uses `07:00` to `21:00`.
 - `TIME_RANGE`: requires `startTime` and `endTime`.
 - `FROM_TIME_ONWARD`: requires `startTime`; backend uses closing time `21:00`.
+
+`reason` is required and must be 255 characters or fewer.
 
 Behavior:
 
@@ -261,7 +268,7 @@ Response includes:
 - `clearedPublicUseRanges`
 - `maintenanceBlocks`
 
-Date filters are inclusive. Without filters, reports use all reservation rows and active/inactive schedule blocks.
+Date filters are inclusive. `from` must be on or before `to`. Without filters, reports use all reservation rows and active/inactive schedule blocks.
 
 ## Exports
 
@@ -270,7 +277,7 @@ All export endpoints return `text/csv; charset=utf-8` with a timestamped attachm
 - `GET /api/exports/daily-schedule.csv?date=YYYY-MM-DD`
 - `GET /api/exports/weekly-schedule.csv?date=YYYY-MM-DD`
 - `GET /api/exports/monthly-reservations.csv?month=YYYY-MM`
-- `GET /api/exports/activity-logs.csv?action=&date=&search=`
+- `GET /api/exports/activity-logs.csv?action=&date=&from=&to=&search=`
 - `GET /api/exports/missed-reservations.csv?from=&to=`
 - `GET /api/exports/cancelled-reservations.csv?from=&to=`
 - `GET /api/exports/reports.csv?from=&to=`
@@ -352,6 +359,8 @@ Role: signed-in staff or admin.
 
 `PUT /api/residents/:residentId`
 
+`DELETE /api/residents/:residentId`
+
 Payload:
 
 ```json
@@ -386,6 +395,8 @@ Duplicate contact numbers return:
 ```json
 { "errors": { "contactNumber": "A resident or group with this contact number already exists." } }
 ```
+
+Deleting a resident directory entry returns the deleted resident model when it is not linked to reservations. Entries already referenced by reservation history return `409` and are preserved.
 
 ## Court Policy Settings
 

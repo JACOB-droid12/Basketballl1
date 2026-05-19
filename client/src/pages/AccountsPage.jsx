@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { apiRequest } from "../api/client.js";
+import { formatBackendDateTime } from "../api/mappers.js";
+import { ConfirmDialog } from "../components/ConfirmDialog.jsx";
 import { EmptyState } from "../components/EmptyState.jsx";
 import { Field } from "../components/Field.jsx";
 import { LoadingState } from "../components/LoadingState.jsx";
@@ -21,6 +23,7 @@ export function AccountsPage({ user }) {
   const [formSuccess, setFormSuccess] = useState("");
   const [saving, setSaving] = useState(false);
   const [statusError, setStatusError] = useState("");
+  const [pendingStatusAccount, setPendingStatusAccount] = useState(null);
   const [updatingUserIds, setUpdatingUserIds] = useState(() => new Set());
 
   useEffect(() => {
@@ -94,7 +97,9 @@ export function AccountsPage({ user }) {
     }
   }
 
-  async function handleStatusChange(account) {
+  async function handleConfirmStatusChange() {
+    const account = pendingStatusAccount;
+    if (!account) return;
     if (updatingUserIds.has(account.userId)) return;
 
     const nextStatus = account.accountStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
@@ -115,6 +120,7 @@ export function AccountsPage({ user }) {
     } catch (error) {
       setStatusError(error.message);
     } finally {
+      setPendingStatusAccount(null);
       setUpdatingUserIds((current) => {
         const next = new Set(current);
         next.delete(account.userId);
@@ -172,7 +178,7 @@ export function AccountsPage({ user }) {
           </div>
 
           {formError && <div className="alert error" role="alert">{formError}</div>}
-          {formSuccess && <div className="alert success" role="alert">{formSuccess}</div>}
+          {formSuccess && <div className="alert success" role="status" aria-live="polite" aria-atomic="true">{formSuccess}</div>}
 
           <Field id="account-fullName" label="Full name" filipino="Buong pangalan" error={fieldErrors.fullName} wide>
             <input name="fullName" autoComplete="name" value={form.fullName} onChange={(event) => updateField("fullName", event.target.value)} />
@@ -231,7 +237,7 @@ export function AccountsPage({ user }) {
                         account={account}
                         currentUserId={user.userId}
                         isUpdating={updatingUserIds.has(account.userId)}
-                        onStatusChange={handleStatusChange}
+                        onStatusChange={setPendingStatusAccount}
                       />
                     ))}
                   </tbody>
@@ -241,6 +247,18 @@ export function AccountsPage({ user }) {
           )}
         </div>
       </div>
+
+      {pendingStatusAccount && (
+        <ConfirmDialog
+          title={pendingStatusAccount.accountStatus === "ACTIVE" ? "Deactivate account?" : "Activate account?"}
+          body={`${pendingStatusAccount.fullName} will ${pendingStatusAccount.accountStatus === "ACTIVE" ? "lose access to this local system" : "be able to sign in again"}.`}
+          confirmLabel={pendingStatusAccount.accountStatus === "ACTIVE" ? "Deactivate account" : "Activate account"}
+          danger={pendingStatusAccount.accountStatus === "ACTIVE"}
+          busy={updatingUserIds.has(pendingStatusAccount.userId)}
+          onConfirm={handleConfirmStatusChange}
+          onCancel={() => setPendingStatusAccount(null)}
+        />
+      )}
     </section>
   );
 }
@@ -252,7 +270,7 @@ function AccountRow({ account, currentUserId, isUpdating, onStatusChange }) {
       <td>{account.username}</td>
       <td>{formatRole(account.role)}</td>
       <td><AccountStatus status={account.accountStatus} /></td>
-      <td>{formatDateTime(account.createdAt)}</td>
+      <td>{formatBackendDateTime(account.createdAt)}</td>
       <td>
         {Number(account.userId) === Number(currentUserId) ? (
           <span className="current-account-lock">Current account</span>
@@ -278,10 +296,4 @@ function AccountStatus({ status }) {
 
 function formatRole(role) {
   return String(role || "").toUpperCase() === "ADMIN" ? "Admin" : "Staff";
-}
-
-function formatDateTime(value) {
-  if (!value) return "Not recorded";
-  const [date = "", time = ""] = String(value).split(" ");
-  return `${date}${time ? ` ${time.slice(0, 5)}` : ""}`;
 }

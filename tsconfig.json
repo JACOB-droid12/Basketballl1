@@ -1,0 +1,19 @@
+{
+  "//": "Configures `tsx` (used by `node --import tsx --test ...` from scripts/run-tests.mjs) to compile `.jsx` modules with the automatic JSX runtime so test files can import `client/src/**/*.jsx` modules without `React` being in scope. The application bundle still goes through Vite + @vitejs/plugin-react in production; this file only governs the Node-side tsx loader.",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "module": "esnext",
+    "target": "es2022",
+    "moduleResolution": "bundler",
+    "allowJs": true,
+    "checkJs": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "client/src/**/*.js",
+    "client/src/**/*.jsx",
+    "tests/**/*.js"
+  ]
+}
