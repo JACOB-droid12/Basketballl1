@@ -71,6 +71,7 @@
   --ink-2: #3F4754;
   --ink-muted: #44505F;
   --primary: #0B4A6F;
+  --primary-deep: #083A57;
   --primary-dark: #083a57;
   --primary-soft: #dceaf2;
   --primary-softer: #EFF5F8;
@@ -101,6 +102,32 @@
   --info-border: #B9D4E3;
   --state-error-bg: #FFF8F7;
   --bar-track-bg: #EEE7DC;
+
+  /* ----- Status badge colors (stronger for low-quality monitors) -------- */
+  --status-available-border: #3B9959;
+  --status-available-bg: #D4EDDA;
+  --status-available-text: #1B6530;
+  --status-reserved-border: #4A90B8;
+  --status-reserved-bg: #D6EAF5;
+  --status-reserved-text: #0B4A6F;
+  --status-completed-border: #6B8FB5;
+  --status-completed-bg: #E3EEF7;
+  --status-completed-text: #1A4A6F;
+  --status-missed-border: #C0665A;
+  --status-missed-bg: #FCDBD6;
+  --status-missed-text: #7A2318;
+  --status-cancelled-border: #A08050;
+  --status-cancelled-bg: #F5ECD6;
+  --status-cancelled-text: #6B4C12;
+  --status-maintenance-border: #C49530;
+  --status-maintenance-bg: #FFF3D0;
+  --status-maintenance-text: #6D4A0D;
+  --status-barangay-border: #7A5BAF;
+  --status-barangay-bg: #EDE5F7;
+  --status-barangay-text: #4A2D7A;
+  --status-cleared-border: #7A9A7A;
+  --status-cleared-bg: #E8F0E8;
+  --status-cleared-text: #3A5A3A;
 
   /* ----- Light button on civic-blue topbar ------------------------------ */
   /* Translucent white treatment used by .topbar .btn-light. Kept in tokens  */
@@ -145,6 +172,150 @@
 
   font-family: var(--font-sans);
   font-size: 17px;
+}
+
+/* ----- Dark theme -------------------------------------------------------- */
+/* Civic-office dark variant for evening-shift staff and low-light use.      */
+/* Activated via data-theme="dark" on <html>. Tokens mirror the reference    */
+/* design system (Barangay (1)/styles.css) and remap the same custom         */
+/* properties so all existing components adapt without per-component rules.  */
+[data-theme="dark"] {
+  --bg: #1a2332;
+  --surface: #212d3d;
+  --surface-2: #283648;
+  --border: #334155;
+  --border-strong: #475569;
+  --ink: #f1f5f9;
+  --ink-2: #cbd5e1;
+  --ink-muted: #94a3b8;
+  --primary: #7db8d4;
+  --primary-dark: #a3d0e4;
+  --primary-soft: #1e3a4f;
+  --primary-softer: #172f40;
+  --primary-ink: #0f2a3d;
+  --accent: #f0a060;
+  --accent-soft: #3d2a1a;
+  --success: #6ee7a0;
+  --success-soft: #1a3d2a;
+  --warning: #fbbf24;
+  --warning-soft: #3d2f1a;
+  --danger: #f87171;
+  --danger-soft: #3d1a1a;
+  --alert-error-bg: #3d1a1a;
+  --alert-error-border: #7f1d1d;
+  --alert-warning-bg: #3d2f1a;
+  --alert-warning-border: #92400e;
+  --alert-warning-text: #fbbf24;
+  --alert-warning-text-strong: #fcd34d;
+  --alert-success-bg: #1a3d2a;
+  --alert-success-border: #166534;
+  --info-border: #1e3a4f;
+
+  /* Status badge dark mode */
+  --status-available-border: #34d058;
+  --status-available-bg: #1a3d2a;
+  --status-available-text: #6ee7a0;
+  --status-reserved-border: #7db8d4;
+  --status-reserved-bg: #1e3a4f;
+  --status-reserved-text: #a3d0e4;
+  --status-completed-border: #6b8fb5;
+  --status-completed-bg: #1e3a4f;
+  --status-completed-text: #a3d0e4;
+  --status-missed-border: #f87171;
+  --status-missed-bg: #3d1a1a;
+  --status-missed-text: #fca5a5;
+  --status-cancelled-border: #fbbf24;
+  --status-cancelled-bg: #3d2f1a;
+  --status-cancelled-text: #fcd34d;
+  --status-maintenance-border: #fbbf24;
+  --status-maintenance-bg: #3d2f1a;
+  --status-maintenance-text: #fcd34d;
+  --status-barangay-border: #a78bfa;
+  --status-barangay-bg: #2d1f4e;
+  --status-barangay-text: #c4b5fd;
+  --status-cleared-border: #6ee7a0;
+  --status-cleared-bg: #1a3d2a;
+  --status-cleared-text: #86efac;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.5);
+  --btn-on-primary-bg: rgba(255, 255, 255, 0.1);
+  --btn-on-primary-bg-hover: rgba(255, 255, 255, 0.18);
+  --btn-on-primary-border: rgba(255, 255, 255, 0.18);
+  --btn-on-primary-border-hover: rgba(255, 255, 255, 0.3);
+}
+
+/* Dark mode: keep the topbar dark and legible. The --primary token
+   lightens in dark mode for use on dark surfaces, but the topbar
+   itself IS the dark surface, so it keeps the original civic blue. */
+[data-theme="dark"] .topbar {
+  background: #0b4a6f;
+}
+
+[data-theme="dark"] .sidebar {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .btn-primary {
+  background: #0b4a6f;
+  border-color: #0b4a6f;
+  color: white;
+}
+
+[data-theme="dark"] .btn-primary:hover:not(:disabled) {
+  background: #083a57;
+  border-color: #083a57;
+}
+
+[data-theme="dark"] .input,
+[data-theme="dark"] .select,
+[data-theme="dark"] .textarea,
+[data-theme="dark"] input[type="date"],
+[data-theme="dark"] input[type="time"] {
+  background: var(--surface-2);
+  color: var(--ink);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .input:focus,
+[data-theme="dark"] .select:focus,
+[data-theme="dark"] .textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+[data-theme="dark"] .card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .slot-picker {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .time-chip:not(:disabled):not(.selected) {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+[data-theme="dark"] .duration-pick button:not(.on) {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--ink);
+}
+
+[data-theme="dark"] .end-time-summary {
+  background: var(--primary-soft);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .nav-item.active {
+  background: var(--primary-soft);
+  color: var(--primary);
 }
 
 * {
@@ -212,7 +383,7 @@ button:disabled {
   height: 44px;
   margin: 0;
   border: 2px solid rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.25);
   font-size: 22px;
 }
 
@@ -1044,6 +1215,12 @@ p {
   font-weight: 600;
 }
 
+.data-table td:last-child {
+  max-width: none;
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
 .data-table tbody tr:hover,
 .data-table tbody tr.selected {
   background: var(--primary-soft);
@@ -1427,7 +1604,17 @@ p {
 }
 
 .admin-table {
-  min-width: 860px;
+  min-width: 720px;
+}
+
+.admin-table th:nth-child(3),
+.admin-table td:nth-child(3) {
+  white-space: nowrap;
+}
+
+.admin-table th:nth-child(4),
+.admin-table td:nth-child(4) {
+  white-space: nowrap;
 }
 
 .logs-table {
@@ -2455,7 +2642,7 @@ button.booking-card.history-row:focus-visible {
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--ink-muted);
+  color: var(--ink-2);
 }
 
 .court-policy-preview-week {
@@ -2464,7 +2651,7 @@ button.booking-card.history-row:focus-visible {
   list-style: none;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 6px;
+  gap: 4px;
 }
 
 .court-policy-preview-daycell {
@@ -2519,8 +2706,8 @@ button.booking-card.history-row:focus-visible {
   margin: 0;
   padding: 0;
   list-style: none;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
   gap: 4px;
 }
 
@@ -2990,7 +3177,7 @@ button.booking-card.history-row:focus-visible {
 
 .booking-row.missed .b-time,
 .booking-row.cancelled .b-time {
-  color: #9C3222;
+  color: var(--danger);
 }
 
 .booking-row small {
@@ -3277,7 +3464,7 @@ button.booking-card.history-row:focus-visible {
 
 .calendar-legend-label {
   color: var(--ink-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -3291,10 +3478,10 @@ button.booking-card.history-row:focus-visible {
 }
 
 .calendar-legend-item .legend-swatch {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   flex: 0 0 auto;
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: 3px;
   background: var(--primary-softer);
 }
@@ -3791,7 +3978,7 @@ button.booking-card.history-row:focus-visible {
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--ink);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -3821,7 +4008,7 @@ button.booking-card.history-row:focus-visible {
 .status-cancelled {
   border-color: var(--alert-error-border);
   background: var(--alert-error-bg);
-  color: #8B2D1F;
+  color: var(--danger);
 }
 
 .status-completed {
@@ -4058,7 +4245,7 @@ button.booking-card.history-row:focus-visible {
   border-top: 0;
 }
 
-.form-section h3 {
+.form-section h2 {
   display: flex;
   align-items: center;
   margin: 0 0 4px;
@@ -4173,10 +4360,27 @@ button.booking-card.history-row:focus-visible {
   background: var(--primary-softer);
 }
 
+.duration-pick button:focus-visible {
+  outline: 3px solid var(--primary-soft);
+  outline-offset: 2px;
+}
+
 .duration-pick button.on {
   border-color: var(--primary);
   background: var(--primary);
   color: white;
+  box-shadow: 0 0 0 3px var(--primary-soft);
+  position: relative;
+}
+
+.duration-pick button.on::after {
+  content: "✓";
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.85;
 }
 
 .end-time-summary {
@@ -4477,6 +4681,12 @@ button.booking-card.history-row:focus-visible {
   list-style: none;
   margin: 0;
   padding: 0;
+  animation: fadeIn 150ms ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
 }
 
 .booking-card-item {
@@ -4501,7 +4711,7 @@ button.booking-card.history-row:focus-visible {
 .booking-card {
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(132px, 0.3fr) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(132px, 0.3fr) minmax(0, 1fr) minmax(auto, max-content);
   align-items: center;
   gap: 20px;
   min-height: 104px;
@@ -4583,16 +4793,16 @@ button.booking-card.history-row:focus-visible {
   font-style: normal;
   font-weight: 700;
   line-height: 1.25;
-  text-align: center;
+  text-align: right;
   overflow-wrap: anywhere;
+  max-width: 280px;
 }
 
 .booking-card-meta {
   display: grid;
   justify-items: end;
-  gap: 4px;
+  gap: 6px;
   min-width: 0;
-  max-width: 200px;
 }
 
 /* Attention rows: the warning chip in the meta column carries the signal.
@@ -5659,9 +5869,10 @@ button.booking-card.history-row:focus-visible {
      At this width the reservation list rows and other booking cards
      fit a tighter action weight; collapse every `.booking-card-actions
      .btn` to the existing `.btn-small` sizing so the action row matches
-     the typography density without introducing a new modifier or token. */
+     the typography density without introducing a new modifier or token.
+     Minimum 44px for WCAG touch target compliance. */
   .booking-card-actions .btn {
-    min-height: 36px;
+    min-height: 44px;
     padding: 0 12px;
     font-size: 14px;
     font-weight: 700;
@@ -5932,11 +6143,16 @@ button.booking-card.history-row:focus-visible {
   background: var(--primary-softer);
 }
 
+.time-chip:not(:disabled):focus-visible {
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
 .time-chip.selected,
-.time-chip[aria-pressed="true"] {
+.time-chip[aria-checked="true"] {
   border-color: var(--primary);
   background: var(--primary);
   color: white;
+  box-shadow: 0 0 0 3px var(--primary-soft);
 }
 
 .time-chip.busy,
@@ -6207,8 +6423,7 @@ button.booking-card.history-row:focus-visible {
   color: rgba(255, 255, 255, 0.78);
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 /* System-ready dot: amber while loading, civic-soft-blue once fonts and  */
@@ -6275,6 +6490,45 @@ button.booking-card.history-row:focus-visible {
 .login-side > .login-side-foot {
   position: relative;
   z-index: 1;
+}
+
+/* ----- Password visibility toggle -------------------------------------- */
+
+.input-with-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-toggle .input {
+  width: 100%;
+  padding-right: 44px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: color 140ms var(--ease-out-quart),
+              background 140ms var(--ease-out-quart);
+}
+
+.password-toggle:hover {
+  color: var(--ink);
+  background: var(--surface-2);
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 /* ----- Sentinel: caps lock + enter hint -------------------------------- */
@@ -6770,94 +7024,95 @@ button.booking-card.history-row:focus-visible {
 }
 
 /* --- Issue 4: Status legend contrast improvements ---------------------- */
-/* Stronger, more distinct status badge colors for low-quality monitors */
+/* Stronger, more distinct status badge colors for low-quality monitors.
+   Now using CSS custom properties for dark mode adaptability. */
 .status-available {
-  border-color: #3B9959;
-  background: #D4EDDA;
-  color: #1B6530;
+  border-color: var(--status-available-border);
+  background: var(--status-available-bg);
+  color: var(--status-available-text);
 }
 
 .status-reserved {
-  border-color: #4A90B8;
-  background: #D6EAF5;
-  color: #0B4A6F;
+  border-color: var(--status-reserved-border);
+  background: var(--status-reserved-bg);
+  color: var(--status-reserved-text);
 }
 
 .status-completed {
-  border-color: #6B8FB5;
-  background: #E3EEF7;
-  color: #1A4A6F;
+  border-color: var(--status-completed-border);
+  background: var(--status-completed-bg);
+  color: var(--status-completed-text);
 }
 
 .status-missed {
-  border-color: #C0665A;
-  background: #FCDBD6;
-  color: #7A2318;
+  border-color: var(--status-missed-border);
+  background: var(--status-missed-bg);
+  color: var(--status-missed-text);
 }
 
 .status-cancelled {
-  border-color: #A08050;
-  background: #F5ECD6;
-  color: #6B4C12;
+  border-color: var(--status-cancelled-border);
+  background: var(--status-cancelled-bg);
+  color: var(--status-cancelled-text);
 }
 
 .status-maintenance {
-  border-color: #C49530;
-  background: #FFF3D0;
-  color: #6D4A0D;
+  border-color: var(--status-maintenance-border);
+  background: var(--status-maintenance-bg);
+  color: var(--status-maintenance-text);
 }
 
 .status-barangay_event {
-  border-color: #7A5BAF;
-  background: #EDE5F7;
-  color: #4A2D7A;
+  border-color: var(--status-barangay-border);
+  background: var(--status-barangay-bg);
+  color: var(--status-barangay-text);
 }
 
 .status-cleared_public_use {
-  border-color: #7A9A7A;
-  background: #E8F0E8;
-  color: #3A5A3A;
+  border-color: var(--status-cleared-border);
+  background: var(--status-cleared-bg);
+  color: var(--status-cleared-text);
 }
 
 /* Legend swatches: match the stronger status badge colors */
 .calendar-legend-item.legend-available .legend-swatch {
-  border-color: #3B9959;
-  background: #D4EDDA;
+  border-color: var(--status-available-border);
+  background: var(--status-available-bg);
 }
 
 .calendar-legend-item.legend-reserved .legend-swatch {
-  border-color: #4A90B8;
-  background: #D6EAF5;
+  border-color: var(--status-reserved-border);
+  background: var(--status-reserved-bg);
 }
 
 .calendar-legend-item.legend-completed .legend-swatch {
-  border-color: #6B8FB5;
-  background: #E3EEF7;
+  border-color: var(--status-completed-border);
+  background: var(--status-completed-bg);
 }
 
 .calendar-legend-item.legend-missed .legend-swatch {
-  border-color: #C0665A;
-  background: #FCDBD6;
+  border-color: var(--status-missed-border);
+  background: var(--status-missed-bg);
 }
 
 .calendar-legend-item.legend-cancelled .legend-swatch {
-  border-color: #A08050;
-  background: #F5ECD6;
+  border-color: var(--status-cancelled-border);
+  background: var(--status-cancelled-bg);
 }
 
 .calendar-legend-item.legend-maintenance .legend-swatch {
-  border-color: #C49530;
-  background: #FFF3D0;
+  border-color: var(--status-maintenance-border);
+  background: var(--status-maintenance-bg);
 }
 
 .calendar-legend-item.legend-barangay .legend-swatch {
-  border-color: #7A5BAF;
-  background: #EDE5F7;
+  border-color: var(--status-barangay-border);
+  background: var(--status-barangay-bg);
 }
 
 .calendar-legend-item.legend-cleared .legend-swatch {
-  border-color: #7A9A7A;
-  background: #E8F0E8;
+  border-color: var(--status-cleared-border);
+  background: var(--status-cleared-bg);
 }
 
 /* --- Issue 5: "Who is booking?" spacing improvements ------------------- */
@@ -6872,10 +7127,8 @@ button.booking-card.history-row:focus-visible {
   border-bottom: 0;
 }
 
-.staff-reservation-form .form-section h3 {
+.staff-reservation-form .form-section h2 {
   margin: 0;
-  font-size: 20px;
-  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -6897,7 +7150,6 @@ button.booking-card.history-row:focus-visible {
 
 .staff-reservation-form .section-hint {
   color: var(--ink-muted);
-  font-size: 14px;
   font-style: italic;
 }
 
@@ -6919,12 +7171,16 @@ button.booking-card.history-row:focus-visible {
 .booking-card-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .booking-card-actions .btn {
-  min-width: 110px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 16px;
+  white-space: nowrap;
 }
 
 @media (max-width: 600px) {
@@ -7036,9 +7292,9 @@ button.booking-card.history-row:focus-visible {
 
 .attention-count {
   display: grid;
-  gap: 4px;
+  gap: 6px;
   min-width: 80px;
-  padding: 14px 16px;
+  padding: 16px 20px;
   border: 2px solid var(--primary-soft);
   border-radius: var(--radius);
   background: var(--primary-softer);
@@ -7046,6 +7302,10 @@ button.booking-card.history-row:focus-visible {
   text-align: center;
   cursor: pointer;
   transition: border-color 160ms ease, background 160ms ease;
+  /* Override the earlier flex: 0 0 190px that forced excessive height */
+  flex: 0 0 auto;
+  min-height: auto;
+  place-items: center;
 }
 
 .attention-count:hover,
@@ -7055,15 +7315,273 @@ button.booking-card.history-row:focus-visible {
 }
 
 .attention-count strong {
-  font-size: 28px;
+  font-size: 32px;
   font-family: var(--font-serif);
   line-height: 1;
 }
 
 .attention-count span {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--ink-muted);
+}
+
+
+/* --- Theme toggle hidden (audit pass) ---------------------------------- */
+.theme-toggle-hidden {
+  display: none !important;
+}
+
+/* --- Collapsible nav group (Account) ----------------------------------- */
+.nav-group-collapsible {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-group-toggle {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.nav-group-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.nav-group-toggle::after {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-left: 6px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform 160ms ease;
+  opacity: 0.5;
+}
+
+.nav-group-collapsible[open] > .nav-group-toggle::after {
+  transform: rotate(45deg);
+}
+
+
+/* --- Sort toggle and date filter (shape pass) -------------------------- */
+
+.sort-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 48px;
+  padding: 0 14px;
+  white-space: nowrap;
+}
+
+.sort-toggle-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.date-filter-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.date-filter-label {
+  flex: 0 0 auto;
+  color: var(--ink-muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.date-filter-group .date-input {
+  min-height: 48px;
+  min-width: 160px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 0 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.date-filter-group .date-input:focus-visible {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-soft);
+}
+
+.date-filter-clear {
+  min-height: 36px;
+  min-width: 36px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+
+
+/* --- Attention panel clarify pass --------------------------------------- */
+/* English-primary CTA with Filipino helper. Dismiss button for reviewed items. */
+
+.attention-panel-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.attention-panel-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.attention-count-fil {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+
+.btn-dismiss {
+  border-style: dashed;
+  opacity: 0.7;
+}
+
+.btn-dismiss:hover {
+  opacity: 1;
+  border-style: solid;
+}
+
+
+/* --- Date-grouped booking list layout ---------------------------------- */
+/* Groups bookings by date with sticky headers for scannability.
+   Differentiates cancelled/missed rows (muted) from today's reserved (elevated). */
+
+.booking-date-group {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.booking-date-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--ink-muted);
+}
+
+.booking-date-header.is-today {
+  background: var(--primary-softer);
+  color: var(--primary);
+}
+
+.booking-date-label {
+  text-transform: uppercase;
+}
+
+.booking-date-today-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: var(--primary);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.booking-date-count {
+  margin-left: auto;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+.booking-date-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Status-based visual differentiation */
+/* Instead of opacity (which reduces contrast below WCAG thresholds),
+   we use targeted color changes that maintain 4.5:1 contrast ratios. */
+.booking-card-item.status-muted .booking-card {
+  background: var(--surface);
+}
+
+.booking-card-item.status-muted .booking-card-time strong {
+  color: var(--ink-muted);
+}
+
+.booking-card-item.status-muted .booking-card-main strong {
+  color: var(--ink-muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--border-strong);
+}
+
+.booking-card-item.status-muted .booking-card-main span,
+.booking-card-item.status-muted .booking-card-main small,
+.booking-card-item.status-muted .booking-card-time span {
+  color: var(--ink-muted);
+}
+
+.booking-card-item.status-muted .booking-card:hover,
+.booking-card-item.status-muted .booking-card:focus-visible,
+.booking-card-item.status-muted .booking-card.selected {
+  background: var(--primary-softer);
+}
+
+.booking-card-item.status-muted .booking-card:hover .booking-card-main strong,
+.booking-card-item.status-muted .booking-card:focus-visible .booking-card-main strong,
+.booking-card-item.status-muted .booking-card.selected .booking-card-main strong {
+  color: var(--ink-2);
+}
+
+.booking-card-item.status-muted .booking-card:hover .booking-card-time strong,
+.booking-card-item.status-muted .booking-card:focus-visible .booking-card-time strong,
+.booking-card-item.status-muted .booking-card.selected .booking-card-time strong {
+  color: var(--ink-2);
+}
+
+.booking-card-item.status-today .booking-card {
+  background: var(--primary-softer);
+  border-left: 0;
+}
+
+.booking-card-item.status-today .booking-card-time strong {
+  color: var(--primary-dark);
+}
+
+/* Load more button */
+.booking-load-more {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.booking-load-more .btn {
+  min-width: 240px;
+  min-height: 48px;
 }
 
 
@@ -7112,10 +7630,6 @@ button.booking-card.history-row:focus-visible {
   gap: 4px;
 }
 
-.court-policy-form .form-card-head h2 {
-  font-size: 20px;
-}
-
 .court-policy-form .form-card-head .form-copy {
   font-size: 14px;
 }
@@ -7124,10 +7638,6 @@ button.booking-card.history-row:focus-visible {
 .court-policy-group {
   gap: 14px;
   padding-top: 14px;
-}
-
-.court-policy-group-head h3 {
-  font-size: 12px;
 }
 
 .court-policy-group-head p {
@@ -7165,7 +7675,7 @@ button.booking-card.history-row:focus-visible {
 }
 
 .court-policy-preview-daycell {
-  padding: 6px 2px;
+  padding: 6px 0;
 }
 
 .court-policy-preview-daylabel {
@@ -7173,12 +7683,15 @@ button.booking-card.history-row:focus-visible {
 }
 
 .court-policy-preview-daystate {
-  font-size: 10px;
+  font-size: 12px;
+  letter-spacing: 0.02em;
 }
 
 .court-policy-preview-slot {
-  padding: 3px 8px;
+  padding: 3px 6px;
   font-size: 12px;
+  min-width: 0;
+  white-space: nowrap;
 }
 
 /* Layout grid: form column slightly wider, preview narrower */
@@ -7209,11 +7722,13 @@ button.booking-card.history-row:focus-visible {
 /* Section group headings: sentence-case, slightly larger, better weight.
    The all-caps 12px was straining readability on office monitors. */
 .court-policy-group-head h3 {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--primary-dark);
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--ink);
 }
 
 .court-policy-group-head p {
@@ -7264,11 +7779,11 @@ button.booking-card.history-row:focus-visible {
 
 /* Preview section headings: quieter than the form headings */
 .court-policy-preview-section h3 {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--ink-muted);
+  color: var(--ink-2);
 }
 
 /* Preview rule and empty text */
@@ -7325,4 +7840,239 @@ button.booking-card.history-row:focus-visible {
 
 .policy-alert-chip strong {
   font-size: 15px;
+}
+
+/* --- Court Policy: Confirmation Dialog --------------------------------- */
+.court-policy-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  background: rgba(32, 35, 38, 0.46);
+  animation: fadeIn 120ms ease-out;
+}
+
+.court-policy-confirm-dialog {
+  width: min(440px, calc(100% - 32px));
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 28px 24px 20px;
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(15, 30, 60, 0.18);
+  animation: slideUp 160ms ease-out;
+}
+
+.court-policy-confirm-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+.court-policy-confirm-icon.warn {
+  background: var(--alert-warning-bg);
+  color: var(--alert-warning-text-strong);
+}
+
+.court-policy-confirm-dialog h3 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--ink);
+}
+
+.court-policy-confirm-dialog p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-2);
+  line-height: 1.5;
+  max-width: 340px;
+}
+
+.court-policy-confirm-changes {
+  width: 100%;
+  margin: 4px 0;
+  padding: 12px 16px;
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  list-style: none;
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-2);
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.court-policy-confirm-changes li::before {
+  content: "•";
+  color: var(--primary);
+  font-weight: 700;
+  margin-right: 8px;
+}
+
+.court-policy-confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  width: 100%;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+
+.court-policy-confirm-actions .btn {
+  min-width: 130px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Court Policy: Select All / Deselect All toggle -------------------- */
+.court-policy-day-toggle {
+  margin-bottom: 6px;
+}
+
+.btn-inline {
+  background: none;
+  border: none;
+  padding: 10px 12px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+.btn-inline:hover {
+  color: var(--primary-dark);
+}
+
+.btn-inline:focus-visible {
+  outline: 3px solid var(--primary-soft);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* --- Court Policy: Duration Range Bar ---------------------------------- */
+.court-policy-preview-duration {
+  display: grid;
+  gap: 4px;
+}
+
+.court-policy-preview-duration-bar {
+  position: relative;
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.court-policy-preview-duration-range {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--primary);
+  border-radius: 3px;
+  opacity: 0.7;
+  transition: clip-path 160ms var(--ease-out-quart);
+}
+
+.court-policy-preview-duration-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+/* --- Court Policy: Grace Period Timeline ------------------------------- */
+.court-policy-preview-grace {
+  display: grid;
+  gap: 8px;
+}
+
+.court-policy-preview-grace-track {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 8px 0;
+}
+
+.court-policy-preview-grace-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.court-policy-preview-grace-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2px solid var(--surface);
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+.court-policy-preview-grace-dot.danger {
+  background: var(--danger);
+  box-shadow: 0 0 0 2px var(--danger);
+}
+
+.court-policy-preview-grace-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.court-policy-preview-grace-window {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2px;
+  background: var(--border-strong);
+  margin: 0 4px;
+  position: relative;
+}
+
+.court-policy-preview-grace-window > span {
+  position: absolute;
+  top: -18px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-2);
+  background: var(--surface);
+  padding: 0 6px;
+}
+
+/* --- Court Policy: Save button disabled state improvement -------------- */
+.court-policy-actions .btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
