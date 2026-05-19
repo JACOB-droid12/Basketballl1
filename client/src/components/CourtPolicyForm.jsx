@@ -210,7 +210,6 @@ export function CourtPolicyForm({ user, initialPolicy, onSaved, onNavigate }) {
     <div className="court-policy-layout">
       <form className="form-card court-policy-form" onSubmit={handleSubmit} noValidate>
         <header className="form-card-head">
-          <p className="page-kicker">Court policy</p>
           <h2>Operating settings</h2>
           <p className="form-copy">
             {isAdmin
