@@ -12,5 +12,9 @@ installers/
 data/mariadb-data/
 data/logs/
 .impeccable/screenshots/
+.impeccable/critique/
+.impeccable/live/
+.playwright-cli/
+login-*-screenshot.png
 .DS_Store
 Thumbs.db
