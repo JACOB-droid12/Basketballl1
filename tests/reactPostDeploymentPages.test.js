@@ -265,6 +265,8 @@ test("ResidentDirectoryPage posts new residents and puts updates", () => {
 
 test("ResidentDirectoryPage prefills the reservation form on selection via onNavigate", () => {
   const source = readSourceFile("client/src/pages/ResidentDirectoryPage.jsx");
+  const app = readSourceFile("client/src/App.jsx");
+  const form = readSourceFile("client/src/pages/ReservationFormPage.jsx");
 
   // The "Use" action routes to the reservation form with the resident
   // ID as a query parameter so the form can prefill (Req. 9.3).
@@ -280,6 +282,23 @@ test("ResidentDirectoryPage prefills the reservation form on selection via onNav
 
   // The "Use" button is rendered for each resident row.
   assert.match(source, /onClick=\{.*onUse\(resident\)/);
+
+  // The app must preserve the browser URL query string while matching
+  // the React route by pathname, otherwise `/reservations/new?residentId=5`
+  // misses the exact `/reservations/new` route.
+  assert.match(app, /window\.history\.pushState\(\{\}, "", nextPath\)/);
+  assert.match(app, /setPath\(normalizePath\(window\.location\.pathname\)\)/);
+
+  // ReservationFormPage consumes the residentId query parameter, fetches
+  // that directory row, and pre-fills the resident-facing fields.
+  assert.match(form, /const residentIdFromQuery = getResidentIdFromLocation\(\)/);
+  assert.match(form, /apiRequest\(`\/api\/residents\/\$\{residentIdFromQuery\}`\)/);
+  assert.match(form, /representativeName: resident\.name \|\| resident\.group \|\| current\.representativeName/);
+  assert.match(form, /contactNo: resident\.contactNumber \|\| current\.contactNo/);
+  assert.match(form, /address: resident\.address \|\| current\.address/);
+  assert.match(form, /function getResidentIdFromLocation\(\)/);
+  assert.match(form, /new URLSearchParams\(window\.location\.search\)/);
+  assert.match(form, /This resident directory entry could not be found/);
 });
 
 test("ResidentDirectoryPage shows duplicate-contact backend error next to the contact-number field", () => {

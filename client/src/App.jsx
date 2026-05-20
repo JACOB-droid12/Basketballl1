@@ -86,9 +86,8 @@ export function App() {
   }, []);
 
   function handleNavigate(nextPath) {
-    const normalized = normalizePath(nextPath);
-    window.history.pushState({}, "", normalized);
-    setPath(normalized);
+    window.history.pushState({}, "", nextPath);
+    setPath(normalizePath(window.location.pathname));
   }
 
   function handleLogin(user) {
@@ -190,9 +189,11 @@ function resolveRoute(path) {
 }
 
 function normalizePath(pathname) {
-  if (!pathname || pathname === "/" || pathname === "/app" || pathname === "/app/") {
+  const pathOnly = String(pathname || "").split(/[?#]/)[0];
+
+  if (!pathOnly || pathOnly === "/" || pathOnly === "/app" || pathOnly === "/app/") {
     return "/dashboard";
   }
 
-  return pathname.endsWith("/") && pathname.length > 1 ? pathname.slice(0, -1) : pathname;
+  return pathOnly.endsWith("/") && pathOnly.length > 1 ? pathOnly.slice(0, -1) : pathOnly;
 }

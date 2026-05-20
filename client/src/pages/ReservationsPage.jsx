@@ -16,10 +16,12 @@ const SCOPE_OPTIONS = ["all", "attention", "past"];
 const STATUS_FILTER_OPTIONS = [
   { value: "any", label: "Any status" },
   { value: "RESERVED", label: "Reserved" },
-  { value: "MISSED", label: "Did not show up" },
+  { value: "MISSED", label: "Did not show" },
   { value: "CANCELLED", label: "Cancelled" },
   { value: "COMPLETED", label: "Completed" }
 ];
+
+const PAGE_SIZE = 20;
 
 export function ReservationsPage({ onNavigate, initialReservationId = null }) {
   const initialSelectedId = parseReservationId(initialReservationId);
@@ -27,12 +29,21 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
   const [query, setQuery] = useState("");
   const [scope, setScope] = useState("all");
   const [statusFilter, setStatusFilter] = useState("any");
+  const [dateFilter, setDateFilter] = useState("");
+  const [sortOrder, setSortOrder] = useState("newest");
   const [selectedId, setSelectedId] = useState(initialSelectedId);
   const [dialog, setDialog] = useState(null);
   const [actionError, setActionError] = useState("");
   const [busy, setBusy] = useState(false);
   const [todayKey, setTodayKey] = useState(getManilaDateKey);
   const [statusToast, setStatusToast] = useState(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [dismissedAttentionIds, setDismissedAttentionIds] = useState(() => {
+    try {
+      const stored = sessionStorage.getItem("dismissed-attention-ids");
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch { return new Set(); }
+  });
 
   useEffect(() => {
     loadReservations(initialSelectedId);
@@ -47,10 +58,54 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
   const attentionReservations = useMemo(() => {
     return reservations.filter((reservation) => isAttentionReservation(reservation, todayKey));
   }, [reservations, todayKey]);
-  const counts = useMemo(() => buildScopeCounts(reservations, todayKey), [reservations, todayKey]);
+  const activeAttentionCount = useMemo(() => {
+    return attentionReservations.filter((r) => !dismissedAttentionIds.has(r.reservationId)).length;
+  }, [attentionReservations, dismissedAttentionIds]);
+  const counts = useMemo(() => {
+    const baseCounts = buildScopeCounts(reservations, todayKey);
+    // Override attention count to reflect dismissed items
+    baseCounts.attention = activeAttentionCount;
+    return baseCounts;
+  }, [reservations, todayKey, activeAttentionCount]);
   const filteredReservations = useMemo(() => {
-    return filterReservations(reservations, query, scope, statusFilter, todayKey);
-  }, [query, reservations, scope, statusFilter, todayKey]);
+    let filtered = filterReservations(reservations, query, scope, statusFilter, todayKey);
+    if (dateFilter) {
+      filtered = filtered.filter((r) => r.reservationDate === dateFilter);
+    }
+    if (scope === "attention") {
+      filtered = filtered.filter((r) => !dismissedAttentionIds.has(r.reservationId));
+    }
+    if (sortOrder === "oldest") {
+      filtered = [...filtered].reverse();
+    }
+    return filtered;
+  }, [query, reservations, scope, statusFilter, todayKey, dismissedAttentionIds, dateFilter, sortOrder]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [query, scope, statusFilter, dateFilter, sortOrder]);
+
+  const paginatedReservations = useMemo(() => {
+    return filteredReservations.slice(0, visibleCount);
+  }, [filteredReservations, visibleCount]);
+
+  const hasMore = filteredReservations.length > visibleCount;
+
+  // Group paginated reservations by date for sticky headers
+  const dateGroups = useMemo(() => {
+    const groups = [];
+    let currentDate = null;
+    for (const reservation of paginatedReservations) {
+      const dateKey = reservation.reservationDate || "unknown";
+      if (dateKey !== currentDate) {
+        currentDate = dateKey;
+        groups.push({ dateKey, label: formatDate(dateKey), isToday: dateKey === todayKey, reservations: [] });
+      }
+      groups[groups.length - 1].reservations.push(reservation);
+    }
+    return groups;
+  }, [paginatedReservations, todayKey]);
 
   const selectedReservation = useMemo(() => {
     if (!selectedId) return null;
@@ -123,9 +178,63 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
     setActionError("");
   }
 
+  // Keyboard shortcuts: N = new reservation, ArrowDown/Up = navigate list, Enter = open selected
+  useEffect(() => {
+    function handleKeyDown(event) {
+      // Don't intercept when typing in inputs
+      const tag = event.target.tagName;
+      if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
+      if (dialog) return;
+
+      if (event.key === "n" && !event.ctrlKey && !event.metaKey) {
+        event.preventDefault();
+        onNavigate("/reservations/new");
+        return;
+      }
+
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        const ids = paginatedReservations.map((r) => r.reservationId);
+        if (ids.length === 0) return;
+        const currentIndex = selectedId ? ids.indexOf(selectedId) : -1;
+        let nextIndex;
+        if (event.key === "ArrowDown") {
+          nextIndex = currentIndex < ids.length - 1 ? currentIndex + 1 : 0;
+        } else {
+          nextIndex = currentIndex > 0 ? currentIndex - 1 : ids.length - 1;
+        }
+        setSelectedId(ids[nextIndex]);
+        return;
+      }
+
+      if (event.key === "Enter" && selectedId) {
+        event.preventDefault();
+        const reservation = paginatedReservations.find((r) => r.reservationId === selectedId);
+        if (reservation) openReservation(reservation);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [paginatedReservations, selectedId, dialog, onNavigate]);
+
   function closeReservation() {
     setSelectedId(null);
     if (initialSelectedId) onNavigate("/reservations");
+  }
+
+  function dismissAttentionItem(reservationId) {
+    setDismissedAttentionIds((prev) => {
+      const next = new Set(prev);
+      next.add(reservationId);
+      try { sessionStorage.setItem("dismissed-attention-ids", JSON.stringify([...next])); } catch {}
+      return next;
+    });
+  }
+
+  function clearAllDismissed() {
+    setDismissedAttentionIds(new Set());
+    try { sessionStorage.removeItem("dismissed-attention-ids"); } catch {}
   }
 
   if (state.loading) return <LoadingState label="Loading reservations..." />;
@@ -141,7 +250,7 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
           <CsvExportButton
             url="/reservations/export.csv"
             label="Export all reservations (CSV)"
-            className="btn btn-light btn-big"
+            className="btn btn-light"
           />
           <button className="btn btn-primary btn-big" type="button" onClick={() => onNavigate("/reservations/new")}>
             New Reservation
@@ -185,30 +294,54 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
       ) : (
         !state.error && (
           <div className="card staff-bookings-card">
+            {activeAttentionCount > 0 && (
             <section className="attention-panel" aria-labelledby="attention-title">
-              <div>
+              <div className="attention-panel-body">
                 <p className="page-kicker">Needs attention</p>
                 <h2 id="attention-title">Records staff may need to check today</h2>
                 <p>
                   Missed or cancelled bookings stay visible here. Today's reserved bookings are also listed so staff can mark them done or missed after the scheduled time.
                 </p>
               </div>
-              <button
-                className="attention-count"
-                type="button"
-                onClick={() => { setScope("attention"); setStatusFilter("any"); }}
-                aria-label={`${attentionReservations.length} reservation records need staff attention`}
-              >
-                <strong>{attentionReservations.length}</strong>
-                <span>Kailangang tingnan</span>
-              </button>
+              <div className="attention-panel-actions">
+                <button
+                  className="attention-count"
+                  type="button"
+                  onClick={() => { setScope("attention"); setStatusFilter("any"); }}
+                  aria-label={`View items — ${activeAttentionCount} records that need staff attention`}
+                >
+                  <strong>{activeAttentionCount}</strong>
+                  <span>View items</span>
+                  <span className="attention-count-fil">Kailangang tingnan</span>
+                </button>
+                {dismissedAttentionIds.size > 0 && (
+                  <button
+                    className="btn btn-light btn-small"
+                    type="button"
+                    onClick={clearAllDismissed}
+                  >
+                    Restore dismissed ({dismissedAttentionIds.size})
+                  </button>
+                )}
+              </div>
             </section>
+            )}
 
             <div className="bookings-toolbar">
               <label className="search-input" aria-label="Search bookings">
                 <span className="search-mark"><Icon name="search" size={20} /></span>
                 <input id="reservation-search" name="search" className="input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by name, purpose, phone, ID, or reference no." />
               </label>
+              <button
+                className={`btn btn-light btn-small sort-toggle ${sortOrder === "oldest" ? "ascending" : ""}`}
+                type="button"
+                onClick={() => setSortOrder((o) => o === "newest" ? "oldest" : "newest")}
+                aria-label={`Sort by date: ${sortOrder === "newest" ? "newest first" : "oldest first"}`}
+                title={sortOrder === "newest" ? "Newest first" : "Oldest first"}
+              >
+                <Icon name={sortOrder === "newest" ? "chevronDown" : "chevronUp"} size={16} />
+                <span className="sort-toggle-label">{sortOrder === "newest" ? "Newest" : "Oldest"}</span>
+              </button>
               <div className="filter-tabs" role="group" aria-label="Reservation scope">
                 {SCOPE_OPTIONS.map((option) => (
                   <button
@@ -219,7 +352,7 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
                     aria-pressed={scope === option}
                   >
                     {getScopeLabel(option)}
-                    <span>({counts[option] || 0})</span>
+                    <span> ({counts[option] || 0})</span>
                   </button>
                 ))}
               </div>
@@ -237,31 +370,83 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
                   ))}
                 </select>
               </label>
+              <div className="date-filter-group">
+                <label className="date-filter-label" htmlFor="reservations-date-filter">Date</label>
+                <input
+                  id="reservations-date-filter"
+                  className="date-input"
+                  type="date"
+                  value={dateFilter}
+                  onChange={(event) => setDateFilter(event.target.value)}
+                  aria-label="Filter by date"
+                  title="Show bookings for a specific date only"
+                />
+                {dateFilter && (
+                  <button
+                    className="btn btn-light btn-small btn-icon date-filter-clear"
+                    type="button"
+                    onClick={() => setDateFilter("")}
+                    aria-label="Clear date filter"
+                  >
+                    <Icon name="x" size={14} />
+                  </button>
+                )}
+              </div>
             </div>
 
             {filteredReservations.length === 0 ? (
               <EmptyState title="No matching bookings" body={getEmptyMessage(scope)} />
             ) : (
-              <ul className="booking-card-list" aria-label="Reservation records">
-                {filteredReservations.map((reservation) => {
-                  const isSelected = reservation.reservationId === selectedId;
-                  return (
-                    <li
-                      key={reservation.reservationId}
-                      className="booking-card-item"
-                      aria-current={isSelected ? "true" : undefined}
-                    >
-                      <ReservationCard
-                        reservation={reservation}
-                        attentionReason={scope === "attention" ? getAttentionReason(reservation, todayKey) : ""}
-                        selected={isSelected}
-                        onOpen={() => openReservation(reservation)}
-                        onPrintSlip={() => onNavigate(`/reservations/${reservation.reservationId}/slip`)}
-                      />
+              <>
+                <ul className="booking-card-list" aria-label="Reservation records">
+                  {dateGroups.map((group) => (
+                    <li key={group.dateKey} className="booking-date-group" aria-label={group.label}>
+                      <div className={`booking-date-header ${group.isToday ? "is-today" : ""}`}>
+                        <span className="booking-date-label">{group.label}</span>
+                        {group.isToday && <span className="booking-date-today-badge">Today</span>}
+                        <span className="booking-date-count">{group.reservations.length} {group.reservations.length === 1 ? "booking" : "bookings"}</span>
+                      </div>
+                      <ul className="booking-date-list">
+                        {group.reservations.map((reservation) => {
+                          const isSelected = reservation.reservationId === selectedId;
+                          const statusClass = reservation.statusCode === "CANCELLED" || reservation.statusCode === "MISSED"
+                            ? "status-muted"
+                            : reservation.reservationDate === todayKey && reservation.statusCode === "RESERVED"
+                              ? "status-today"
+                              : "";
+                          return (
+                            <li
+                              key={reservation.reservationId}
+                              className={`booking-card-item ${statusClass}`}
+                              aria-current={isSelected ? "true" : undefined}
+                            >
+                              <ReservationCard
+                                reservation={reservation}
+                                attentionReason={scope === "attention" ? getAttentionReason(reservation, todayKey) : ""}
+                                selected={isSelected}
+                                onOpen={() => openReservation(reservation)}
+                                onPrintSlip={() => onNavigate(`/reservations/${reservation.reservationId}/slip`)}
+                                onDismiss={scope === "attention" ? () => dismissAttentionItem(reservation.reservationId) : undefined}
+                              />
+                            </li>
+                          );
+                        })}
+                      </ul>
                     </li>
-                  );
-                })}
-              </ul>
+                  ))}
+                </ul>
+                {hasMore && (
+                  <div className="booking-load-more">
+                    <button
+                      className="btn btn-light"
+                      type="button"
+                      onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+                    >
+                      Show more ({filteredReservations.length - visibleCount} remaining)
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )
@@ -291,7 +476,7 @@ export function ReservationsPage({ onNavigate, initialReservationId = null }) {
   );
 }
 
-function ReservationCard({ reservation, selected, onOpen, onPrintSlip, attentionReason = "" }) {
+function ReservationCard({ reservation, selected, onOpen, onPrintSlip, onDismiss, attentionReason = "" }) {
   // The card is a semantic <article> with no click handler, no
   // role="button", and no aria-pressed. Two sibling <button> actions
   // (Open record / Print slip) live in the body. The attentionReason
@@ -321,7 +506,7 @@ function ReservationCard({ reservation, selected, onOpen, onPrintSlip, attention
             type="button"
             onClick={onOpen}
             title={attentionReason || undefined}
-            aria-label={`Open reservation ${reservationLabel}`}
+            aria-label={`${selected ? "Viewing" : "Open record"} — ${reservationLabel}`}
           >
             {selected ? "Viewing" : "Open record"}
           </button>
@@ -329,10 +514,20 @@ function ReservationCard({ reservation, selected, onOpen, onPrintSlip, attention
             className="btn btn-light btn-small"
             type="button"
             onClick={onPrintSlip}
-            aria-label={`Print slip for ${reservationLabel}`}
+            aria-label={`Print slip — ${reservationLabel}`}
           >
             Print slip
           </button>
+          {onDismiss && (
+            <button
+              className="btn btn-light btn-small btn-dismiss"
+              type="button"
+              onClick={onDismiss}
+              aria-label={`Reviewed — ${reservationLabel}`}
+            >
+              Reviewed
+            </button>
+          )}
         </div>
       </div>
     </article>

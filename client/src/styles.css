@@ -387,6 +387,17 @@ button:disabled {
   font-size: 22px;
 }
 
+.brand-seal--image {
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  padding: 2px;
+  background: #FFFFFF;
+  color: transparent;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
 h1 {
   margin: 0 0 8px;
   font-size: 28px;

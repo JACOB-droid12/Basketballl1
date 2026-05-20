@@ -14,6 +14,7 @@ import test from "node:test";
 import { formatReferenceNo, matchesReferenceNo } from "../client/src/api/referenceNo.js";
 import { getStatusDisplay } from "../client/src/api/statusDisplay.js";
 import { buildCsvExportUrl, CSV_EXPORT_ENDPOINTS } from "../client/src/api/csvExport.js";
+import { buildActivityLogsCsv } from "../src/features/api/apiExports.js";
 
 // ===========================================================================
 // formatReferenceNo
@@ -220,4 +221,23 @@ test("buildCsvExportUrl accepts all seven documented endpoints", () => {
     const url = buildCsvExportUrl(endpoint);
     assert.equal(url, `/api/exports/${endpoint}.csv`);
   }
+});
+
+test("buildActivityLogsCsv includes linked reservation reference numbers", () => {
+  const csv = buildActivityLogsCsv([
+    {
+      createdAt: "2026-05-20 08:30:00",
+      action: "CREATE_RESERVATION",
+      userName: "Admin User",
+      reservationId: 7,
+      referenceNo: "BCS-2026-000007",
+      reservationDate: "2026-05-20",
+      reservationStartTime: "09:00",
+      reservationEndTime: "10:00",
+      details: "Created reservation BCS-2026-000007."
+    }
+  ]);
+
+  assert.match(csv, /Reservation Reference No/);
+  assert.match(csv, /BCS-2026-000007/);
 });

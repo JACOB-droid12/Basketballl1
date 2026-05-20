@@ -47,13 +47,14 @@ export function createDashboardRoutes({
         timeSlots,
         reservations: weeklyReservations
       });
-      const summary = buildDashboardSummary({ today, todaySchedule, upcomingReservations });
+      const currentTime = currentTimeProvider();
+      const summary = buildDashboardSummary({ today, todaySchedule, upcomingReservations, currentTime });
       const nearestAvailableSlot = findNearestAvailableSlot({
         startDate: today,
         timeSlots,
         reservations: suggestionReservations,
         searchDays: 14,
-        currentTime: currentTimeProvider()
+        currentTime
       });
 
       response.render("dashboard", {

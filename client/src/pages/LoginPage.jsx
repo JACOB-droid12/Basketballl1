@@ -75,6 +75,7 @@ export function LoginPage({ onLogin }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [capsOn, setCapsOn] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [now, setNow] = useState(() => new Date());
   const [systemReady, setSystemReady] = useState(false);
   const inFlightRef = useRef(false);
@@ -257,16 +258,27 @@ export function LoginPage({ onLogin }) {
             <span className="field-label">
               Password <span className="fil">· Password</span>
             </span>
-            <input
-              className="input"
-              id="login-password"
-              name="password"
-              type="password"
-              value={form.password}
-              onChange={(event) => setForm({ ...form, password: event.target.value })}
-              autoComplete="current-password"
-              required
-            />
+            <span className="input-with-toggle">
+              <input
+                className="input"
+                id="login-password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={form.password}
+                onChange={(event) => setForm({ ...form, password: event.target.value })}
+                autoComplete="current-password"
+                required
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                tabIndex={-1}
+              >
+                <Icon name={showPassword ? "eyeOff" : "eye"} size={18} />
+              </button>
+            </span>
             {capsOn && (
               <span className="login-caps" role="status">
                 <Icon name="warn" size={16} />

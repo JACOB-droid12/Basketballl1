@@ -54,6 +54,7 @@ export function CourtPolicyForm({ user, initialPolicy, onSaved, onNavigate }) {
   const [formSuccess, setFormSuccess] = useState("");
   const [saving, setSaving] = useState(false);
   const [savedSnapshot, setSavedSnapshot] = useState(() => formFromPolicy(initialPolicy));
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     const next = formFromPolicy(initialPolicy);
@@ -70,6 +71,9 @@ export function CourtPolicyForm({ user, initialPolicy, onSaved, onNavigate }) {
   const crossFieldHints = useMemo(() => buildCrossFieldHints(form), [form]);
 
   const isDirty = useMemo(() => isFormDifferent(form, savedSnapshot), [form, savedSnapshot]);
+
+  // Human-readable summary of what changed, shown in the confirmation dialog.
+  const changeSummary = useMemo(() => buildChangeSummary(form, savedSnapshot), [form, savedSnapshot]);
 
   // The "you have unsaved changes" guard: warn before unloading the tab
   // when the admin has typed but not saved. Skipped for non-admin (form
@@ -157,10 +161,40 @@ export function CourtPolicyForm({ user, initialPolicy, onSaved, onNavigate }) {
     setFormSuccess("");
   }
 
+  function selectAllDays() {
+    setForm((current) => ({
+      ...current,
+      allowedDays: [0, 1, 2, 3, 4, 5, 6]
+    }));
+    setFieldErrors((current) => {
+      if (!current.allowedDays) return current;
+      const next = { ...current };
+      delete next.allowedDays;
+      return next;
+    });
+    setFormError("");
+    setFormSuccess("");
+  }
+
+  function deselectAllDays() {
+    setForm((current) => ({
+      ...current,
+      allowedDays: []
+    }));
+    setFormError("");
+    setFormSuccess("");
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     if (!isAdmin || saving) return;
 
+    // Show confirmation dialog before committing a system-wide change.
+    setConfirmOpen(true);
+  }
+
+  async function confirmAndSave() {
+    setConfirmOpen(false);
     setSaving(true);
     setFieldErrors({});
     setFormError("");
@@ -351,6 +385,17 @@ export function CourtPolicyForm({ user, initialPolicy, onSaved, onNavigate }) {
                 Allowed days
                 <span className="fil">· Mga araw na pwede</span>
               </legend>
+              {isAdmin && (
+                <div className="court-policy-day-toggle">
+                  <button
+                    type="button"
+                    className="btn-inline"
+                    onClick={form.allowedDays.length === 7 ? deselectAllDays : selectAllDays}
+                  >
+                    {form.allowedDays.length === 7 ? "Deselect all" : "Select all"}
+                  </button>
+                </div>
+              )}
               <div className="court-policy-day-options">
                 {ALLOWED_DAY_OPTIONS.map((day) => {
                   const checked = form.allowedDays.includes(day.value);
@@ -437,10 +482,19 @@ export function CourtPolicyForm({ user, initialPolicy, onSaved, onNavigate }) {
                 Discard changes
               </button>
             )}
-            <button className="btn btn-primary" type="submit" disabled={saving}>
+            <button className="btn btn-primary" type="submit" disabled={saving || !isDirty}>
               {saving ? "Saving..." : "Save policy"}
             </button>
           </div>
+        )}
+
+        {confirmOpen && (
+          <PolicyConfirmDialog
+            summary={changeSummary}
+            onConfirm={confirmAndSave}
+            onCancel={() => setConfirmOpen(false)}
+            saving={saving}
+          />
         )}
       </form>
 
@@ -533,13 +587,14 @@ function BlockedDaysPicker({ isAdmin, dates, error, onAdd, onRemove }) {
 function CourtPolicyPreview({ form }) {
   // Live preview of how the current settings map to a real bookable day.
   // Renders the seven-day strip with allowed/blocked tints, then a single
-  // hour ruler from opening to closing tick-marked at the default slot.
-  // The preview is informational only; nothing here is editable.
+  // hour ruler from opening to closing tick-marked at the default slot,
+  // a duration range bar, and a grace period timeline.
   const opening = parseTimeToMinutes(form.openingTime);
   const closing = parseTimeToMinutes(form.closingTime);
   const slot = numberOrNull(form.defaultSlotMinutes);
   const minMinutes = numberOrNull(form.minimumReservationMinutes);
   const maxMinutes = numberOrNull(form.maximumReservationMinutes);
+  const graceMinutes = numberOrNull(form.gracePeriodBeforeMissedMinutes);
 
   const totalMinutes = opening !== null && closing !== null && closing > opening ? closing - opening : null;
   const ticks = totalMinutes !== null && slot !== null && slot > 0
@@ -554,9 +609,8 @@ function CourtPolicyPreview({ form }) {
   return (
     <aside className="court-policy-preview" aria-label="Policy preview">
       <header className="court-policy-preview-head">
-        <p className="page-kicker">Preview</p>
         <h2>What staff will see</h2>
-        <p>One synthetic day at the current settings. Updates as you edit.</p>
+        <p>A synthetic day at the current settings. Updates as you edit.</p>
       </header>
 
       <section className="court-policy-preview-section">
@@ -600,9 +654,11 @@ function CourtPolicyPreview({ form }) {
               )}
             </ol>
             {minMinutes !== null && maxMinutes !== null && (
-              <p className="court-policy-preview-rule">
-                Each booking lasts {minMinutes} to {maxMinutes} minutes.
-              </p>
+              <DurationRangeBar
+                min={minMinutes}
+                max={maxMinutes}
+                totalMinutes={totalMinutes}
+              />
             )}
             {previewDayOfWeek === null && (
               <p className="court-policy-preview-warn">No days are allowed yet — pick at least one above.</p>
@@ -610,6 +666,13 @@ function CourtPolicyPreview({ form }) {
           </div>
         )}
       </section>
+
+      {graceMinutes !== null && (
+        <section className="court-policy-preview-section">
+          <h3>Grace period</h3>
+          <GracePeriodTimeline graceMinutes={graceMinutes} />
+        </section>
+      )}
 
       <section className="court-policy-preview-section">
         <h3>Blocked dates</h3>
@@ -628,6 +691,176 @@ function CourtPolicyPreview({ form }) {
       </section>
     </aside>
   );
+}
+
+/**
+ * Confirmation dialog shown before saving policy changes.
+ * Summarizes what changed so the admin can verify before committing.
+ */
+function PolicyConfirmDialog({ summary, onConfirm, onCancel, saving }) {
+  // Close on Escape
+  useEffect(() => {
+    function handleKey(event) {
+      if (event.key === "Escape") onCancel();
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onCancel]);
+
+  return (
+    <div className="court-policy-confirm-backdrop" onClick={onCancel}>
+      <div
+        className="court-policy-confirm-dialog"
+        role="alertdialog"
+        aria-labelledby="court-policy-confirm-title"
+        aria-describedby="court-policy-confirm-body"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="court-policy-confirm-icon warn">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <h3 id="court-policy-confirm-title">Save court policy?</h3>
+        <p id="court-policy-confirm-body">
+          This affects all future reservations. Review the changes below.
+        </p>
+        {summary.length > 0 && (
+          <ul className="court-policy-confirm-changes">
+            {summary.map((line, index) => (
+              <li key={index}>{line}</li>
+            ))}
+          </ul>
+        )}
+        <div className="court-policy-confirm-actions">
+          <button
+            type="button"
+            className="btn btn-light"
+            onClick={onCancel}
+            disabled={saving}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={onConfirm}
+            disabled={saving}
+          >
+            {saving ? "Saving..." : "Confirm and save"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Visual range bar showing min/max reservation duration relative to the
+ * total open window. Replaces the plain text "Each booking lasts X to Y minutes."
+ */
+function DurationRangeBar({ min, max, totalMinutes }) {
+  const clampedMax = Math.min(max, totalMinutes);
+  const minPct = Math.round((min / totalMinutes) * 100);
+  const maxPct = Math.round((clampedMax / totalMinutes) * 100);
+
+  return (
+    <div className="court-policy-preview-duration" aria-label={`Booking duration: ${min} to ${max} minutes`}>
+      <div className="court-policy-preview-duration-bar">
+        <div
+          className="court-policy-preview-duration-range"
+          style={{ clipPath: `inset(0 ${100 - maxPct}% 0 ${minPct}% round 3px)` }}
+        />
+      </div>
+      <div className="court-policy-preview-duration-labels">
+        <span>{min} min</span>
+        <span>{max} min</span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Mini timeline showing how the grace period works:
+ * [Start time] ──── grace window ──── [Marked missed]
+ */
+function GracePeriodTimeline({ graceMinutes }) {
+  if (graceMinutes === 0) {
+    return (
+      <p className="court-policy-preview-rule">
+        No grace period. Reservations are marked missed immediately if the party doesn't arrive by start time.
+      </p>
+    );
+  }
+
+  return (
+    <div className="court-policy-preview-grace" aria-label={`Grace period: ${graceMinutes} minutes`}>
+      <div className="court-policy-preview-grace-track">
+        <div className="court-policy-preview-grace-marker start">
+          <span className="court-policy-preview-grace-dot" />
+          <span className="court-policy-preview-grace-label">Start time</span>
+        </div>
+        <div className="court-policy-preview-grace-window">
+          <span>{graceMinutes} min</span>
+        </div>
+        <div className="court-policy-preview-grace-marker end">
+          <span className="court-policy-preview-grace-dot danger" />
+          <span className="court-policy-preview-grace-label">Marked missed</span>
+        </div>
+      </div>
+      <p className="court-policy-preview-rule">
+        If no one arrives within {graceMinutes} minutes of the start time, the reservation is automatically marked missed.
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Builds a human-readable list of what changed between the current form
+ * and the last saved snapshot, for the confirmation dialog.
+ */
+function buildChangeSummary(form, saved) {
+  const lines = [];
+  if (form.openingTime !== saved.openingTime) {
+    lines.push(`Opening time: ${saved.openingTime || "(empty)"} → ${form.openingTime || "(empty)"}`);
+  }
+  if (form.closingTime !== saved.closingTime) {
+    lines.push(`Closing time: ${saved.closingTime || "(empty)"} → ${form.closingTime || "(empty)"}`);
+  }
+  if (String(form.minimumReservationMinutes) !== String(saved.minimumReservationMinutes)) {
+    lines.push(`Minimum duration: ${saved.minimumReservationMinutes || "(empty)"} → ${form.minimumReservationMinutes || "(empty)"} min`);
+  }
+  if (String(form.maximumReservationMinutes) !== String(saved.maximumReservationMinutes)) {
+    lines.push(`Maximum duration: ${saved.maximumReservationMinutes || "(empty)"} → ${form.maximumReservationMinutes || "(empty)"} min`);
+  }
+  if (String(form.defaultSlotMinutes) !== String(saved.defaultSlotMinutes)) {
+    lines.push(`Default slot: ${saved.defaultSlotMinutes || "(empty)"} → ${form.defaultSlotMinutes || "(empty)"} min`);
+  }
+  if (String(form.gracePeriodBeforeMissedMinutes) !== String(saved.gracePeriodBeforeMissedMinutes)) {
+    lines.push(`Grace period: ${saved.gracePeriodBeforeMissedMinutes || "(empty)"} → ${form.gracePeriodBeforeMissedMinutes || "(empty)"} min`);
+  }
+
+  const daysChanged = form.allowedDays.length !== saved.allowedDays.length ||
+    form.allowedDays.some((d, i) => d !== saved.allowedDays[i]);
+  if (daysChanged) {
+    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const oldDays = saved.allowedDays.map((d) => dayNames[d]).join(", ") || "none";
+    const newDays = form.allowedDays.map((d) => dayNames[d]).join(", ") || "none";
+    lines.push(`Allowed days: ${oldDays} → ${newDays}`);
+  }
+
+  const blockedChanged = form.blockedDays.length !== saved.blockedDays.length ||
+    form.blockedDays.some((d, i) => d !== saved.blockedDays[i]);
+  if (blockedChanged) {
+    const added = form.blockedDays.filter((d) => !saved.blockedDays.includes(d));
+    const removed = saved.blockedDays.filter((d) => !form.blockedDays.includes(d));
+    if (added.length > 0) lines.push(`Blocked dates added: ${added.join(", ")}`);
+    if (removed.length > 0) lines.push(`Blocked dates removed: ${removed.join(", ")}`);
+  }
+
+  return lines;
 }
 
 function buildCrossFieldHints(form) {

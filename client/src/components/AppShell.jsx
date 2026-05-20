@@ -4,6 +4,28 @@ import { initials } from "../api/mappers.js";
 import { OFFICIAL_HEADER } from "../api/officialHeader.js";
 import { Icon } from "./Icon.jsx";
 
+const ASSET_BASE_URL = import.meta.env.BASE_URL.endsWith("/")
+  ? import.meta.env.BASE_URL
+  : `${import.meta.env.BASE_URL}/`;
+const SEAL_IMAGE_SRC = `${ASSET_BASE_URL}seal-sto-nino.jpg`;
+
+function getStoredTheme() {
+  try {
+    return localStorage.getItem("barangay-theme") || "light";
+  } catch {
+    return "light";
+  }
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme === "dark" ? "dark" : "");
+  try {
+    localStorage.setItem("barangay-theme", theme);
+  } catch {
+    // Storage unavailable — theme won't persist across reloads.
+  }
+}
+
 const NAV_GROUPS = [
   {
     label: "Operate",
@@ -43,11 +65,20 @@ export function AppShell({ user, path, onNavigate, onLogout, children }) {
   const allVisibleItems = visibleGroups.flatMap((group) => group.items);
   const [officeTime, setOfficeTime] = useState(getOfficeTime);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [theme, setTheme] = useState(getStoredTheme);
   const activePath = allVisibleItems
     .map((item) => item.path)
     .filter((itemPath) => path === itemPath || (itemPath !== "/dashboard" && path.startsWith(`${itemPath}/`)))
     .sort((a, b) => b.length - a.length)[0] || "/dashboard";
   const activeItem = allVisibleItems.find((item) => item.path === activePath);
+
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
+
+  function toggleTheme() {
+    setTheme((current) => (current === "dark" ? "light" : "dark"));
+  }
 
   useEffect(() => {
     let intervalId;
@@ -76,7 +107,7 @@ export function AppShell({ user, path, onNavigate, onLogout, children }) {
       <a className="skip-link" href="#main-panel">Skip to main content</a>
       <header className="topbar">
         <div className="brand">
-          <div className="brand-seal small">N</div>
+          <BrandSeal />
           <div className="brand-text">
             <strong className="brand-title">{`${OFFICIAL_HEADER.courtName} Reservation`}</strong>
             <span className="brand-subtitle">{`${OFFICIAL_HEADER.barangayName} · ${OFFICIAL_HEADER.subtitle}`}</span>
@@ -94,6 +125,16 @@ export function AppShell({ user, path, onNavigate, onLogout, children }) {
               <small>{user.role === "ADMIN" ? "Administrator" : "Staff"}</small>
             </span>
           </div>
+          <button
+            className="btn btn-light btn-icon theme-toggle-hidden"
+            type="button"
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title={theme === "dark" ? "Light mode" : "Dark mode"}
+            hidden
+          >
+            <Icon name={theme === "dark" ? "sun" : "moon"} size={18} />
+          </button>
           <button className="btn btn-light" type="button" onClick={onLogout}>
             <Icon name="logout" size={20} />
             <span>Sign Out</span>
@@ -117,26 +158,56 @@ export function AppShell({ user, path, onNavigate, onLogout, children }) {
       </div>
 
       <aside className={`sidebar ${mobileNavOpen ? "sidebar-open" : ""}`} id="sidebar-nav">
-        {visibleGroups.map((group) => (
-          <div className="nav-group" key={group.label}>
-            <div className="nav-group-label" aria-hidden="true">{group.label}</div>
-            {group.items.map((item) => (
-              <button
-                key={item.path}
-                className={`nav-item ${activePath === item.path ? "active" : ""}`}
-                type="button"
-                onClick={() => handleMobileNav(item.path)}
-                aria-current={activePath === item.path ? "page" : undefined}
-              >
-                <NavIcon name={item.icon} />
-                <span className="nav-copy">
-                  <span>{item.label}</span>
-                  <small>{item.helper}</small>
-                </span>
-              </button>
-            ))}
-          </div>
-        ))}
+        <nav aria-label="Main navigation">
+        {visibleGroups.map((group) => {
+          const isAccountGroup = group.label === "Account";
+          const hasActiveItem = group.items.some((item) => activePath === item.path);
+
+          if (isAccountGroup) {
+            return (
+              <details className="nav-group nav-group-collapsible" key={group.label} open={hasActiveItem || undefined}>
+                <summary className="nav-group-label nav-group-toggle">{group.label}</summary>
+                {group.items.map((item) => (
+                  <button
+                    key={item.path}
+                    className={`nav-item ${activePath === item.path ? "active" : ""}`}
+                    type="button"
+                    onClick={() => handleMobileNav(item.path)}
+                    aria-current={activePath === item.path ? "page" : undefined}
+                  >
+                    <NavIcon name={item.icon} />
+                    <span className="nav-copy">
+                      <span>{item.label}</span>
+                      <small>{item.helper}</small>
+                    </span>
+                  </button>
+                ))}
+              </details>
+            );
+          }
+
+          return (
+            <div className="nav-group" key={group.label}>
+              <div className="nav-group-label" aria-hidden="true">{group.label}</div>
+              {group.items.map((item) => (
+                <button
+                  key={item.path}
+                  className={`nav-item ${activePath === item.path ? "active" : ""}`}
+                  type="button"
+                  onClick={() => handleMobileNav(item.path)}
+                  aria-current={activePath === item.path ? "page" : undefined}
+                >
+                  <NavIcon name={item.icon} />
+                  <span className="nav-copy">
+                    <span>{item.label}</span>
+                    <small>{item.helper}</small>
+                  </span>
+                </button>
+              ))}
+            </div>
+          );
+        })}
+        </nav>
         <div className="sidebar-help">
           <span className="help-icon" aria-hidden="true">
             <Icon name="question" size={20} />
@@ -147,6 +218,26 @@ export function AppShell({ user, path, onNavigate, onLogout, children }) {
       </aside>
       <main className="main-panel" id="main-panel">{children}</main>
     </div>
+  );
+}
+
+function BrandSeal() {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return <div className="brand-seal small" aria-hidden="true">N</div>;
+  }
+
+  return (
+    <img
+      className="brand-seal brand-seal--image small"
+      src={SEAL_IMAGE_SRC}
+      alt=""
+      width="44"
+      height="44"
+      decoding="async"
+      onError={() => setFailed(true)}
+    />
   );
 }
 

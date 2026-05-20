@@ -143,6 +143,24 @@ test("finds the nearest available slot starting today", () => {
   });
 });
 
+test("skips same-day slots whose start time has already passed", () => {
+  const suggestion = findNearestAvailableSlot({
+    startDate: "2026-05-07",
+    timeSlots,
+    reservations: [],
+    searchDays: 3,
+    currentTime: "08:30"
+  });
+
+  assert.deepEqual(suggestion, {
+    date: "2026-05-07",
+    slotId: 3,
+    name: "9:00 AM - 10:00 AM",
+    startTime: "09:00",
+    endTime: "10:00"
+  });
+});
+
 test("finds the nearest future slot when today is fully reserved", () => {
   const suggestion = findNearestAvailableSlot({
     startDate: "2026-05-07",
@@ -285,4 +303,20 @@ test("counts bookable dashboard slots using availability flag", () => {
   assert.equal(summary.availableCount, 3);
   assert.equal(summary.missedCount, 1);
   assert.deepEqual(summary.missedReservations.map((reservation) => reservation.reservationId), [51]);
+});
+
+test("excludes elapsed same-day slots from dashboard availability count", () => {
+  const todaySchedule = buildDailySchedule({
+    date: "2026-05-07",
+    timeSlots,
+    reservations: []
+  });
+
+  const summary = buildDashboardSummary({
+    today: "2026-05-07",
+    todaySchedule,
+    currentTime: "08:30"
+  });
+
+  assert.equal(summary.availableCount, 1);
 });

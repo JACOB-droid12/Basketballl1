@@ -3,6 +3,36 @@
 Date: 2026-05-18
 Target use: Offline single-computer barangay office deployment for Barangay Sto. Nino staff/admin encoding walk-in reservations.
 
+## 2026-05-20 Final Deployment War-Room Override
+
+This section is the current source of truth and supersedes older readiness claims later in this file.
+
+Final judgment for actual barangay-office use: **DO NOT DEPLOY YET**.
+
+Reason: local source, database, strict offline package, backup, disposable restore drill, browser smoke, and print-page rendering passed on this development machine, but the actual target office PC and physical printer were not available for this run. Those gates are **NOT VERIFIED**, not passed.
+
+Current local readiness score: **94 / 100**.
+Current barangay deployment readiness score: **88 / 100** until the target-PC and physical-printer checklist is completed.
+
+Current verified fixes:
+
+1. Resident Directory `Use` now opens New Reservation with `residentId`, preserves the URL query, fetches the resident by ID, and pre-fills requester, contact number, and address.
+2. Activity Logs now return and export linked reservation reference numbers where a reservation is present, while safely rendering logs with no linked reservation.
+3. Dashboard availability now excludes elapsed same-day start times from both nearest-slot suggestions and the count of open slots still available for staff encoding.
+
+Current required follow-up before live office use:
+
+- Run `docs/TARGET_PC_FINAL_CHECKLIST.md` on the actual office computer.
+- Print one physical reservation slip and one physical daily schedule from the target PC.
+- Change the starter admin password or create a real Admin account and deactivate the starter account.
+- Keep SQL backups on barangay-controlled storage only; they contain resident and reservation data.
+
+Current evidence files:
+
+- `docs/FINAL_DEPLOYMENT_SIGNOFF.md`
+- `docs/TARGET_PC_FINAL_CHECKLIST.md`
+- `docs/BACKUP_AND_RESTORE_GUIDE.md`
+
 ## 2026-05-18 Codex Zero-Tolerance UI/UX Audit Override
 
 This update supersedes the older visual/UI pass language later in this file.

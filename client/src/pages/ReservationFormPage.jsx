@@ -107,6 +107,7 @@ const CONTACT_NUMBER_PATTERN = String.raw`[0-9+\x2d\(\)\s]{7,30}`;
 
 export function ReservationFormPage({ reservationId, onNavigate }) {
   const isEdit = Boolean(reservationId);
+  const residentIdFromQuery = getResidentIdFromLocation();
   const [form, setForm] = useState(() => (isEdit ? EMPTY_FORM : buildInitialForm()));
   const [originalSlot, setOriginalSlot] = useState(null);
   const [state, setState] = useState({ loading: isEdit, saving: false, error: "", fieldErrors: {} });
@@ -202,6 +203,44 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
       active = false;
     };
   }, [isEdit, reservationId]);
+
+  useEffect(() => {
+    if (isEdit || !residentIdFromQuery) return;
+
+    let active = true;
+    setState((current) => ({ ...current, error: "" }));
+
+    apiRequest(`/api/residents/${residentIdFromQuery}`)
+      .then((data) => {
+        if (!active) return;
+        const resident = data?.resident || null;
+        if (!resident) {
+          setState((current) => ({
+            ...current,
+            error: "This resident directory entry could not be found. You can still encode the reservation manually."
+          }));
+          return;
+        }
+
+        setForm((current) => ({
+          ...current,
+          representativeName: resident.name || resident.group || current.representativeName,
+          contactNo: resident.contactNumber || current.contactNo,
+          address: resident.address || current.address
+        }));
+      })
+      .catch((error) => {
+        if (!active) return;
+        setState((current) => ({
+          ...current,
+          error: friendlyResidentPrefillError(error)
+        }));
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [isEdit, residentIdFromQuery]);
 
   const hasEditedTimeChanged = useMemo(() => {
     if (!isEdit) return true;
@@ -480,7 +519,7 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
         noValidate
       >
         <section className="form-section">
-          <h3><span className="section-num">1</span>Who is booking?</h3>
+          <h2><span className="section-num">1</span>Who is booking?</h2>
           <div className="section-hint">Sino ang magpapa-reserba?</div>
           <div className="slot-picker" aria-label="Resident directory shortcut">
             <span className="field-hint">
@@ -554,7 +593,7 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
         </section>
 
         <section className="form-section">
-          <h3><span className="section-num">2</span>When will they use the court?</h3>
+          <h2><span className="section-num">2</span>When will they use the court?</h2>
           <div className="section-hint">Kailan nila gustong gamitin?</div>
 
           <Field
@@ -614,7 +653,6 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
                             type="button"
                             role="radio"
                             aria-checked={activeSelection}
-                            aria-pressed={selected}
                             tabIndex={selected ? 0 : -1}
                             data-time={time}
                             className={`time-chip ${activeSelection ? "selected" : ""}`}
@@ -638,7 +676,7 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
             <span className="field-label">Duration <span className="fil">· Gaano katagal</span></span>
             <div className="duration-pick">
               {[1, 2, 3, 4].map((hours) => (
-                <button key={hours} type="button" className={durationHours(form.startTime, form.endTime) === hours ? "on" : ""} onClick={() => applyDuration(hours)}>
+                <button key={hours} type="button" className={durationHours(form.startTime, form.endTime) === hours ? "on" : ""} aria-pressed={durationHours(form.startTime, form.endTime) === hours} onClick={() => applyDuration(hours)}>
                   {hours}h
                 </button>
               ))}
@@ -684,7 +722,7 @@ export function ReservationFormPage({ reservationId, onNavigate }) {
         </section>
 
         <section className="form-section">
-          <h3><span className="section-num">3</span>Any notes?</h3>
+          <h2><span className="section-num">3</span>Any notes?</h2>
           <div className="section-hint">Mga paalala</div>
           <Field id="remarks" label="Remarks (optional)" filipino="Paalala" error={state.fieldErrors.remarks} wide>
             <textarea
@@ -980,6 +1018,26 @@ function friendlyAvailabilityError(error) {
   return error?.message || "Availability could not be confirmed.";
 }
 
+function friendlyResidentPrefillError(error) {
+  if (isNetworkError(error)) {
+    return "The system is offline or the office network is down. The resident was not prefilled, but you can still encode the reservation manually.";
+  }
+
+  if (error?.status === 404) {
+    return "This resident directory entry could not be found. You can still encode the reservation manually.";
+  }
+
+  if (error?.status === 401) {
+    return "Your session has expired. Sign in again, then choose the resident from the directory.";
+  }
+
+  if (error?.status >= 500) {
+    return "The resident directory could not be loaded. The office computer may need a restart, but you can still encode the reservation manually.";
+  }
+
+  return error?.message || "The resident was not prefilled. You can still encode the reservation manually.";
+}
+
 function isNetworkError(error) {
   if (!error) return false;
   // fetch() throws a TypeError with no `status` when the request never reached
@@ -1091,6 +1149,13 @@ function handleTimeChipKeyDown(event, currentStart, applyStart) {
   // continues from the right anchor.
   const target = event.currentTarget.querySelector(`[data-time="${nextTime}"]`);
   if (target instanceof HTMLElement) target.focus();
+}
+
+function getResidentIdFromLocation() {
+  if (typeof window === "undefined") return "";
+  const params = new URLSearchParams(window.location.search);
+  const residentId = String(params.get("residentId") || "").trim();
+  return /^[1-9]\d*$/.test(residentId) ? residentId : "";
 }
 
 function getManilaDate() {

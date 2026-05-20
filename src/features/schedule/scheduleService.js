@@ -95,8 +95,7 @@ export function findNearestAvailableSlot({ startDate, timeSlots = [], reservatio
     const schedule = buildDailySchedule({ date, timeSlots, reservations, blocks });
     const availableSlot = schedule.find((slot) => {
       if (!slot.isAvailableForBooking) return false;
-      // On the first day (today), exclude slots whose end time has already passed
-      if (offset === 0 && currentTime && slot.endTime <= currentTime) return false;
+      if (offset === 0 && isElapsedSameDaySlot(slot, currentTime)) return false;
       return true;
     });
 
@@ -114,7 +113,7 @@ export function findNearestAvailableSlot({ startDate, timeSlots = [], reservatio
   return null;
 }
 
-export function buildDashboardSummary({ today, todaySchedule = [], upcomingReservations = [] }) {
+export function buildDashboardSummary({ today, todaySchedule = [], upcomingReservations = [], currentTime = null }) {
   const todayReserved = uniqueReservationsById(
     todaySchedule
       .filter((slot) => slot.statusCode === "RESERVED" && slot.reservation)
@@ -130,7 +129,7 @@ export function buildDashboardSummary({ today, todaySchedule = [], upcomingReser
   return {
     today,
     reservedCount: todayReserved.length,
-    availableCount: todaySchedule.filter(isBookableSlot).length,
+    availableCount: todaySchedule.filter((slot) => isBookableSlot(slot, currentTime)).length,
     missedCount: missedReservations.length,
     todayReserved,
     missedReservations,
@@ -151,12 +150,20 @@ function uniqueReservationsById(reservations) {
   return [...uniqueReservations.values()];
 }
 
-function isBookableSlot(slot) {
+function isBookableSlot(slot, currentTime = null) {
+  if (isElapsedSameDaySlot(slot, currentTime)) {
+    return false;
+  }
+
   if (typeof slot.isAvailableForBooking === "boolean") {
     return slot.isAvailableForBooking;
   }
 
   return slot.statusCode === "AVAILABLE";
+}
+
+function isElapsedSameDaySlot(slot, currentTime) {
+  return Boolean(currentTime && slot?.startTime && slot.startTime <= currentTime);
 }
 
 function compareReservationsForSlot(a, b) {

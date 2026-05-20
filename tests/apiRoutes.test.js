@@ -1264,6 +1264,35 @@ test("GET /api/dashboard returns today schedule and nearest available slot", asy
   }
 });
 
+test("GET /api/dashboard excludes elapsed same-day availability from count and nearest slot", async () => {
+  const app = buildApiTestApp({
+    session: buildSession(),
+    todayProvider: () => "2026-05-13",
+    currentTimeProvider: () => "08:30",
+    repositories: {
+      getTimeSlots: async () => buildTimeSlots(),
+      listReservations: async () => []
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/dashboard");
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.summary.availableCount, 1);
+    assert.deepEqual(response.body.nearestAvailableSlot, {
+      date: "2026-05-13",
+      slotId: 2,
+      name: "9:00 AM - 10:00 AM",
+      startTime: "09:00",
+      endTime: "10:00"
+    });
+  } finally {
+    await closeServer(server);
+  }
+});
+
 test("GET /api/schedule returns week rows with mapped cells", async () => {
   const app = buildApiTestApp({
     session: buildSession(),
@@ -1790,6 +1819,67 @@ test("resident directory APIs search, create, and update local resident records"
   }
 });
 
+test("GET /api/residents/:residentId returns one resident for reservation prefill", async () => {
+  let receivedResidentId = null;
+  const app = buildApiTestApp({
+    session: buildSession({ userId: 10, role: "STAFF" }),
+    repositories: {
+      getResidentDirectoryEntryById: async (_db, residentId) => {
+        receivedResidentId = residentId;
+        return {
+          residentId: 5,
+          name: "Team Alpha",
+          contactNumber: "09171234567",
+          address: "Purok 3",
+          group: "Youth",
+          notes: "",
+          createdAt: "2026-05-14 08:00:00",
+          updatedAt: "2026-05-15 09:00:00"
+        };
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const response = await getJson(server, "/api/residents/5");
+
+    assert.equal(response.status, 200);
+    assert.equal(receivedResidentId, 5);
+    assert.equal(response.body.resident.name, "Team Alpha");
+    assert.equal(response.body.resident.contactNumber, "09171234567");
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("GET /api/residents/:residentId handles invalid and missing residents", async () => {
+  let lookupCalled = false;
+  const app = buildApiTestApp({
+    session: buildSession({ userId: 10, role: "STAFF" }),
+    repositories: {
+      getResidentDirectoryEntryById: async () => {
+        lookupCalled = true;
+        return null;
+      }
+    }
+  });
+  const server = app.listen(0);
+
+  try {
+    const invalid = await getJson(server, "/api/residents/not-a-number");
+    const missing = await getJson(server, "/api/residents/99");
+
+    assert.equal(invalid.status, 400);
+    assert.deepEqual(invalid.body, { error: "Resident ID must be a positive integer." });
+    assert.equal(missing.status, 404);
+    assert.deepEqual(missing.body, { error: "Resident directory record was not found." });
+    assert.equal(lookupCalled, true);
+  } finally {
+    await closeServer(server);
+  }
+});
+
 test("resident directory API validates duplicate and malformed records", async () => {
   const app = buildApiTestApp({
     session: buildSession(),
@@ -1839,7 +1929,9 @@ test("GET /api/activity-logs passes normalized filters and returns log rows", as
             action: "CREATE_RESERVATION",
             details: "Created reservation.",
             createdAt: "2026-05-13 08:00:00",
-            userName: "Admin User"
+            userName: "Admin User",
+            reservationId: 7,
+            referenceNo: "BCS-2026-000007"
           }
         ];
       }
@@ -1857,6 +1949,7 @@ test("GET /api/activity-logs passes normalized filters and returns log rows", as
       search: "Team"
     });
     assert.equal(response.body.logs[0].logId, 1);
+    assert.equal(response.body.logs[0].referenceNo, "BCS-2026-000007");
   } finally {
     await closeServer(server);
   }

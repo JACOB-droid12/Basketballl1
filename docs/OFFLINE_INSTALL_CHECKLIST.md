@@ -138,6 +138,8 @@ For ordinary staff, `STAFF-DAILY-USE.txt` is the shortest root-level guide. `REA
 
 `START-HERE.bat` > `Back up the database now` runs the local MySQL backup command and writes timestamped `.sql` files under `backups\` by default. Keep backup files on a protected local drive or barangay-controlled external drive.
 
+Each `.sql` backup contains resident and reservation records, account metadata, and activity logs. Treat backups as confidential barangay data and copy them only to barangay-controlled storage.
+
 `START-HERE.bat` > `Create desktop shortcut` creates two current-user Desktop shortcuts: `Barangay Court Scheduler` opens `start-barangay-office.bat` for daily staff use, and `Barangay Court Scheduler - Maintenance` opens `START-HERE.bat` for setup, backup, database checks, sign-off, and support.
 
 If only the database needs to be created or checked, use `START-HERE.bat` > `Database-only setup/checks for IT support`. It does not start the app UI.

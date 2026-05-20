@@ -87,8 +87,7 @@ export function CourtPolicyPage({ user, onNavigate }) {
           <p className="page-kicker">Settings</p>
           <h1 className="page-title">Court policy</h1>
           <div className="page-sub">
-            Default opening hours, reservation duration limits, allowed days, blocked dates,
-            and the grace period before a no-show is recorded.
+            Rules that apply to every reservation on the court.
             <span className="page-sub-fil-inline">Para sa default na patakaran ng court.</span>
           </div>
         </div>
@@ -117,7 +116,7 @@ export function CourtPolicyPage({ user, onNavigate }) {
               </button>
             </div>
           )}
-          {alertsState.payload && <CompactAlertsStrip payload={alertsState.payload} />}
+          {alertsState.payload && <PolicyContextStrip payload={alertsState.payload} />}
           <BackupReminderCard />
           <CourtPolicyForm
             user={user}
@@ -132,42 +131,35 @@ export function CourtPolicyPage({ user, onNavigate }) {
 }
 
 /**
- * Compact inline alerts strip for the Court Policy page.
- * Shows today's reservation count and any active alerts in a single
- * tight row instead of the full DashboardAlertsCard with oversized
- * stat cards. Keeps focus on the policy form.
+ * Policy-relevant context strip for the Court Policy page.
+ * Only shows information that helps the admin make policy decisions:
+ * upcoming reservation counts that would be affected by changes,
+ * or warnings about missed bookings that suggest the grace period
+ * needs adjustment.
  */
-function CompactAlertsStrip({ payload }) {
-  const alerts = Array.isArray(payload?.alerts)
-    ? payload.alerts.filter((a) => a && (a.message || a.title || a.body))
-    : [];
+function PolicyContextStrip({ payload }) {
   const metrics = payload?.metrics || {};
-  const todayCount = Number(metrics.todayReservationCount) || 0;
   const missedCount = Number(metrics.missedPendingCount) || 0;
-  const hasAlerts = alerts.length > 0 || todayCount > 0 || missedCount > 0;
+  const upcomingCount = Number(metrics.upcomingReservationCount) || Number(metrics.todayReservationCount) || 0;
 
-  if (!hasAlerts) return null;
+  // Only show if there's policy-relevant context
+  const hasMissedWarning = missedCount > 0;
+  const hasUpcoming = upcomingCount > 0;
+
+  if (!hasMissedWarning && !hasUpcoming) return null;
 
   return (
-    <div className="court-policy-alerts-strip" role="status" aria-label="Today's alerts">
-      {todayCount > 0 && (
-        <span className="policy-alert-chip">
-          <strong>{todayCount}</strong> reservation{todayCount !== 1 ? "s" : ""} today
-        </span>
-      )}
-      {missedCount > 0 && (
+    <div className="court-policy-alerts-strip" role="status" aria-label="Policy context">
+      {hasMissedWarning && (
         <span className="policy-alert-chip policy-alert-chip-warn">
-          <strong>{missedCount}</strong> missed, pending review
+          <strong>{missedCount}</strong> missed recently — consider adjusting the grace period
         </span>
       )}
-      {alerts.map((alert, index) => (
-        <span
-          key={alert.id || `alert-${index}`}
-          className={`policy-alert-chip ${alert.severity === "warning" || alert.severity === "danger" ? "policy-alert-chip-warn" : ""}`}
-        >
-          {alert.message || alert.title || alert.body}
+      {hasUpcoming && (
+        <span className="policy-alert-chip">
+          <strong>{upcomingCount}</strong> upcoming booking{upcomingCount !== 1 ? "s" : ""} use the current policy
         </span>
-      ))}
+      )}
     </div>
   );
 }

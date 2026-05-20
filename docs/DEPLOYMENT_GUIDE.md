@@ -286,6 +286,8 @@ The command reads `.env`, creates `backups/` if needed, and writes a timestamped
 
 Keep backup files on a protected external drive or barangay-controlled storage. To store backups somewhere else, set `BACKUP_DIR` in `.env`.
 
+Important privacy note: `.sql` backup files contain resident names, contact numbers, addresses, reservation history, user account metadata, password hashes, and activity logs. Treat each backup as confidential barangay data. Do not attach backup files to messages or store them on personal drives.
+
 ## Restore Database
 
 Use restore only when necessary and only after confirming the target database can be replaced.
@@ -295,6 +297,8 @@ npm run restore:mysql -- backups\backup-file.sql
 ```
 
 The restore command requires an explicit `.sql` file path and reads the MySQL password from `.env` rather than putting it in the command text.
+
+For drills or training, restore only into a disposable test database or copied environment. Do not restore over the live office database unless real recovery is required and an authorized Admin or IT support person has approved the selected backup.
 
 ## Update Procedure
 

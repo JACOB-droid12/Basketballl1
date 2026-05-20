@@ -171,6 +171,9 @@ choose the needed option from the menu.
 Copy the backups folder to a USB drive once a week. Keep one copy in the
 barangay office and one off-site.
 
+Backup files contain resident names, contact numbers, reservation history,
+and activity logs. Only use barangay-controlled storage for these files.
+
 OFFLINE REMINDER
 
 This system runs on the barangay office computer. The browser address uses

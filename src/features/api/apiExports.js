@@ -76,6 +76,7 @@ export function buildActivityLogsCsv(logs = []) {
     ["Action", "action"],
     ["User", "userName"],
     ["Reservation ID", "reservationId"],
+    ["Reservation Reference No", "referenceNo"],
     ["Reservation Date", "reservationDate"],
     ["Start Time", "reservationStartTime"],
     ["End Time", "reservationEndTime"],

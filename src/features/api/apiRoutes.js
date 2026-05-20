@@ -21,6 +21,7 @@ import {
   createResidentDirectoryEntry,
   deleteResidentDirectoryEntry,
   DuplicateResidentError,
+  getResidentDirectoryEntryById,
   listResidents,
   ResidentInUseError,
   ResidentNotFoundError,
@@ -84,6 +85,7 @@ const defaultRepositories = {
   getCourtPolicySettings,
   getReservationById,
   getReservationSlipData,
+  getResidentDirectoryEntryById,
   getReservationStatuses,
   getTimeSlots,
   listActivityLogs,
@@ -433,14 +435,15 @@ export function createApiRoutes({
         repo.listScheduleBlocks(db, { fromDate: today, toDate: addDays(today, 13) })
       ]);
       const todaySchedule = buildDailySchedule({ date: today, timeSlots, reservations: todayReservations, blocks: todayBlocks });
-      const summary = buildDashboardSummary({ today, todaySchedule, upcomingReservations });
+      const currentTime = currentTimeProvider();
+      const summary = buildDashboardSummary({ today, todaySchedule, upcomingReservations, currentTime });
       const nearestAvailableSlot = findNearestAvailableSlot({
         startDate: today,
         timeSlots,
         reservations: suggestionReservations,
         blocks: suggestionBlocks,
         searchDays: 14,
-        currentTime: currentTimeProvider()
+        currentTime
       });
 
       response.json({
@@ -755,6 +758,28 @@ export function createApiRoutes({
     try {
       const residents = await repo.listResidents(db, cleanResidentFilters(request.query));
       response.json({ residents });
+    } catch (error) {
+      sendDatabaseError(response, error);
+    }
+  });
+
+  router.get("/api/residents/:residentId", async (request, response) => {
+    const residentId = parsePositiveIntegerParam(request.params.residentId);
+
+    if (!residentId) {
+      response.status(400).json({ error: "Resident ID must be a positive integer." });
+      return;
+    }
+
+    try {
+      const resident = await repo.getResidentDirectoryEntryById(db, residentId);
+
+      if (!resident) {
+        response.status(404).json({ error: "Resident directory record was not found." });
+        return;
+      }
+
+      response.json({ resident });
     } catch (error) {
       sendDatabaseError(response, error);
     }

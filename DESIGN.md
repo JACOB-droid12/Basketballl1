@@ -22,7 +22,7 @@ colors:
   danger-soft: "#FADEDA"
   ink: "#1F2937"
   ink-secondary: "#3F4754"
-  ink-muted: "#6B7280"
+  ink-muted: "#44505F"
   border: "#DCD6C7"
   border-strong: "#B9B19E"
 typography:
@@ -168,7 +168,7 @@ A restrained civic-office palette: warm paper neutrals carry the surfaces, civic
 - **Muted Paper** (`#F0ECE3`): Hover rows, secondary panels (table headers, action-code chips, dialog feet, form footers), icon wells for non-active nav, lock chip.
 - **Ink** (`#1F2937`): Primary text.
 - **Ink Secondary** (`#3F4754`): Body copy inside info banners and other contained reading surfaces.
-- **Ink Muted** (`#6B7280`): Secondary labels, Filipino helper italics, timestamps, metadata, table column labels.
+- **Ink Muted** (`#44505F`): Secondary labels, Filipino helper italics, timestamps, metadata, table column labels.
 - **Office Border** (`#DCD6C7`): Dividers, card borders, input strokes, table rules.
 - **Office Border Strong** (`#B9B19E`): Hover and focus border lift on light buttons.
 

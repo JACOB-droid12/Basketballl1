@@ -38,6 +38,7 @@ export function buildActivityLogListQuery(filters = {}) {
         DATE_FORMAT(al.created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
         user.full_name AS user_name,
         r.reservation_id,
+        r.reference_no,
         DATE_FORMAT(r.reservation_date, '%Y-%m-%d') AS reservation_date,
         TIME_FORMAT(r.start_time, '%H:%i:%s') AS reservation_start_time,
         TIME_FORMAT(r.end_time, '%H:%i:%s') AS reservation_end_time
@@ -71,6 +72,7 @@ export function mapActivityLogRow(row) {
     createdAt: formatDateTimeValue(row.created_at),
     userName: row.user_name || "System",
     reservationId,
+    referenceNo: row.reference_no || "",
     reservationDate: formatDateValue(row.reservation_date),
     reservationStartTime: formatTimeValue(row.reservation_start_time),
     reservationEndTime: formatTimeValue(row.reservation_end_time)

@@ -5,6 +5,7 @@ import {
   buildResidentListQuery,
   createResidentDirectoryEntry,
   DuplicateResidentError,
+  getResidentDirectoryEntryById,
   mapResidentRow,
   updateResidentDirectoryEntry
 } from "../src/features/residents/residentRepository.js";
@@ -40,6 +41,33 @@ test("maps resident rows with directory fields", () => {
     createdAt: "2026-05-14 08:00:00",
     updatedAt: "2026-05-15 09:00:00"
   });
+});
+
+test("getResidentDirectoryEntryById reads one resident by safe id parameter", async () => {
+  let receivedParams = null;
+  const db = {
+    execute: async (sql, params) => {
+      assert.match(sql, /WHERE resident_id = :residentId/);
+      assert.doesNotMatch(sql, /Team Alpha/);
+      receivedParams = params;
+      return [[{
+        resident_id: 5,
+        full_name: "Team Alpha",
+        contact_no: "09171234567",
+        address: "Purok 3",
+        group_name: "Youth",
+        notes: "",
+        created_at: "2026-05-14 08:00:00",
+        updated_at: "2026-05-15 09:00:00"
+      }]];
+    }
+  };
+
+  const resident = await getResidentDirectoryEntryById(db, 5);
+
+  assert.equal(receivedParams.residentId, 5);
+  assert.equal(resident.residentId, 5);
+  assert.equal(resident.name, "Team Alpha");
 });
 
 test("createResidentDirectoryEntry rejects duplicate contact numbers", async () => {

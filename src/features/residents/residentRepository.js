@@ -62,6 +62,10 @@ export async function listResidents(db, filters = {}) {
   return rows.map(mapResidentRow);
 }
 
+export async function getResidentDirectoryEntryById(db, residentId) {
+  return getResidentById(db, residentId);
+}
+
 export async function createResidentDirectoryEntry(db, resident, options = {}) {
   const userId = requireAuthenticatedUserId(options.userId);
   const connection = await db.getConnection();
